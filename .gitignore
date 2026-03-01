@@ -1,0 +1,19 @@
+# ~/dotfiles/.gitignore
+
+# Ignorar archivos de claves y certificados
+**/.ssh/*
+**/*.pem
+**/*.key
+**/*.pub
+
+# Ignorar archivos de variables de entorno (claves API, DB)
+**/.env
+**/.env.*
+
+# Ignorar cachés y temporales
+**/.cache/
+**/.npm/
+**/node_modules/
+
+# Ignorar archivos de historial (pueden contener contraseñas tecleadas)
+**/*_history

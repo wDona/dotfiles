@@ -1,0 +1,59 @@
+{
+  "$schema": "/etc/xdg/swaync/configSchema.json",
+  "timeout": 3,
+  "timeout-low": 2,
+  "timeout-critical": 0,
+  "notification-2fa-timeout": 0,
+  "notification-inline-replies-timeout": 0,
+  "hide-on-clear": false,
+  "skip-display": "closed",
+  "notification-window-width": 550,
+  "positionX": "center",
+  "positionY": "top",
+  "control-center-width": 550,
+  "control-center-height": 400,
+  "control-center-margin-top": 10,
+  "control-center-margin-bottom": 500,
+  "fit-empty-placeholder": true,
+  "hide-on-clear": false,
+  "layer": "overlay",
+  "cssPriority": "application",
+  "widgets": [
+    "dnd",
+    "title",
+    "buttons-grid",
+    "notifications"
+  ],
+  "widget-config": {
+    "title": {
+      "text": "Notificaciones",
+      "clear-all-button": true,
+      "button-text": "Limpiar"
+    },
+    "dnd": {
+      "text": "No molestar"
+    },
+    "mpris": {
+      "image-size": 96,
+      "image-radius": 12
+    },
+    "buttons-grid": {
+      "actions": [
+        {
+          "label": "",
+          "command": "pkill -f -SIGUSR1 gpu-screen-recorder"
+        },
+        {
+          "label": "",
+          "command": "spotify"
+        }
+      ]
+    },
+    "notifications": {
+      "text": "Notificaciones",
+      "group-by-app": true,
+      "group-by-app-max": 3,
+      "group-by-app-collapsed-max": 1
+    }
+  }
+}

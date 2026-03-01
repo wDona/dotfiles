@@ -1,0 +1,190 @@
+/* Contenedor de la notificación (el "cuadrado") */
+.notification {
+    background: rgba(30, 30, 46, 0.95); /* Fondo oscuro profundo */
+    border-radius: 12px;               /* Bordes redondos tipo Ubuntu */
+    border: 1px solid rgba(137, 180, 250, 0.3); /* Borde azul suave */
+    margin: 0;                  /* Espaciado entre notificaciones */
+    padding: 4px 8px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Título de la notificación */
+.notification-content .summary {
+    color: #cba6f7; /* Morado suave para el título */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Cuerpo del texto */
+.notification-content .body {
+    color: #bac2de; /* Azul grisáceo para el texto */
+    font-size: 12px;
+    margin: 0;
+    background-color: transparent;
+}
+
+/* La barra lateral de color (acento Ubuntu) */
+.notification-default {
+    border-left: 4px solid #89b4fa; /* Línea azul de acento a la izquierda */
+    border-radius: 15px;
+}
+
+/* Oculta el encabezado con el nombre de la app (notify-send) */
+.widget-notifications .notification-group > box:first-child {
+    display: none;
+}
+
+/* Opcional: Si quieres quitar el borde o fondo que queda del grupo */
+.notification-group {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Oculta el nombre de la aplicación (el encabezado del grupo) */
+.notification-group-headers {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Por si acaso tu versión usa estos nombres de clase específicos */
+.notification-group-icon, 
+.notification-group-name {
+    display: none;
+}
+
+/* Si queda un hueco vacío arriba de la notificación, lo colapsamos */
+.notification-group {
+    background: transparent;
+    padding-top: 0px;
+    margin-top: 0px;
+}
+
+/* Tamaño de las imágenes (carátulas/iconos) */
+.notification-content image {
+    margin-right: 8px;
+    border-radius: 10px;
+}
+
+/* Botón de cerrar (X) */
+.close-button {
+    background: #313244;
+    color: #f38ba8;
+    text-shadow: none;
+    padding: 2px;
+    border-radius: 100%;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+.close-button:hover {
+    background: #f38ba8;
+    color: #11111b;
+}
+
+.control-center {
+    background: rgba(17, 17, 27, 0.95);
+    border-radius: 24px;
+    border: 2px solid rgba(137, 180, 250, 0.3);
+    margin-top: 10px;
+
+    /* FORZAR TAMAÑO DINÁMICO */
+    min-width: 550px;
+    /* En GTK, esto ayuda a que no se estire al infinito */
+    border-bottom: 1px solid transparent; 
+}
+
+/* ESTA ES LA CLAVE: Limitar el área de las notificaciones */
+.control-center-list {
+    background: transparent;
+    /* Si no hay notis, que no ocupe nada */
+    min-height: 0px; 
+}
+
+/* El elemento contenedor directo de cada notificación */
+.control-center-list-box {
+    background: transparent; /* Transparente para no ver gris detrás */
+    padding: 0px; 
+    margin: 0px;
+}
+
+/* Reducimos el placeholder para que no empuje hacia abajo */
+.control-center-list-placeholder {
+    opacity: 0.4;
+    font-size: 12px;
+    padding: 10px;
+    margin: 0;
+}
+
+.widget-title, .widget-dnd, .widget-mpris, .widget-buttons-grid {
+    margin: 2px 10px;
+}
+
+.widget-dnd {
+    margin-top: 10px;
+}
+
+/* Estilo para los botones cuando el panel está centrado */
+.widget-buttons-grid {
+    padding: 10px;
+    border-radius: 15px;
+    background: rgba(49, 50, 68, 0.5);
+}
+
+/* El título superior ("Notificaciones") */
+.widget-title {
+    color: #cba6f7; /* Morado Ubuntu */
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Botón de "Limpiar todo" */
+.widget-title > button {
+    background: rgba(49, 50, 68, 0.8);
+    color: #bac2de;
+    border-radius: 10px;
+    padding: 5px 10px;
+}
+
+.widget-title > button:hover {
+    background: #f38ba8; /* Rojo al pasar el ratón para borrar */
+    color: #11111b;
+}
+
+/* El widget de música dentro del menú */
+.widget-mpris {
+    background: rgba(30, 30, 46, 0.6);
+    border-radius: 15px;
+    padding: 15px;
+    border: 1px solid rgba(180, 190, 254, 0.1);
+    margin-bottom: 5px;
+}
+
+.widget-mpris-player {
+    padding: 5px;
+}
+
+.widget-mpris-title {
+    color: #89b4fa; /* Azul para el título de la canción */
+    font-weight: bold;
+    
+}
+
+@keyframes slide-in-top {
+    from {
+        margin-top: -50px;
+        opacity: 0;
+    }
+    to {
+        margin-top: 10px;
+        opacity: 1;
+    }
+}
+
+.control-center {
+    animation: slide-in-top 0.3s ease forwards;
+}

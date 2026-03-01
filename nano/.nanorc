@@ -1,0 +1,27 @@
+set linenumbers
+set mouse
+
+# Colores de la interfaz (Azul y Morado)
+set titlecolor lightmagenta  # Título morado
+set statuscolor cyan          # Estado azul/cian
+set numbercolor blue                  # Números de línea azules
+set keycolor lightmagenta     # Teclas de ayuda moradas
+set functioncolor cyan        # Descripción de funciones azul
+
+# Color del texto seleccionado
+set selectedcolor white,blue
+
+## --- INTERFAZ Y COMPORTAMIENTO ---
+set autoindent       # Indenta automáticamente al pulsar Enter
+set tabsize 4        # Tamaño de tabulación estándar
+set tabstospaces     # Convierte tabs en espacios (mejor para código)
+set indicator        # Muestra una barra a la derecha para saber dónde estás
+#set minibar          # Una barra de estado más limpia y moderna abajo
+
+## --- COLORES EXTRA ---
+set promptcolor lightmagenta   # Color de las preguntas de nano (como al guardar)
+
+## --- BUSCADOR ---
+set casesensitive    # Búsqueda sensible a mayúsculas
+
+include "/usr/share/nano-syntax-highlighting/*.nanorc"

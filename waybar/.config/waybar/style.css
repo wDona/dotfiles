@@ -1,0 +1,111 @@
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+}
+
+window#waybar {
+    background: rgba(21, 18, 27, 0.1); /* Fondo oscuro transparente */
+    /*border-bottom: 2px solid rgba(255, 255, 255, 0.1);*/
+    color: #cdd6f4;
+}
+
+#workspaces button {
+    padding: 2px 5px;
+    color: #89b4fa;
+    /* border-radius: 999px; */
+    /* background: #313244; */
+}
+
+#workspaces button.active {
+    color: #f5c2e7;
+    border-bottom: 3px solid #f5c2e7;
+}
+
+#pulseaudio, #cpu, #memory, #network {
+    padding: 4px 10px;
+    margin: 6px 2px;
+    border-radius: 999px;
+    background: #313244;
+}
+
+#clock {
+    padding: 6px 12px;
+    margin: 4px 2px;
+    border-radius: 999px;
+    background: #313244;
+}
+
+#clock { color: #af95f1; }
+#pulseaudio { color: #f9e2af; }
+#cpu { color: #a6e3a1; }
+
+#custom-power {
+    background-color: #f38ba8; /* Un rojo suave estilo Catppuccin */
+    color: #11111b;
+    border-radius: 8px;
+    padding: 2px 15px;
+    margin: 4px 3px;
+    font-weight: bold;
+    min-width: 20px;
+}
+
+#tray {
+    margin-right: 6px;  /* Espacio a la derecha del bloque */
+    margin-left: 6px;   /* Espacio a la izquierda del bloque */
+    margin-top: 6px;
+    margin-bottom: 5px;
+    
+    padding-top: 1px;
+    padding-right: 10px;
+    padding-bottom: 1px;
+    padding-left: 12px;
+
+    border-radius: 9999px;
+    background: #313244;
+}
+
+#tray menu {
+    background: #1a1b26; /* Color de fondo del menú (estilo Cyberpunk/Tokyo Night) */
+    color: #c0caf5;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+#custom-launcher {
+    font-size: 20px;
+    color: #bb9af7; 
+    padding-left: 10px;
+    padding-right: 15px;
+    border-radius: 999px;
+    /* background: #313244; */
+}
+
+#custom-launcher:hover {
+    color: #9ece6a;
+}
+
+#custom-notification {
+ 
+    margin-right: 12px;
+    margin-left: 5px;
+    margin-top: 4px;
+    
+    padding-top: 1px;
+    padding-right: 15px;
+    padding-bottom: 1px;
+    padding-left: 12px;
+
+    border-radius: 9999px;
+    background: #313244;
+    color: #b4befe;
+}

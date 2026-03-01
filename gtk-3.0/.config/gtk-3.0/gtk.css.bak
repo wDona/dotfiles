@@ -1,0 +1,35 @@
+/* Este selector afecta directamente a la ventana de gsimplecal */
+window.background.main-window {
+    background-color: #1a1b26;
+    color: #c0caf5;
+    border: 2px solid #bb9af7;
+    border-radius: 15px;
+}
+
+/* Estilo para los botones (los días) */
+window.background.main-window button {
+    background-image: none; /* Quita el degradado por defecto de GTK */
+    background-color: transparent;
+    color: #c0caf5;
+    border: none;
+    box-shadow: none;
+}
+
+/* El día actual seleccionado */
+window.background.main-window button:checked {
+    background-color: #9ece6a;
+    color: #1a1b26;
+    border-radius: 8px;
+}
+
+/* Añade margen a los botones de navegación (flechas) */
+#gsimplecal button {
+    margin: 10px; /* Esto los separa de los bordes de la ventana */
+    padding: 5px;
+}
+
+/* Si quieres que los botones de "mes anterior/siguiente" sean más grandes y fáciles de clicar */
+#gsimplecal header button {
+    min-width: 40px;
+    min-height: 40px;
+}

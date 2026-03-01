@@ -1,0 +1,90 @@
+{
+    "layer": "top",
+    "position": "top",
+    "spacing": 2,
+    "mod": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "height": 30,
+    "modules-left": ["custom/launcher", "hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["custom/notification", "clock"],
+    "modules-right": ["custom/spotify", "network", "cpu", "memory", "pulseaudio", "tray", "custom/power"],
+
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "format-icons": {
+            "1": "󰘙 ",
+            "2": " ",
+            "3": "󰘙 ",
+            "default": ""
+        }
+    },
+    "custom/launcher": {
+        "format": "󰣆",
+        "on-click": "~/.config/rofi/scripts/launch_rofi.sh",
+        "tooltip": false
+    },
+    "clock": {
+        "format": "󰥔 {:%a %d %b, %H:%M}",
+        "on-click": "/home/wdona/.config/gsimplecal/launch_cal.sh",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "  ",
+        "format-icons": { "default": [" ", " ", "  "] },
+        "on-click": "pavucontrol"
+    },
+    "cpu": {
+        "format": " {usage}%",
+        "interval": 2,
+        "tooltip": true
+    },
+    "memory": {
+        "format": " {used}GB",
+        "interval": 5,
+        "tooltip": true
+    },
+    "network": {
+        "interval": 1,
+        "format-wifi": "  {bandwidthDownBits}",
+        "format-ethernet": "󰈀  {bandwidthDownBits}",
+        "format-disconnected": "⚠ Disconnected",
+        "tooltip-format": "IP: {ipaddr}\nSubida: {bandwidthUpBits}\nBajada: {bandwidthDownBits}"
+    },
+    "custom/power": {
+        "format": "⏻ Apagar",
+        "on-click": "/home/wdona/.config/rofi/scripts/powermenu.sh",
+        "tooltip": false
+    },
+    "custom/spotify": {
+        "exec": "~/.config/waybar/scripts/mediaplayer.sh",
+        "format": "{}",
+        "interval": 3,
+        "on-click": "playerctl -p spotify play-pause",
+        "max-length": 40
+    },
+    "custom/notification": {
+        "tooltip": false,
+        "format": "{icon}",
+        "format-icons": {
+            "notification": "<span foreground='red'><sup></sup></span>",
+            "none": "",
+            "dnd-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-none": "",
+            "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "inhibited-none": "",
+            "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-inhibited-none": ""
+        },
+        "return-type": "json",
+        "exec-if": "which swaync-client",
+        "exec": "swaync-client -swb",
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true
+    }
+}
+

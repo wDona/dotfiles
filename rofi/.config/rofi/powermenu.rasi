@@ -1,0 +1,33 @@
+window {
+    width: 450px;       /* <-- Aquí lo hacemos más ancho */
+    location: west;
+    anchor: west;
+    x-offset: 10px;     /* Despegarlo un poco del borde de la pantalla */
+}
+
+listview {
+    columns: 1;         /* Solo una columna para que el texto ocupe todo el ancho */
+    lines: 5;           /* Ajusta según el número de opciones */
+    spacing: 10px;
+}
+
+element {
+    padding: 10px 15px; /* Más espacio interno para que el texto no se corte */
+    orientation: horizontal; /* Fuerza a que el contenido sea horizontal, no vertical */
+    cursor: pointer; /* Cambia el cursor al pasar por encima de la opción */
+
+}
+
+element-icon {
+    size: 0px;          /* <-- ESTO elimina el hueco del icono invisible */
+    visible: false;
+}
+
+element-text {
+    vertical-align: 0.5;
+    horizontal-align: 0.0; /* Alinea el texto a la izquierda */
+}
+
+button {
+    cursor: pointer;
+}

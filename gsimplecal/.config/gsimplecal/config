@@ -1,0 +1,10 @@
+show_calendar = 1
+mark_today = 1
+close_on_unfocus = 1
+force_i3_compatibility = 1
+font = Monospace 18
+
+horizontal_padding = 40
+vertical_padding = 40
+
+button_width = 60
