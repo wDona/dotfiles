@@ -14,11 +14,18 @@
     "hyprland/workspaces": {
         "format": "{icon}",
         "on-click": "activate",
+        "persistent-workspaces": {
+            "DP-2": [1, 3, 4, "special"],
+            "HDMI-A-1": [2, 5, 6, "special"]
+        },
         "format-icons": {
             "1": "󰘙 ",
             "2": " ",
             "3": "󰘙 ",
-            "default": ""
+            "4": "󰘙 ",
+            "5": " ",
+            "6": " ",
+            "special": "󰮤"
         }
     },
     "custom/launcher": {
@@ -55,7 +62,7 @@
         "tooltip-format": "IP: {ipaddr}\nSubida: {bandwidthUpBits}\nBajada: {bandwidthDownBits}"
     },
     "custom/power": {
-        "format": "⏻ Apagar",
+        "format": "⏻",
         "on-click": "/home/wdona/.config/rofi/scripts/powermenu.sh",
         "tooltip": false
     },
