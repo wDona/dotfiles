@@ -63,19 +63,26 @@ chmod +x ~/dotfiles/scripts/stow-setup.sh
 
 El script recorre automáticamente todas las carpetas del repositorio, elimina los archivos de configuración existentes que no sean symlinks y crea los symlinks con stow.
 
-### 4. Instala Oh My Zsh
+### 4. Instalar TODAS mis aplicaciones (opcional, si no las tienes)
+### Cuidado 
+El siguiente script instala ABSOLUTAMENTE TODO lo que me he instalado. Mi recomendacion es que instales a mano lo que necesites o que le pidas a una IA que te diga los comandos para instalar lo justo y necesario desde mis archivos/scripts. 
+
+```bash
+chmod +x ~/dotfiles/scripts/install.sh
+~/dotfiles/scripts/install.sh
+```
+
+### 5. Instala Oh My Zsh
 
 ```bash
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
-### 5. Cambia la shell a zsh
+### 6. Cambia la shell a zsh
 
 ```bash
 chsh -s $(which zsh)
 ```
-
-Reinicia la sesión y listo.
 
 ## ⚙️ Plugins de Zsh (Viene en el install.sh)
 
