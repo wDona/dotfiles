@@ -96,4 +96,5 @@ Reinicia la sesión y listo.
 ## 📝 Notas
 
 - Reinicia el PC al terminar la instalacion y el Stow para aplicar los cambios.
-- En el .config/hypr/hyprland.conf esta puesto para usar dvorak, cambialo si lo sientes incomodo. 
+- En el .config/hypr/hyprland.conf esta puesto para usar dvorak, cambialo si lo sientes incomodo.
+- El override.conf debe de estar en ~/.config/systemd/user/wireplumber.service.d/override.conf
