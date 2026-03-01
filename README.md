@@ -97,4 +97,4 @@ Reinicia la sesión y listo.
 
 - Reinicia el PC al terminar la instalacion y el Stow para aplicar los cambios.
 - En el .config/hypr/hyprland.conf esta puesto para usar dvorak, cambialo si lo sientes incomodo.
-- El override.conf debe de estar en ~/.config/systemd/user/wireplumber.service.d/override.conf
+- El override.conf debe de estar en ~/.config/systemd/user/wireplumber.service.d/override.conf. Este archivo hace que el sonido se inicie despues de la sesion grafica, y evita tener que reiniciar el servicio de sonido manualmente para poder escuchar.
