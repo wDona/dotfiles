@@ -8,41 +8,44 @@
     "gtk-layer-shell": true,
     "height": 30,
     "modules-left": ["custom/launcher", "hyprland/workspaces", "hyprland/window"],
-    "modules-center": ["custom/notification", "clock"],
+    "modules-center": ["custom/notification", "custom/clock"],
     "modules-right": ["custom/spotify", "network", "cpu", "memory", "pulseaudio", "tray", "custom/power"],
 
     "hyprland/workspaces": {
         "format": "{icon}",
         "on-click": "activate",
-        "persistent-workspaces": {
-            "DP-2": [1, 3, 4, "special"],
-            "HDMI-A-1": [2, 5, 6, "special"]
-        },
+        "show-special": true,
         "format-icons": {
-            "1": "󰘙 ",
-            "2": " ",
-            "3": "󰘙 ",
-            "4": "󰘙 ",
-            "5": " ",
-            "6": " ",
-            "special": "󰮤"
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "4788887": "0",
+            "special": "󰮤",
+            "default": "{name}"
         }
     },
     "custom/launcher": {
         "format": "󰣆",
-        "on-click": "~/.config/rofi/scripts/launch_rofi.sh",
+        "on-click": "~/.config/eww/scripts/close_cal.sh; ~/.config/rofi/scripts/launch_rofi.sh",
         "tooltip": false
     },
-    "clock": {
-        "format": "󰥔 {:%a %d %b, %H:%M}",
-        "on-click": "/home/wdona/.config/gsimplecal/launch_cal.sh",
-        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    "custom/clock": {
+        "exec": "~/.config/waybar/scripts/clock_es.sh",
+        "interval": 10,
+        "on-click": "~/.config/eww/scripts/toggle_cal.sh",
+        "tooltip": false
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
         "format-muted": "  ",
         "format-icons": { "default": [" ", " ", "  "] },
-        "on-click": "pavucontrol"
+        "on-click": "~/.config/eww/scripts/close_cal.sh; pavucontrol"
     },
     "cpu": {
         "format": " {usage}%",
@@ -63,14 +66,14 @@
     },
     "custom/power": {
         "format": "⏻",
-        "on-click": "/home/wdona/.config/rofi/scripts/powermenu.sh",
+        "on-click": "~/.config/eww/scripts/close_cal.sh; /home/wdona/.config/rofi/scripts/powermenu.sh",
         "tooltip": false
     },
     "custom/spotify": {
         "exec": "~/.config/waybar/scripts/mediaplayer.sh",
         "format": "{}",
         "interval": 3,
-        "on-click": "playerctl -p spotify play-pause",
+        "on-click": "~/.config/eww/scripts/close_cal.sh; playerctl -p spotify play-pause",
         "max-length": 40
     },
     "custom/notification": {
@@ -89,8 +92,8 @@
         "return-type": "json",
         "exec-if": "which swaync-client",
         "exec": "swaync-client -swb",
-        "on-click": "swaync-client -t -sw",
-        "on-click-right": "swaync-client -d -sw",
+        "on-click": "~/.config/eww/scripts/close_cal.sh; swaync-client -t -sw",
+        "on-click-right": "~/.config/eww/scripts/close_cal.sh; swaync-client -d -sw",
         "escape": true
     }
 }

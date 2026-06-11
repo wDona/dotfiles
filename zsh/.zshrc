@@ -41,3 +41,4 @@ bindkey '\t' autosuggest-accept
 bindkey '^ ' expand-or-complete
 setopt AUTO_MENU
 eval "$(zoxide init zsh --cmd cd)"
+export PATH="$HOME/.local/bin:$PATH"

@@ -1,8 +1,8 @@
 /* Contenedor de la notificación (el "cuadrado") */
 .notification {
-    background: rgba(30, 30, 46, 0.95); /* Fondo oscuro profundo */
+    background: rgba(28, 18, 38, 0.95); /* Fondo morado oscuro profundo */
     border-radius: 12px;               /* Bordes redondos tipo Ubuntu */
-    border: 1px solid rgba(137, 180, 250, 0.3); /* Borde azul suave */
+    border: 1px solid rgba(217, 70, 239, 0.4); /* Borde magenta suave */
     margin: 0;                  /* Espaciado entre notificaciones */
     padding: 4px 8px;
 
@@ -11,14 +11,14 @@
 
 /* Título de la notificación */
 .notification-content .summary {
-    color: #cba6f7; /* Morado suave para el título */
+    color: #d946ef; /* Magenta para el título */
     font-weight: bold;
     font-size: 14px;
 }
 
 /* Cuerpo del texto */
 .notification-content .body {
-    color: #bac2de; /* Azul grisáceo para el texto */
+    color: #c8c0e0; /* Lila grisáceo para el texto */
     font-size: 12px;
     margin: 0;
     background-color: transparent;
@@ -26,7 +26,7 @@
 
 /* La barra lateral de color (acento Ubuntu) */
 .notification-default {
-    border-left: 4px solid #89b4fa; /* Línea azul de acento a la izquierda */
+    border-left: 4px solid #d946ef; /* Línea magenta de acento a la izquierda */
     border-radius: 15px;
 }
 
@@ -72,8 +72,8 @@
 
 /* Botón de cerrar (X) */
 .close-button {
-    background: #313244;
-    color: #f38ba8;
+    background: #2d1b4e;
+    color: #ec4899;
     text-shadow: none;
     padding: 2px;
     border-radius: 100%;
@@ -82,14 +82,14 @@
 }
 
 .close-button:hover {
-    background: #f38ba8;
-    color: #11111b;
+    background: #ec4899;
+    color: #14101a;
 }
 
 .control-center {
-    background: rgba(17, 17, 27, 0.95);
+    background: rgba(18, 12, 26, 0.96);
     border-radius: 24px;
-    border: 2px solid rgba(137, 180, 250, 0.3);
+    border: 2px solid rgba(217, 70, 239, 0.4);
     margin-top: 10px;
 
     /* FORZAR TAMAÑO DINÁMICO */
@@ -132,35 +132,35 @@
 .widget-buttons-grid {
     padding: 10px;
     border-radius: 15px;
-    background: rgba(49, 50, 68, 0.5);
+    background: rgba(45, 27, 78, 0.5);
 }
 
 /* El título superior ("Notificaciones") */
 .widget-title {
-    color: #cba6f7; /* Morado Ubuntu */
+    color: #d946ef; /* Magenta */
     font-size: 20px;
     font-weight: bold;
 }
 
 /* Botón de "Limpiar todo" */
 .widget-title > button {
-    background: rgba(49, 50, 68, 0.8);
-    color: #bac2de;
+    background: rgba(45, 27, 78, 0.8);
+    color: #c8c0e0;
     border-radius: 10px;
     padding: 5px 10px;
 }
 
 .widget-title > button:hover {
-    background: #f38ba8; /* Rojo al pasar el ratón para borrar */
-    color: #11111b;
+    background: #ec4899; /* Rosa al pasar el ratón para borrar */
+    color: #14101a;
 }
 
 /* El widget de música dentro del menú */
 .widget-mpris {
-    background: rgba(30, 30, 46, 0.6);
+    background: rgba(28, 18, 38, 0.6);
     border-radius: 15px;
     padding: 15px;
-    border: 1px solid rgba(180, 190, 254, 0.1);
+    border: 1px solid rgba(217, 70, 239, 0.15);
     margin-bottom: 5px;
 }
 
@@ -169,7 +169,7 @@
 }
 
 .widget-mpris-title {
-    color: #89b4fa; /* Azul para el título de la canción */
+    color: #ec4899; /* Rosa para el título de la canción */
     font-weight: bold;
     
 }

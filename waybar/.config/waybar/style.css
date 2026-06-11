@@ -1,80 +1,125 @@
 * {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
+    all: unset;
 }
 
 window#waybar {
-    background: rgba(21, 18, 27, 0.1); /* Fondo oscuro transparente */
+    background: transparent; /* Transparente: el blur del compositor solo se ve bajo los modulos */
     /*border-bottom: 2px solid rgba(255, 255, 255, 0.1);*/
-    color: #cdd6f4;
+    color: #f0f0ff;
 }
 
 #workspaces button {
-    padding: 0px 5px;
+    padding: 8px 10px;
+    margin: 4px 3px;
     margin-top: 6px;
     margin-bottom: 3px;
-    color: #89b4fa;
-    /* border-radius: 999px; */
-    /* background: #313244; */
+    color: #c9a0ff;
+    border-radius: 10px;
+    background: rgba(45, 27, 78, 0.15);
+    border: 1px solid rgba(217, 70, 239, 0.18);
+    transition: all 150ms ease;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+#workspaces button.special {
+    padding: 8px 14px;
+}
+
+#workspaces button:hover {
+    background: rgba(45, 27, 78, 0.2);
+    border-color: rgba(217, 70, 239, 0.18);
+    color: #e8d0ff;
 }
 
 #workspaces button.active {
-    color: #f5c2e7;
-    border-bottom: 3px solid #f5c2e7;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(217, 70, 239, 0.8), rgba(244, 114, 182, 0.6));
+    border: 1px solid #d946ef;
+    box-shadow: 0 0 10px rgba(217, 70, 239, 0.15);
 }
 
 #pulseaudio, #cpu, #memory, #network {
-    padding: 4px 10px;
-    margin: 6px 2px;
-    border-radius: 999px;
-    background: #181823;
-}
-
-#clock {
     padding: 6px 12px;
     margin: 4px 2px;
-    border-radius: 999px;
-    background: #181823;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    transition: all 150ms ease;
+    font-weight: 500;
 }
 
-#clock { 
-    color: #cdd6f4;
-    /* color: #af95f1;  */
+#cpu {
+    letter-spacing: 2px;
 }
-#pulseaudio { color: #f9e2af; }
-#cpu { color: #a6e3a1; }
+
+#pulseaudio:hover, #cpu:hover, #memory:hover, #network:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+
+#clock, #custom-clock {
+    padding: 6px 14px;
+    margin: 4px 4px;
+    border-radius: 12px;
+    background: rgba(217, 70, 239, 0.18);
+    border: 1px solid rgba(217, 70, 239, 0.15);
+    color: #e8e8ff;
+    font-weight: 600;
+    transition: all 150ms ease;
+}
+
+#clock:hover, #custom-clock:hover {
+    background: rgba(217, 70, 239, 0.35);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+
+#pulseaudio { color: #ffd700; }
+#cpu { color: #90ff90; }
+#memory { color: #c9a0ff; }
+#network { color: #ff9999; }
 
 #custom-power {
-    background-color: #181823; /* Un rojo suave estilo Catppuccin */
-    color: #ececf7;
-    border-radius: 9999px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 4px;
-    padding-right: 7px;
-    margin: 6px 3px;
+    background: linear-gradient(135deg, rgba(217, 70, 239, 0.7), rgba(244, 114, 182, 0.5));
+    color: #fff;
+    border-radius: 12px;
+    padding: 6px 14px;
+    margin: 4px 4px;
+    margin-right: 12px;
     font-weight: bold;
-    min-width: 20px;
+    font-size: 18px;
+    border: 1px solid rgba(244, 114, 182, 0.6);
+    transition: all 150ms ease;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+#custom-power:hover {
+    background: linear-gradient(135deg, rgba(217, 70, 239, 1), rgba(244, 114, 182, 0.8));
+    box-shadow: 0 0 15px rgba(217, 70, 239, 0.18);
 }
 
 #tray {
-    margin-right: 6px;  /* Espacio a la derecha del bloque */
-    margin-left: 6px;   /* Espacio a la izquierda del bloque */
-    margin-top: 6px;
-    margin-bottom: 5px;
-    
-    padding-top: 1px;
-    padding-right: 10px;
-    padding-bottom: 1px;
-    padding-left: 12px;
+    margin: 4px 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    transition: all 150ms ease;
+}
 
-    border-radius: 9999px;
-    background: #181823;
+#tray:hover {
+    background: rgba(45, 27, 78, 0.3);
+    border-color: rgba(217, 70, 239, 0.6);
 }
 
 #tray menu {
-    background: #181823; /* Color de fondo del menú (estilo Cyberpunk/Tokyo Night) */
-    color: #c0caf5;
+    background: rgba(45, 27, 78, 0.95);
+    color: #e8e8ff;
+    border-radius: 8px;
+    border: 1px solid rgba(217, 70, 239, 0.18);
 }
 
 #tray > .passive {
@@ -90,33 +135,36 @@ window#waybar {
 }
 
 #custom-launcher {
-    font-size: 20px;
-    color: #bb9af7; 
-    padding-left: 10px;
-    padding-right: 15px;
-    border-radius: 999px;
-    /* background: #313244; */
+    font-size: 24px;
+    color: #d946ef;
+    padding: 6px 20px 6px 12px;
+    margin-left: 12px;
+    margin-right: 8px;
+    border-radius: 12px;
+    background: rgba(217, 70, 239, 0.15);
+    border: 1px solid rgba(217, 70, 239, 0.15);
+    transition: all 150ms ease;
 }
 
 #custom-launcher:hover {
-    color: #9ece6a;
+    color: #f472b6;
+    background: rgba(217, 70, 239, 0.3);
+    border-color: rgba(217, 70, 239, 0.7);
+    box-shadow: 0 0 12px rgba(217, 70, 239, 0.3);
 }
 
 #custom-notification {
+    margin: 4px 4px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    color: #e8e8ff;
+    font-weight: 500;
+    transition: all 150ms ease;
+}
 
-    margin-right: 12px;
-    margin-left: 5px;
-    margin-top: 6px;
-    margin-bottom: 5px;
-    
-    padding-top: 0px;
-    padding-right: 13px;
-    padding-bottom: 0px;
-    padding-left: 10px;
-
-    border-radius: 9999px;
-    background: #181823;
-    color: #b4befe;
-
-
+#custom-notification:hover {
+    background: rgba(45, 27, 78, 0.3);
+    border-color: rgba(217, 70, 239, 0.6);
 }

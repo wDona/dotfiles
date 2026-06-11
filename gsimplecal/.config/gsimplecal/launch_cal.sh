@@ -6,9 +6,14 @@ if pgrep -x "gsimplecal" > /dev/null; then
     exit 0
 fi
 
-# 2. Lanzar con escala de interfaz (2 = doble de grande, 1.5 = un poco más grande)
-# Ajusta GDK_SCALE según tu preferencia
-export GDK_DPI_SCALE=1.5
+# 2. Tamaño via fuente (config) en lugar de GDK_DPI_SCALE fraccionario,
+# que descentra el numero del dia dentro de la celda.
+
+# Tema morado custom aislado (CSS en _gtktheme/gtk-3.0/gtk.css)
+# Usamos un XDG_CONFIG_HOME propio para no afectar al resto de apps GTK.
+export XDG_CONFIG_HOME="$HOME/.config/gsimplecal/_gtktheme"
+export GTK_APPLICATION_PREFER_DARK_THEME=1
+
 gsimplecal &
 
 # 3. Esperar un momento a que se abra y asegurar el cierre al perder foco

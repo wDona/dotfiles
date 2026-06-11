@@ -8,4 +8,4 @@ fi
 
 # Lanzar Rofi con tus parámetros preferidos
 # He quitado -no-lazy-grab porque sin mover el cursor no es tan crítico
-rofi -show drun -kb-cancel 'Escape,MousePrimary' -
+rofi -show drun -kb-cancel 'Escape,MousePrimary' -show-icons

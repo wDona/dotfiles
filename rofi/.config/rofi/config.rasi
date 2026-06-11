@@ -7,8 +7,8 @@ configuration {
     location: 0;
     disable-history: false;
     hide-scrollbar: true;
-    display-drun: "   Apps ";
-    display-run: "   Run ";
+    display-drun: " Apps ";
+    display-run: " Run ";
     sidebar-mode: true;
     hover-select: true;
     me-select-entry: "";
@@ -18,13 +18,15 @@ configuration {
 //@theme "/dev/null"
 
 * {
-    bg-col:  #1e1e2e;
-    bg-col-light: #1e1e2e;
-    border-col: #89b4fa;
-    selected-col: #313244;
-    blue: #89b4fa;
-    fg-col: #cdd6f4;
-    fg-col2: #f38ba8;
+    bg-col:  #140f1a;
+    bg-col-light: #1f1430;
+    bg-input: #1c1228;
+    border-col: #d946ef;
+    selected-col: #2d1b4e;
+    blue: #d946ef;
+    fg-col: #f0f0ff;
+    fg-col2: #ec4899;
+    fg-dim: #8b8bb0;
     width: 600;
     font: "JetBrainsMono Nerd Font 12";
 }
@@ -37,15 +39,15 @@ window {
     close-on-click: true;
 
     /* Asegúrate de que estas dimensiones no sean demasiado grandes */
-    width:               600px;
-    height:              360px;
-    
+    width:               720px;
+    height:              480px;
+
     enabled:             true;
     margin:              0px;
     padding:             0px;
-    border:              1px solid;
-    border-radius:       15px;
-    border-color:        #bf00ff;
+    border:              2px solid;
+    border-radius:       18px;
+    border-color:        #d946ef;
     background-color:    @bg-col;
 }
 
@@ -55,24 +57,31 @@ mainbox {
 
 inputbar {
     children: [prompt,entry];
-    background-color: @bg-col;
-    border-radius: 5px;
-    padding: 2px;
+    background-color: @bg-input;
+    border: 1px solid;
+    border-color: @selected-col;
+    border-radius: 12px;
+    padding: 4px;
+    margin: 14px 14px 0px 14px;
 }
 
 prompt {
     background-color: @blue;
-    padding: 6px;
+    padding: 6px 12px;
     text-color: @bg-col;
-    border-radius: 3px;
-    margin: 20px 0px 0px 20px;
+    border-radius: 8px;
+    margin: 0px;
+    vertical-align: 0.5;
 }
 
 entry {
-    padding: 6px;
-    margin: 20px 0px 0px 10px;
+    padding: 6px 8px;
+    margin: 0px;
     text-color: @fg-col;
-    background-color: @bg-col;
+    background-color: transparent;
+    placeholder: "Buscar...";
+    placeholder-color: @fg-dim;
+    vertical-align: 0.5;
 }
 
 listview {
@@ -80,7 +89,7 @@ listview {
     padding: 6px 0px 0px;
     margin: 10px 0px 0px 20px;
     columns: 2;
-    lines: 5;
+    lines: 6;
     background-color: @bg-col;
 }
 
@@ -90,22 +99,37 @@ element {
     margin:                      2px;
     padding:                     8px;
     border:                      0px solid;
-    border-radius:               15px; /* Aquí forzamos el redondeo */
-    background-color:            transparent;
+    border-radius:               12px;
+    background-color:            @bg-input;
     text-color:                  @fg-col;
     cursor:                      pointer;
 }
 
-element selected {
+element normal normal,
+element alternate normal {
+    background-color:            @bg-input;
+    text-color:                  @fg-col;
+}
+
+element normal active,
+element alternate active {
+    background-color:            @bg-input;
+    text-color:                  @fg-col2;
+}
+
+element selected normal,
+element selected active {
     background-color:            @selected-col;
-    text-color:                  @blue;
-    border-radius:               15px; /* Obligatorio repetirlo aquí */
+    text-color:                  @fg-col;
+    border:                      0px 0px 0px 3px solid;
+    border-color:                @blue;
+    border-radius:               12px;
 }
 
 element-icon {
     background-color:            transparent;
     text-color:                  inherit;
-    size:                        24px;
+    size:                        28px;
     cursor:                      inherit;
 }
 
@@ -115,6 +139,5 @@ element-text {
     cursor:                      inherit;
     vertical-align:              0.5;
     horizontal-align:            0.0;
+    font:                        "JetBrainsMono Nerd Font 14";
 }
-
-@theme "/usr/share/rofi/themes/sidebar-v2.rasi"

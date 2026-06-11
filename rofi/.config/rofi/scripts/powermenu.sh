@@ -14,23 +14,28 @@ confirm_exit() {
     window {
         width:              500px;
         height:             380px;
-        background-color:   #1a1b26;
+        background-color:   #140f1a;
         border:             2px;
-        border-color:       #bb9af7;
+        border-color:       #d946ef;
         border-radius:      20px;
         location:           center;
         anchor:             center;
+        x-offset:           0px;
+        y-offset:           0px;
     }
     mainbox {
         padding:            20px;
+        background-color:   #140f1a;
         children:           [ "message", "listview", "inputbar" ];
     }
-    message { 
-        expand: false; 
-        margin: 0 0 10px 0; 
+    message {
+        expand: false;
+        margin: 0 0 10px 0;
+        background-color:   transparent;
     }
     textbox {
-        text-color:         #f7768e;
+        text-color:         #ec4899;
+        background-color:   transparent;
         horizontal-align:   0.5;
         font:               "JetBrainsMono Nerd Font Bold 14";
     }
@@ -40,51 +45,57 @@ confirm_exit() {
         spacing:            20px;
         expand:             true;
         fixed-height:       true;
+        background-color:   transparent;
     }
     element {
         padding:            15px;
         border-radius:      15px;
         orientation:        vertical;
+        background-color:   transparent;
+        text-color:         #f0f0ff;
     }
     element-icon {
         size:               80px;
         horizontal-align:   0.5;
         enabled:            true;
+        background-color:   transparent;
     }
     element-text {
         horizontal-align:   0.5;
+        background-color:   transparent;
         font:               "JetBrainsMono Nerd Font 12";
     }
-    
-    /* EL RECUADRO VERDE SIN FONDO BLANCO */
+
+    /* Recuadro del prompt en magenta */
     inputbar {
         margin:             20px 0 0 0;
         padding:            10px;
-        background-color:   #9ece6a; /* Tu verde */
+        background-color:   #d946ef;
         border-radius:      12px;
         children:           [ "dummy", "prompt", "dummy" ];
     }
 
     prompt {
         enabled:            true;
-        background-color:   transparent; /* ESTO QUITA EL FONDO BLANCO */
-        text-color:         #1a1b26;      /* Color de texto oscuro para que resalte */
+        background-color:   transparent;
+        text-color:         #140f1a;
         font:               "JetBrainsMono Nerd Font Bold 13";
-        border:             0px;          /* Nos aseguramos de que no haya bordes */
-        padding:            0px;          /* Quitamos rellenos extra */
+        border:             0px;
+        padding:            0px;
     }
 
     dummy {
         expand:             true;
         background-color:   transparent;
     }
-    
+
     entry { enabled: false; }
 
     element selected {
-        background-color:   #24283b;
-        border:             2px;
-        border-color:       #9ece6a;
+        background-color:   #2d1b4e;
+        text-color:         #f0f0ff;
+        border:             0px 0px 0px 3px;
+        border-color:       #d946ef;
     }' \
     -hover-select -me-select-entry 'MousePrimary' -me-accept-entry '!MousePrimary'
 }
@@ -106,9 +117,11 @@ seleccion=$(echo -e "$opciones" | rofi -dmenu -i -normal-window -no-lazy-grab -k
         height:             250px;      /* Altura reducida */
         location:           center;
         anchor:             center;
-        background-color:   #1a1b26;
+        x-offset:           0px;
+        y-offset:           0px;
+        background-color:   #140f1a;
         border:             2px;
-        border-color:       #bb9af7;
+        border-color:       #d946ef;
         border-radius:      20px;
     }
     listview {
@@ -116,9 +129,11 @@ seleccion=$(echo -e "$opciones" | rofi -dmenu -i -normal-window -no-lazy-grab -k
         lines:              1;
         spacing:            20px;
         layout:             vertical;   /* Layout interno del elemento */
+        background-color:   transparent;
     }
     mainbox {
         padding:            20px 10px;
+        background-color:   #140f1a;
         children:           [ "listview" ];
     }
 
@@ -126,19 +141,24 @@ seleccion=$(echo -e "$opciones" | rofi -dmenu -i -normal-window -no-lazy-grab -k
         padding:            25px 10px;
         border-radius:      15px;
         orientation:        vertical;
+        background-color:   transparent;
+        text-color:         #f0f0ff;
     }
     element-icon {
         size:               64px;       /* Tamaño equilibrado para barra lateral */
         horizontal-align:   0.5;
+        background-color:   transparent;
     }
     element-text {
         horizontal-align:   0.5;
+        background-color:   transparent;
         font:               "JetBrainsMono Nerd Font Bold 12";
     }
     element selected {
-        background-color:   #24283b;
-        border:             2px;
-        border-color:       #9ece6a;
+        background-color:   #2d1b4e;
+        text-color:         #f0f0ff;
+        border:             0px 0px 0px 3px;
+        border-color:       #d946ef;
     }' \
     -hover-select -me-select-entry 'MousePrimary' -me-accept-entry '!MousePrimary')
 

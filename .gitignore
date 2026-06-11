@@ -17,3 +17,5 @@
 
 # Ignorar archivos de historial (pueden contener contraseñas tecleadas)
 **/*_history
+# Ignorar backups locales
+**/*.bkup

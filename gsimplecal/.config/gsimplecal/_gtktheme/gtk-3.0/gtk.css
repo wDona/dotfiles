@@ -1,0 +1,103 @@
+/* Tema morado custom solo para gsimplecal (XDG_CONFIG_HOME aislado) */
+
+window {
+    background-color: #140f1a;
+    border: 2px solid #d946ef;
+    border-radius: 16px;
+    padding: 10px 12px;
+}
+
+/* Centrar el contenido vertical y horizontalmente */
+window > * {
+    margin: 0;
+}
+
+calendar {
+    margin: 0;
+}
+
+/* Calendario */
+calendar {
+    background-color: #140f1a;
+    color: #f0f0ff;
+    padding: 6px;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    border-spacing: 0;
+}
+
+/* Celdas de los dias: padding simetrico para centrar el numero */
+calendar:link,
+calendar.view,
+calendar text {
+    padding: 4px 0;
+}
+
+/* Quitar lineas/bordes internos del grid del calendario */
+calendar:inconsistent {
+    border: none;
+}
+
+calendar > * {
+    border: none;
+    box-shadow: none;
+}
+
+/* Cabecera mes/año y flechas de navegacion */
+calendar.header {
+    color: #ec4899;
+    font-weight: bold;
+}
+
+calendar.button {
+    color: #d946ef;
+}
+
+calendar.button:hover {
+    color: #f472b6;
+}
+
+/* Nombres de los dias de la semana */
+calendar.highlight {
+    color: #c9a0ff;
+    font-weight: bold;
+}
+
+/* Dias de otros meses (atenuados) */
+calendar:indeterminate {
+    color: #5a4a6a;
+}
+
+/* Dia de hoy (solo color, sin cambiar tamaño/peso para que no se desplace) */
+calendar.today {
+    color: #d946ef;
+}
+
+/* Dia seleccionado */
+calendar:selected {
+    background-color: #d946ef;
+    color: #140f1a;
+    border-radius: 8px;
+}
+
+/* Botones inferiores (Editar / Copiar fecha, etc) */
+button {
+    background-image: none;
+    background-color: #1c1228;
+    color: #f0f0ff;
+    border: 1px solid #2d1b4e;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin: 2px;
+}
+
+button:hover {
+    background-color: #2d1b4e;
+    border-color: #d946ef;
+    color: #ffffff;
+}
+
+label {
+    color: #f0f0ff;
+}
