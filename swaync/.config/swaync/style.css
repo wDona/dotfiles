@@ -128,11 +128,55 @@
     margin-top: 10px;
 }
 
-/* Estilo para los botones cuando el panel está centrado */
+/* Fila SOLO de botones de volumen de Spotify */
 .widget-buttons-grid {
-    padding: 10px;
+    padding: 8px;
     border-radius: 15px;
     background: rgba(45, 27, 78, 0.5);
+}
+
+/* Los 2 botones reparten todo el ancho (≈50% cada uno) */
+.widget-buttons-grid > flowbox {
+    min-width: 0;
+}
+
+.control-center .widget-buttons-grid > flowbox > flowboxchild {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* Prefijo .control-center = misma especificidad que el default de swaync,
+   y como nuestra hoja carga después (cssPriority application), gana.
+   min-width va en el BOTON. */
+.control-center .widget-buttons-grid > flowbox > flowboxchild > button {
+    min-width: 250px;
+    padding: 8px 0;
+    margin: 0;
+    border-radius: 10px;
+    font-size: 18px;
+    color: #c9a0ff;
+    background: rgba(217, 70, 239, 0.12);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    transition: all 150ms ease;
+}
+
+.control-center .widget-buttons-grid > flowbox > flowboxchild:first-child > button {
+    margin-right: 4px;
+}
+.control-center .widget-buttons-grid > flowbox > flowboxchild:last-child > button {
+    margin-left: 4px;
+}
+
+.control-center .widget-buttons-grid > flowbox > flowboxchild > button:hover {
+    background: rgba(217, 70, 239, 0.28);
+    border-color: rgba(217, 70, 239, 0.6);
+    color: #f0f0ff;
+}
+
+.control-center .widget-buttons-grid > flowbox > flowboxchild > button:active {
+    background: #ec4899;
+    color: #14101a;
 }
 
 /* El título superior ("Notificaciones") */
@@ -157,15 +201,36 @@
 
 /* El widget de música dentro del menú */
 .widget-mpris {
-    background: rgba(28, 18, 38, 0.6);
-    border-radius: 15px;
-    padding: 15px;
-    border: 1px solid rgba(217, 70, 239, 0.15);
-    margin-bottom: 5px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+/* sin fondo/borde tambien en el player interior y el carrusel */
+.widget-mpris .widget-mpris-player {
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 .widget-mpris-player {
-    padding: 5px;
+    padding: 2px;
+    margin: 2px;
+}
+
+.widget-mpris-player button {
+    padding: 2px;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+/* flechas del carrusel mas finas */
+.widget-mpris > box > button {
+    padding: 0;
+    min-width: 16px;
 }
 
 .widget-mpris-title {

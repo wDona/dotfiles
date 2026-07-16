@@ -1,7 +1,7 @@
 {
   "$schema": "/etc/xdg/swaync/configSchema.json",
-  "timeout": 3,
-  "timeout-low": 2,
+  "timeout": 2,
+  "timeout-low": 1,
   "timeout-critical": 0,
   "notification-2fa-timeout": 0,
   "notification-inline-replies-timeout": 0,
@@ -10,18 +10,17 @@
   "notification-window-width": 550,
   "positionX": "center",
   "positionY": "top",
-  "control-center-width": 550,
-  "control-center-height": 400,
+  "control-center-width": 400,
+  "control-center-height": 450,
   "control-center-margin-top": 10,
-  "control-center-margin-bottom": 500,
+  "control-center-margin-bottom": 100,
   "fit-empty-placeholder": true,
-  "hide-on-clear": false,
   "layer": "overlay",
   "cssPriority": "application",
   "widgets": [
-    "dnd",
-    "title",
+    "mpris",
     "buttons-grid",
+    "dnd",
     "notifications"
   ],
   "widget-config": {
@@ -34,18 +33,18 @@
       "text": "No molestar"
     },
     "mpris": {
-      "image-size": 96,
-      "image-radius": 12
+      "image-size": 44,
+      "image-radius": 8
     },
     "buttons-grid": {
       "actions": [
         {
-          "label": "",
-          "command": "pkill -f -SIGUSR1 gpu-screen-recorder"
+          "label": "󰝞",
+          "command": "~/.config/swaync/spotify_vol.sh down 5"
         },
         {
-          "label": "",
-          "command": "spotify"
+          "label": "󰝝",
+          "command": "~/.config/swaync/spotify_vol.sh up 5"
         }
       ]
     },
@@ -54,6 +53,77 @@
       "group-by-app": true,
       "group-by-app-max": 3,
       "group-by-app-collapsed-max": 1
+    }
+  },
+  "notification-action": [
+    {
+      "id": "discord-focus",
+      "action-name": "Focus",
+      "app-name": "discord",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh discord"
+    },
+    {
+      "id": "claude-focus",
+      "action-name": "Focus",
+      "app-name": "claude",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh claude"
+    },
+    {
+      "id": "kitty-focus",
+      "action-name": "Focus",
+      "app-name": "kitty",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh kitty"
+    },
+    {
+      "id": "spotify-focus",
+      "action-name": "Focus",
+      "app-name": "spotify",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh spotify"
+    },
+    {
+      "id": "brave-focus",
+      "action-name": "Focus",
+      "app-name": "brave",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh brave"
+    },
+    {
+      "id": "steam-focus",
+      "action-name": "Focus",
+      "app-name": "steam",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh steam"
+    },
+    {
+      "id": "teamspeak-focus",
+      "action-name": "Focus",
+      "app-name": "teamspeak",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh teamspeak"
+    },
+    {
+      "id": "lutris-focus",
+      "action-name": "Focus",
+      "app-name": "lutris",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh lutris"
+    },
+    {
+      "id": "whatsapp-focus",
+      "action-name": "Focus",
+      "app-name": "whatsapp",
+      "urgency": "low",
+      "exec": "~/.config/swaync/focus_app.sh whatsapp"
+    }
+  ],
+  "scripts": {
+    "sonido": {
+      "exec": "/home/wdona/.config/swaync/notif_sound.sh",
+      "app-name": ".*"
     }
   }
 }

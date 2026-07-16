@@ -1,0 +1,603 @@
+// Paleta morada (igual que rofi / waybar / swaync)
+$bg: #140f1a;
+$bg-cell: #1c1228;
+$surface: #2d1b4e;
+$accent: #d946ef;
+$accent2: #ec4899;
+$fg: #f0f0ff;
+$fg-dim: #5a4a6a;
+$lila: #c9a0ff;
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font";
+}
+
+.cal-box {
+  background-color: $bg;
+  border: 2px solid $accent;
+  border-radius: 16px;
+  padding: 14px;
+  margin: 4px;
+}
+
+// ── Cabecera ──
+.cal-header {
+  margin-bottom: 6px;
+}
+
+.cal-month {
+  color: $accent2;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 10px;
+
+  &:hover {
+    background-color: $surface;
+    color: #ffffff;
+  }
+}
+
+.cal-year-row {
+  margin-top: 2px;
+}
+
+.cal-year {
+  color: $lila;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 0 8px;
+}
+
+.cal-nav {
+  color: $accent;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background-color: $bg-cell;
+
+  &:hover {
+    background-color: $surface;
+    color: #ffffff;
+  }
+}
+
+// ── Selector rapido de mes ──
+.cal-picker {
+  margin: 4px 0 8px 0;
+}
+
+.pick {
+  color: $lila;
+  font-size: 14px;
+  padding: 6px 0;
+  border-radius: 8px;
+  background-color: $bg-cell;
+
+  &:hover {
+    background-color: $surface;
+    color: #ffffff;
+  }
+
+  &.pick-cur {
+    background-color: $accent;
+    color: $bg;
+    font-weight: bold;
+  }
+}
+
+// ── Dias de la semana ──
+.cal-weekdays {
+  color: $lila;
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 4px;
+
+  label {
+    padding: 2px 0;
+  }
+}
+
+// ── Celdas ──
+.cal-cell {
+  background-color: $bg-cell;
+  border-radius: 10px;
+  min-width: 38px;
+  min-height: 38px;
+
+  .cal-num {
+    color: $fg;
+    font-size: 15px;
+  }
+
+  .ev-dot {
+    color: $accent2;
+    font-size: 9px;
+    margin: 3px 4px 0 0;
+  }
+
+  &.dim .cal-num {
+    color: $fg-dim;
+  }
+
+  &.has-event {
+    border: 1px solid $accent2;
+  }
+
+  &.today {
+    background-color: $accent;
+
+    .cal-num {
+      color: $bg;
+    }
+    .ev-dot { color: $bg; }
+  }
+
+  &.selected {
+    border: 2px solid #ffffff;
+  }
+
+  &:hover:not(.today) {
+    background-color: $surface;
+  }
+}
+
+// ── Boton Hoy ──
+.cal-actions {
+  margin-top: 8px;
+}
+
+.cal-today {
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 4px 18px;
+  border-radius: 10px;
+  background-color: $surface;
+
+  &:hover {
+    background-color: $accent;
+    color: $bg;
+  }
+}
+
+// ── Editor de nota ──
+.cal-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid $surface;
+}
+
+.note-date {
+  color: $accent2;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.note-text {
+  color: $fg;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background-color: $bg-cell;
+  border: 1px solid $surface;
+}
+
+.note-empty {
+  color: $fg-dim;
+  font-size: 13px;
+  padding: 4px 2px;
+}
+
+// Fila de evento (texto + boton borrar)
+.ev-row {
+  background-color: $bg-cell;
+  border: 1px solid $surface;
+  border-radius: 9px;
+  padding: 5px 8px;
+}
+.ev-text {
+  color: $fg;
+  font-size: 13px;
+}
+.ev-del {
+  color: $lila;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 0 8px;
+  border-radius: 7px;
+  &:hover { background-color: #7a1f3a; color: #ffffff; }
+}
+
+.note-buttons {
+  margin-top: 4px;
+}
+
+.note-save, .note-del, .note-close {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 6px 0;
+  border-radius: 9px;
+}
+
+.note-save {
+  color: $bg;
+  background-color: $accent;
+  &:hover { background-color: $accent2; }
+}
+
+.note-del {
+  color: $fg;
+  background-color: $bg-cell;
+  &:hover { background-color: #7a1f3a; color: #ffffff; }
+}
+
+.note-close {
+  color: $lila;
+  background-color: $bg-cell;
+  &:hover { background-color: $surface; color: #ffffff; }
+}
+
+// ══════════════════════════════════════════════════════════
+// ─── DASHBOARD HARDWARE ───────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.dash {
+  background-color: rgba(20, 15, 26, 0.96);
+  border-left: 2px solid $accent;
+  border-top: 2px solid rgba(217, 70, 239, 0.4);
+  border-bottom: 2px solid rgba(217, 70, 239, 0.4);
+  border-top-left-radius: 22px;
+  border-bottom-left-radius: 22px;
+  padding: 22px 20px;
+}
+
+// ── Cabecera ──
+.dash-user {
+  color: $fg;
+  font-size: 17px;
+  font-weight: bold;
+}
+.dash-up {
+  color: $fg-dim;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.dash-clock {
+  color: $accent;
+  font-size: 26px;
+  font-weight: bold;
+}
+.dash-date {
+  color: $lila;
+  font-size: 11px;
+}
+
+// ── Bloque de filas ──
+.dash-detail {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+// ── Fila de stat ──
+.stat {
+  // contenedor vertical: linea + barra
+}
+.s-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+.s-name {
+  color: $lila;
+  font-size: 13px;
+}
+.s-val {
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+}
+.s-bar {
+  background-color: $surface;
+  border-radius: 6px;
+  min-height: 5px;
+  margin-top: 1px;
+}
+.s-bar-fill {
+  border-radius: 6px;
+  min-height: 5px;
+}
+
+// ── Teclado + temporizador ──
+.dash-tools {
+  margin-top: 2px;
+}
+.tool-btn {
+  background-color: $bg-cell;
+  color: $lila;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 9px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  &:hover { background-color: $surface; color: #ffffff; }
+}
+.tool-timer.running {
+  color: $accent2;
+  border-color: $accent2;
+}
+// Temporizador como texto (no boton)
+.dash-timer {
+  font-size: 14px;
+  color: $fg-dim;
+  padding: 2px 0;
+  &.running { color: $accent2; font-weight: bold; }
+  &.done    { color: $accent2; font-weight: bold; }
+}
+
+// ══════════════════════════════════════════════════════════
+// ─── MENU SISTEMA (power + herramientas) ──────────────────
+// ══════════════════════════════════════════════════════════
+.sysmenu {
+  background-color: rgba(20, 15, 26, 0.96);
+  border: 2px solid $accent;
+  border-top: 2px solid rgba(217, 70, 239, 0.4);
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding: 14px;
+}
+
+// ── Herramientas (Hardware / Temporizador) ──
+.sm-item {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  padding: 11px 13px;
+  &:hover { background-color: $surface; }
+}
+.sm-ico {
+  color: $accent;
+  font-size: 18px;
+  margin-right: 4px;
+}
+.sm-lbl {
+  color: $fg;
+  font-size: 14px;
+  font-weight: bold;
+}
+.sm-sub {
+  color: $accent2;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+// ── Separador ──
+.sm-sep {
+  background-color: rgba(217, 70, 239, 0.22);
+  min-height: 1px;
+  margin: 4px 2px;
+}
+
+// ── Botones de energia ──
+.sm-power {
+  margin-top: 2px;
+}
+.sm-pwr {
+  background-color: $bg-cell;
+  color: $lila;
+  font-size: 20px;
+  padding: 12px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  &:hover { background-color: $surface; color: #ffffff; }
+}
+
+// ══════════════════════════════════════════════════════════
+// ─── PERSONALIZACION (fondo de pantalla) ──────────────────
+// ══════════════════════════════════════════════════════════
+.perso {
+  background-color: rgba(20, 15, 26, 0.96);
+  border: 2px solid $accent;
+  // mismo redondeo que las ventanas de Hyprland (decoration:rounding = 16)
+  border-radius: 16px;
+  padding: 14px;
+}
+.perso-title {
+  color: $fg;
+  font-size: 16px;
+  font-weight: bold;
+}
+.perso-close {
+  background-color: transparent;
+  color: $fg-dim;
+  font-size: 16px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  &:hover { background-color: $surface; color: $accent; }
+}
+.perso-sub {
+  color: $accent2;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+// ── Lista de fondos ──
+.wp-scroll { padding-right: 2px; }
+.wp-card {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  padding: 8px;
+  &:hover { background-color: $surface; }
+  &.sel {
+    border: 2px solid $accent;
+    background-color: rgba(217, 70, 239, 0.12);
+  }
+}
+.wp-thumb {
+  border-radius: 8px;
+}
+.wp-name {
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+}
+.wp-type {
+  color: $lila;
+  font-size: 11px;
+}
+.wp-check {
+  color: $accent;
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+// ── Boton examinar / editar VSCode ──
+.wp-browse {
+  background-color: $bg-cell;
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  margin-top: 4px;
+  &:hover { background-color: $surface; color: $accent; }
+}
+
+// ── Cabecera: back ──
+.perso-back {
+  background-color: transparent;
+  color: $lila;
+  font-size: 16px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-right: 4px;
+  &:hover { background-color: $surface; color: $accent; }
+}
+
+// ── Tarjetas de categoria (menu principal) ──
+.cat-card {
+  background-color: $bg-cell;
+  border-radius: 14px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  padding: 16px 16px;
+  &:hover { background-color: $surface; }
+}
+.cat-ico {
+  color: $accent;
+  font-size: 26px;
+  margin-right: 4px;
+}
+.cat-title {
+  color: $fg;
+  font-size: 15px;
+  font-weight: bold;
+}
+.cat-sub {
+  color: $fg-dim;
+  font-size: 12px;
+}
+
+// ── Chips (compactos, reutilizables) ──
+.chip {
+  background-color: $bg-cell;
+  color: $fg;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  &:hover { background-color: $surface; }
+  &.sel {
+    border: 2px solid $accent;
+    color: $accent;
+    background-color: rgba(217, 70, 239, 0.12);
+  }
+}
+.conf-item.sel {
+  border: 2px solid $accent;
+  background-color: rgba(217, 70, 239, 0.12);
+  .conf-name { color: $accent; }
+}
+
+// ── Lista de configuraciones ──
+.conf-item {
+  background-color: $bg-cell;
+  border-radius: 10px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  padding: 10px 13px;
+  &:hover { background-color: $surface; }
+}
+.conf-ico { color: $accent; font-size: 15px; margin-right: 2px; }
+.conf-name { color: $fg; font-size: 13px; font-weight: bold; }
+.conf-chev { color: $fg-dim; font-size: 14px; }
+.conf-empty { color: $fg-dim; font-size: 13px; }
+
+// ── Interruptor ON/OFF ──
+.tg {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+.tg-on  { color: $bg; background-color: $accent; }
+.tg-off { color: $fg-dim; background-color: $bg-cell; }
+
+// ── Muestra de color (paleta eww) ──
+.swatch {
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+// ── Muestra de gradiente de borde ──
+.bswatch {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.bswatch-lbl {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+// ── Mini botones (ventanas eww: ver / editar) ──
+.mini-btn {
+  background-color: $surface;
+  color: $fg;
+  font-size: 15px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  &:hover { background-color: $accent; color: $bg; }
+}
+
+// ── Badge de valor (sliders) ──
+.val-badge {
+  color: $accent;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+// ── Slider eww ──
+scale trough {
+  background-color: $bg-cell;
+  border-radius: 10px;
+  min-height: 8px;
+}
+scale highlight {
+  background-color: $accent;
+  border-radius: 10px;
+}
+scale slider {
+  background-color: $fg;
+  border-radius: 50%;
+  min-width: 14px;
+  min-height: 14px;
+  margin: -5px;
+}

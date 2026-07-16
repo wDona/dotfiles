@@ -1,0 +1,504 @@
+;; ─── Estado ───────────────────────────────────────────────
+(defvar cal_offset 0)                 ;; meses respecto al actual
+(defvar cal_selected "")              ;; dia marcado (YYYY-MM-DD)
+(defvar event_input "")               ;; (legacy, sin usar)
+(defvar cal_picker "none")            ;; "none" | "month"  (selector rapido)
+
+;; Eventos del dia seleccionado (hasta 8 slots; select.sh los rellena)
+(defvar nev 0)
+(defvar sev0_text "") (defvar sev0_show false)
+(defvar sev1_text "") (defvar sev1_show false)
+(defvar sev2_text "") (defvar sev2_show false)
+(defvar sev3_text "") (defvar sev3_show false)
+(defvar sev4_text "") (defvar sev4_show false)
+(defvar sev5_text "") (defvar sev5_show false)
+(defvar sev6_text "") (defvar sev6_show false)
+(defvar sev7_text "") (defvar sev7_show false)
+
+;; JSON del mes. eww no permite variables en defpoll -> defvar que
+;; nav.sh / goto.sh / addevent.sh regeneran.
+(defvar cal_json "{ \"label\": \"\", \"year\": 0, \"month\": 0, \"weeks\": [] }")
+
+;; Lista para el selector rapido de mes
+(defvar months_list "[{\"n\":1,\"t\":\"Ene\"},{\"n\":2,\"t\":\"Feb\"},{\"n\":3,\"t\":\"Mar\"},{\"n\":4,\"t\":\"Abr\"},{\"n\":5,\"t\":\"May\"},{\"n\":6,\"t\":\"Jun\"},{\"n\":7,\"t\":\"Jul\"},{\"n\":8,\"t\":\"Ago\"},{\"n\":9,\"t\":\"Sep\"},{\"n\":10,\"t\":\"Oct\"},{\"n\":11,\"t\":\"Nov\"},{\"n\":12,\"t\":\"Dic\"}]")
+
+;; ── Estado del panel de Ajustes (lo rellena toggle_perso.sh al abrir) ──
+;; Fondos: cada item {path, thumb, name, type, selected}
+(defvar wallpapers "[]")
+(defvar view "home")        ;; "home" | "conf"
+(defvar conf_sel "")        ;; alias del conf abierto en detalle
+(defvar confs "[]")         ;; [{name,path}] desde `conf --list`
+(defvar themes_gtk "[]")    ;; [{name,selected}]
+(defvar themes_icon "[]")   ;; [{name,selected}]
+(defvar kitty_op 75)        ;; opacidad kitty 0-100
+(defvar kitty_fs 12)        ;; tamaño fuente kitty
+(defvar gtk_cur "")         ;; nombre tema GTK actual (subtitulo)
+(defvar icon_cur "")        ;; nombre tema iconos actual (subtitulo)
+(defvar cursors "[]")       ;; [{name,selected}]
+(defvar fonts "[]")         ;; [{name,selected}]
+(defvar cursor_cur "")
+(defvar font_cur "")
+(defvar cursor_size 24)
+(defvar ewwcols "{\"bg\":\"\",\"bg_cell\":\"\",\"surface\":\"\",\"accent\":\"\",\"accent2\":\"\",\"fg\":\"\",\"fg_dim\":\"\",\"lila\":\"\"}")
+(defvar ewwwins "[]")       ;; ventanas eww auto-descubiertas
+(defvar eww_presets "[\"morado\",\"dracula\",\"nord\",\"catppuccin\",\"gruvbox\"]")
+(defvar hypr_t "{\"gaps_in\":0,\"gaps_out\":0,\"border_size\":0,\"rounding\":0}")
+
+;; ─── Fila de evento (texto + boton borrar) ───────────────
+(defwidget evrow [show text off date]
+  (box :class "ev-row" :visible show :space-evenly false :spacing 6
+    (label :class "ev-text" :hexpand true :halign "start" :wrap true :limit-width 26 :text text)
+    (button :class "ev-del" :tooltip "Borrar este evento"
+            :onclick "~/.config/eww/scripts/note_del.sh ${off} ${date} ${text}" "✕")))
+
+;; ─── Dia ──────────────────────────────────────────────────
+(defwidget cal_day [d]
+  (button :class "cal-cell ${d.today ? "today" : ""} ${d.dim ? "dim" : ""} ${d.date == cal_selected ? "selected" : ""} ${d.event ? "has-event" : ""}"
+          :onclick "~/.config/eww/scripts/select.sh ${d.date}"
+          :onrightclick "~/.config/eww/scripts/note_edit.sh ${cal_offset} ${d.date} &"
+    (overlay
+      (label :class "cal-num" :halign "center" :valign "center"
+             :hexpand true :vexpand true :text {d.day})
+      (label :class "ev-dot" :halign "end" :valign "start"
+             :text {d.event ? "●" : ""}))))
+
+;; ─── Calendario ───────────────────────────────────────────
+(defwidget cal_widget []
+  (box :class "cal-box" :orientation "v" :space-evenly false :spacing 6
+    ;; Cabecera: ‹ Mes › arriba (click mes = selector); « Anio » abajo
+    (box :class "cal-header" :orientation "v" :space-evenly false :spacing 2
+      (box :class "cal-month-row" :space-evenly false :spacing 4
+        (button :class "cal-nav" :onclick "~/.config/eww/scripts/goto.sh ${cal_json.year} ${cal_json.month - 1}" "‹")
+        (button :class "cal-month" :hexpand true
+                :onclick "eww update cal_picker=${cal_picker == "month" ? "\"none\"" : "\"month\""}"
+                {cal_json.mname})
+        (button :class "cal-nav" :onclick "~/.config/eww/scripts/goto.sh ${cal_json.year} ${cal_json.month + 1}" "›"))
+      (box :class "cal-year-row" :space-evenly false :spacing 4 :halign "center"
+        (button :class "cal-nav" :onclick "~/.config/eww/scripts/goto.sh ${cal_json.year - 1} ${cal_json.month}" "«")
+        (label :class "cal-year" :text {cal_json.year})
+        (button :class "cal-nav" :onclick "~/.config/eww/scripts/goto.sh ${cal_json.year + 1} ${cal_json.month}" "»")))
+
+    ;; Selector rapido de mes
+    (revealer :transition "slidedown" :reveal {cal_picker == "month"} :duration "150ms"
+      (box :class "cal-picker" :orientation "v" :spacing 4
+        (for row in {[[months_list[0], months_list[1], months_list[2], months_list[3]],
+                      [months_list[4], months_list[5], months_list[6], months_list[7]],
+                      [months_list[8], months_list[9], months_list[10], months_list[11]]]}
+          (box :space-evenly true :spacing 4
+            (for m in row
+              (button :class "pick ${m.n == cal_json.month ? "pick-cur" : ""}"
+                      :onclick "~/.config/eww/scripts/goto.sh ${cal_json.year} ${m.n} && eww update cal_picker=\"none\""
+                      {m.t}))))))
+
+    ;; Dias de la semana
+    (box :class "cal-weekdays" :space-evenly true
+      (label :text "L") (label :text "M") (label :text "X")
+      (label :text "J") (label :text "V") (label :text "S") (label :text "D"))
+
+    ;; Grid
+    (box :class "cal-grid" :orientation "v" :space-evenly true :spacing 2
+      (for week in {cal_json.weeks}
+        (box :class "cal-week" :space-evenly true :spacing 2
+          (for d in week
+            (cal_day :d d)))))
+
+    ;; Boton Hoy
+    (box :class "cal-actions" :space-evenly false :halign "center"
+      (button :class "cal-today" :onclick "~/.config/eww/scripts/nav.sh 0 && eww update cal_picker=\"none\" cal_selected=\"\" event_input=\"\"" "Hoy"))
+
+    ;; Eventos del dia seleccionado (varios). Cada uno con su ✕ para borrar.
+    (revealer :transition "slidedown" :reveal {cal_selected != ""} :duration "150ms"
+      (box :class "cal-note" :orientation "v" :space-evenly false :spacing 6
+        (label :class "note-date" :halign "start" :text {cal_selected})
+        (label :class "note-empty" :halign "start" :visible {nev == 0} :text "(sin eventos)")
+        (box :orientation "v" :space-evenly false :spacing 4 :visible {nev > 0}
+          (evrow :show sev0_show :text sev0_text :off cal_offset :date cal_selected)
+          (evrow :show sev1_show :text sev1_text :off cal_offset :date cal_selected)
+          (evrow :show sev2_show :text sev2_text :off cal_offset :date cal_selected)
+          (evrow :show sev3_show :text sev3_text :off cal_offset :date cal_selected)
+          (evrow :show sev4_show :text sev4_text :off cal_offset :date cal_selected)
+          (evrow :show sev5_show :text sev5_text :off cal_offset :date cal_selected)
+          (evrow :show sev6_show :text sev6_text :off cal_offset :date cal_selected)
+          (evrow :show sev7_show :text sev7_text :off cal_offset :date cal_selected))
+        (box :class "note-buttons" :space-evenly true :spacing 6
+          (button :class "note-save"
+                  :onclick "~/.config/eww/scripts/note_edit.sh ${cal_offset} ${cal_selected} &"
+                  "+ Evento")
+          (button :class "note-close"
+                  :onclick "eww update cal_selected=\"\""
+                  "Cerrar"))))))
+
+;; ══════════════════════════════════════════════════════════
+;; ─── DASHBOARD HARDWARE ───────────────────────────────────
+;; ══════════════════════════════════════════════════════════
+(defpoll sys   :interval "2s" :initial "{\"cpu\":0,\"mem\":0,\"mem_used\":0,\"mem_total\":0,\"disk\":0,\"disk_used\":0,\"disk_total\":0,\"cputemp\":0,\"gputemp\":0,\"uptime\":\"\",\"host\":\"\"}" "~/.config/eww/scripts/sysinfo.sh")
+(defpoll duser :interval "3600s" :initial "" "whoami")
+(defpoll dtime :interval "10s" "date +'%H:%M'")
+(defpoll ddate :interval "300s" "date +'%A, %d %B'")
+(defpoll kbinfo    :interval "1s" :initial "{\"text\":\"\"}" "~/.config/waybar/scripts/kb_switch.sh status")
+(defpoll timerinfo :interval "1s" :initial "{\"text\":\"\",\"class\":\"idle\"}" "/home/wdona/.config/waybar/scripts/timer.sh status")
+
+;; Fila: icono + nombre a la izq, valor a la der, barra de uso debajo (opcional)
+(defwidget statrow [icon name val color ?pct ?show]
+  (box :class "stat" :orientation "v" :space-evenly false :spacing 3 :visible {show ?: true}
+    (box :space-evenly false
+      (label :class "s-icon" :style "color: ${color};" :text icon)
+      (label :class "s-name" :hexpand true :halign "start" :text name)
+      (label :class "s-val"  :halign "end" :text val))
+    (box :class "s-bar" :visible {pct ?: false} :halign "fill"
+      (box :class "s-bar-fill" :hexpand false :halign "start"
+           :style "min-width: ${(pct ?: 0) * 2.8}px; background-color: ${color};"))))
+
+(defwidget dashboard []
+  (box :class "dash" :orientation "v" :space-evenly false :spacing 12
+    ;; Cabecera: usuario + reloj
+    (box :class "dash-head" :space-evenly false
+      (box :orientation "v" :space-evenly false :hexpand true :halign "start"
+        (label :class "dash-user" :halign "start" :text "󰀄  ${duser}")
+        (label :class "dash-up"   :halign "start" :text "󰅐  ${sys.uptime}"))
+      (box :orientation "v" :space-evenly false :halign "end"
+        (label :class "dash-clock" :halign "end" :text dtime)
+        (label :class "dash-date"  :halign "end" :text ddate)))
+
+    ;; Uso (con barra)
+    (box :class "dash-detail" :orientation "v" :space-evenly false :spacing 8
+      (statrow :icon "󰘚" :name "CPU"   :val "${sys.cpu}%"  :color "#d946ef" :pct {sys.cpu})
+      (statrow :icon "󰍛" :name "RAM"   :val "${sys.mem_used} / ${sys.mem_total} GB" :color "#ec4899" :pct {sys.mem})
+      (statrow :icon {sys.disk_icon} :name {sys.d0_name} :val {sys.d0_val} :color "#c9a0ff" :pct {sys.d0_pct} :show {sys.d0_show})
+      (statrow :icon {sys.disk_icon} :name {sys.d1_name} :val {sys.d1_val} :color "#c9a0ff" :pct {sys.d1_pct} :show {sys.d1_show})
+      (statrow :icon {sys.disk_icon} :name {sys.d2_name} :val {sys.d2_val} :color "#c9a0ff" :pct {sys.d2_pct} :show {sys.d2_show})
+      (statrow :icon {sys.disk_icon} :name {sys.d3_name} :val {sys.d3_val} :color "#c9a0ff" :pct {sys.d3_pct} :show {sys.d3_show})
+      (statrow :icon {sys.gpu_icon} :name "GPU"   :val "${sys.g0_use}%" :color "#90ff90" :pct {sys.g0_use} :show {sys.g0_show})
+      (statrow :icon {sys.gpu_icon} :name "GPU 2" :val "${sys.g1_use}%" :color "#90ff90" :pct {sys.g1_use} :show {sys.g1_show}))
+
+    ;; Temperaturas + red (sin barra)
+    (box :class "dash-detail" :orientation "v" :space-evenly false :spacing 8
+      (statrow :icon "󰔏" :name "Temp CPU" :val "${sys.cputemp}°C" :color "#ffd700")
+      (statrow :icon "󰍹" :name "Temp GPU" :val "${sys.gputemp}°C" :color "#ffd700")
+      (statrow :icon {sys.net_icon} :name "Red"    :val {sys.net_ip}   :color "#90ff90")
+      (statrow :icon "󰇚" :name "Bajada" :val "${sys.net_down}" :color "#90ff90")
+      (statrow :icon "󰕒" :name "Subida" :val "${sys.net_up}"   :color "#90ff90"))
+
+    ;; Temporizador (solo display; se configura desde la barra)
+    (box :class "dash-timer ${timerinfo.class}" :halign "center"
+      (label :text {timerinfo.class == "idle" ? "Sin temporizador" : timerinfo.text}))
+
+    ;; Herramientas (espacio para futuros botones)
+    (box :class "dash-tools" :space-evenly true :spacing 10
+      (button :class "tool-btn"
+              :onclick "~/.config/waybar/scripts/kb_switch.sh variant"
+              :onrightclick "~/.config/waybar/scripts/kb_switch.sh lang"
+              :tooltip "click=disposicion (QW/DV) · der=idioma (EN/ES)"
+        (label :text {kbinfo.text})))))
+
+;; ══════════════════════════════════════════════════════════
+;; ─── MENU SISTEMA (power + herramientas) ──────────────────
+;; ══════════════════════════════════════════════════════════
+(defwidget sysmenu []
+  (box :class "sysmenu" :orientation "v" :space-evenly false :spacing 10
+    (box :class "sm-tools" :orientation "v" :space-evenly false :spacing 8
+      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_dash.sh"
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰘚")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Hardware")))
+      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_perso.sh"
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰸉")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Personalizacion")))
+      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/hypr/scripts/toggle_claude.sh"
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰚩")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Claude Code")))
+      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/waybar/scripts/timer.sh set"
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰔛")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Temporizador")
+          (label :class "sm-sub" :text {timerinfo.class == "idle" ? "" : timerinfo.text}))))
+    (box :class "sm-sep")
+    (box :class "sm-power" :space-evenly true :spacing 8
+      (button :class "sm-pwr poweroff" :tooltip "Apagar"        :onclick "eww close sysmenu & systemctl poweroff"   "󰐥")
+      (button :class "sm-pwr reboot"   :tooltip "Reiniciar"     :onclick "eww close sysmenu & systemctl reboot"     "󰜉")
+      (button :class "sm-pwr logout"   :tooltip "Cerrar sesion" :onclick "eww close sysmenu & hyprctl dispatch exit" "󰍃"))))
+
+
+;; ══════════════════════════════════════════════════════════
+;; ─── AJUSTES (fondo, apariencia, configuraciones) ─────────
+;; ══════════════════════════════════════════════════════════
+
+;; Slider reutilizable para los ajustes de Hyprland
+(defwidget aj-slider [label key val min max]
+  (box :orientation "v" :space-evenly false :spacing 4
+    (box :space-evenly false
+      (label :class "perso-sub" :hexpand true :halign "start" :text label)
+      (label :class "val-badge" :text val))
+    (scale :hexpand true :min min :max max :value val
+           :onchange "~/.config/hypr/scripts/hypr_tweak.sh set ${key} {}")))
+
+;; Tarjeta de categoria del menu principal (abre un submenu)
+(defwidget cat-card [icon title sub target]
+  (button :class "cat-card" :onclick `eww update view=${target}`
+    (box :space-evenly false :spacing 14
+      (label :class "cat-ico" :text icon)
+      (box :orientation "v" :space-evenly false :hexpand true :halign "start" :valign "center"
+        (label :class "cat-title" :halign "start" :text title)
+        (label :class "cat-sub" :halign "start" :limit-width 40 :text sub))
+      (label :class "conf-chev" :text "󰅂"))))
+
+;; Fila seleccionable (tema / icono)
+(defwidget theme-row [name selected onclick]
+  (button :class {selected ? "conf-item sel" : "conf-item"} :onclick onclick
+    (box :space-evenly false :spacing 10
+      (label :class "conf-name" :hexpand true :halign "start" :limit-width 40 :text name)
+      (label :class "wp-check" :visible selected :text "󰄬"))))
+
+;; Interruptor ON/OFF
+(defwidget aj-toggle [label on onclick]
+  (button :class "conf-item" :onclick onclick
+    (box :space-evenly false :spacing 10
+      (label :class "conf-name" :hexpand true :halign "start" :text label)
+      (label :class {on == 1 ? "tg tg-on" : "tg tg-off"} :text {on == 1 ? "󰔡  ON" : "󰨙  OFF"}))))
+
+;; Fila de color (muestra muestra + hex, click abre selector zenity)
+(defwidget color-row [key label hex]
+  (button :class "conf-item" :onclick `~/.config/eww/scripts/eww_color.sh pick ${key} &`
+    (box :space-evenly false :spacing 12
+      (box :class "swatch" :style "background-color: ${hex};")
+      (box :orientation "v" :space-evenly false :hexpand true :halign "start" :valign "center"
+        (label :class "conf-name" :halign "start" :text label)
+        (label :class "cat-sub" :halign "start" :text hex))
+      (label :class "conf-chev" :text "󰏘"))))
+
+;; Muestra de gradiente de borde (preset)
+(defwidget border-swatch [name grad css]
+  (button :class "bswatch" :style "background-image: ${css};"
+          :onclick `~/.config/hypr/scripts/hypr_tweak.sh set border_grad "${grad}" && eww update hypr_t="$(~/.config/hypr/scripts/hypr_tweak.sh get)"`
+    (label :class "bswatch-lbl" :text name)))
+
+;; ── Vista HOME: tarjetas de categoria ──
+(defwidget aj-home []
+  (scroll :vscroll true :hscroll false :height 560
+    (box :orientation "v" :space-evenly false :spacing 10
+      (cat-card :icon "󰸉" :title "Fondo de pantalla" :sub "Imagen o video animado" :target "wallpaper")
+      (cat-card :icon "󰏘" :title "Tema GTK" :sub {gtk_cur != "" ? gtk_cur : "Apariencia de las apps"} :target "gtk")
+      (cat-card :icon "󰋩" :title "Iconos" :sub {icon_cur != "" ? icon_cur : "Set de iconos"} :target "icon")
+      (cat-card :icon "󰳽" :title "Cursor" :sub {cursor_cur != "" ? cursor_cur : "Puntero del raton"} :target "cursor")
+      (cat-card :icon "󰛖" :title "Fuentes" :sub "Sistema y terminal" :target "fonts")
+      (cat-card :icon "" :title "Hyprland" :sub "Gaps, blur, opacidad, bordes" :target "hypr")
+      (cat-card :icon "󰕷" :title "eww" :sub "Paleta de colores y ventanas" :target "eww")
+      (cat-card :icon "" :title "Configuraciones" :sub "Editar cualquier config" :target "confs"))))
+
+;; ── Submenu: Fondo de pantalla ──
+(defwidget aj-wallpaper []
+  (box :orientation "v" :space-evenly false :spacing 10
+    (scroll :class "wp-scroll" :vscroll true :hscroll false :height 500
+      (box :orientation "v" :space-evenly false :spacing 8
+        (for w in wallpapers
+          (button :class {w.selected ? "wp-card sel" : "wp-card"}
+                  :onclick `~/.config/eww/scripts/wp_select.sh set "${w.path}" &`
+            (box :space-evenly false :spacing 12
+              (image :class "wp-thumb" :path {w.thumb} :image-width 150 :image-height 84)
+              (box :orientation "v" :space-evenly false :hexpand true :halign "start" :valign "center"
+                (label :class "wp-name" :halign "start" :limit-width 26 :text {w.name})
+                (label :class "wp-type" :halign "start"
+                       :text {w.type == "video" ? "󰕧  Video" : "󰋩  Imagen"}))
+              (label :class "wp-check" :visible {w.selected} :text "󰄬"))))))
+    (button :class "wp-browse" :onclick `~/.config/eww/scripts/wp_select.sh browse &`
+      (box :space-evenly false :spacing 8 :halign "center"
+        (label :text "󰈢") (label :text "Examinar archivo...")))))
+
+;; ── Submenu: Tema GTK ──
+(defwidget aj-gtk []
+  (scroll :vscroll true :hscroll false :height 540
+    (box :orientation "v" :space-evenly false :spacing 6
+      (for t in themes_gtk
+        (theme-row :name {t.name} :selected {t.selected}
+          :onclick `~/.config/hypr/scripts/appearance.sh set-gtk "${t.name}" && eww update gtk_cur="${t.name}" themes_gtk="$(~/.config/hypr/scripts/appearance.sh list-gtk)"`)))))
+
+;; ── Submenu: Iconos ──
+(defwidget aj-icon []
+  (scroll :vscroll true :hscroll false :height 540
+    (box :orientation "v" :space-evenly false :spacing 6
+      (for t in themes_icon
+        (theme-row :name {t.name} :selected {t.selected}
+          :onclick `~/.config/hypr/scripts/appearance.sh set-icon "${t.name}" && eww update icon_cur="${t.name}" themes_icon="$(~/.config/hypr/scripts/appearance.sh list-icon)"`)))))
+
+;; ── Submenu: Hyprland (gaps, blur, opacidad, animaciones, bordes) ──
+(defwidget aj-hypr []
+  (scroll :vscroll true :hscroll false :height 560
+    (box :orientation "v" :space-evenly false :spacing 16
+      (box :class "perso-section" :orientation "v" :space-evenly false :spacing 16
+        (aj-slider :label "Gaps exterior"     :key "gaps_out"    :val {hypr_t.gaps_out}    :min 0 :max 40)
+        (aj-slider :label "Gaps interior"     :key "gaps_in"     :val {hypr_t.gaps_in}     :min 0 :max 30)
+        (aj-slider :label "Grosor borde"      :key "border_size" :val {hypr_t.border_size} :min 0 :max 8)
+        (aj-slider :label "Redondeo esquinas" :key "rounding"    :val {hypr_t.rounding}    :min 0 :max 30)
+        (aj-slider :label "Tamaño blur"       :key "blur_size"   :val {hypr_t.blur_size}   :min 0 :max 20)
+        (aj-slider :label "Opacidad activa"   :key "active_opacity"   :val {hypr_t.active_opacity}   :min 20 :max 100)
+        (aj-slider :label "Opacidad inactiva" :key "inactive_opacity" :val {hypr_t.inactive_opacity} :min 20 :max 100))
+      (box :orientation "v" :space-evenly false :spacing 8
+        (aj-toggle :label "Blur" :on {hypr_t.blur_enabled}
+          :onclick `~/.config/hypr/scripts/hypr_tweak.sh set blur_enabled ${hypr_t.blur_enabled == 1 ? 0 : 1} && eww update hypr_t="$(~/.config/hypr/scripts/hypr_tweak.sh get)"`)
+        (aj-toggle :label "Animaciones" :on {hypr_t.animations}
+          :onclick `~/.config/hypr/scripts/hypr_tweak.sh set animations ${hypr_t.animations == 1 ? 0 : 1} && eww update hypr_t="$(~/.config/hypr/scripts/hypr_tweak.sh get)"`))
+      (box :class "perso-section" :orientation "v" :space-evenly false :spacing 8
+        (label :class "perso-sub" :halign "start" :text "Color del borde activo")
+        (box :space-evenly true :spacing 6
+          (border-swatch :name "Morado" :grad "rgba(d946efff) rgba(f472b6ff) 90deg" :css "linear-gradient(90deg, #d946ef, #f472b6)")
+          (border-swatch :name "Rosa"   :grad "rgba(ec4899ff) rgba(f9a8d4ff) 90deg" :css "linear-gradient(90deg, #ec4899, #f9a8d4)")
+          (border-swatch :name "Cian"   :grad "rgba(22d3eeff) rgba(0ea5e9ff) 90deg" :css "linear-gradient(90deg, #22d3ee, #0ea5e9)"))
+        (box :space-evenly true :spacing 6
+          (border-swatch :name "Verde" :grad "rgba(34d399ff) rgba(10b981ff) 90deg" :css "linear-gradient(90deg, #34d399, #10b981)")
+          (border-swatch :name "Oro"   :grad "rgba(fbbf24ff) rgba(f59e0bff) 90deg" :css "linear-gradient(90deg, #fbbf24, #f59e0b)")
+          (border-swatch :name "Arco"  :grad "rgba(d946efff) rgba(22d3eeff) rgba(34d399ff) 90deg" :css "linear-gradient(90deg, #d946ef, #22d3ee, #34d399)")))
+      (button :class "wp-browse" :onclick `~/.config/eww/scripts/conf_open.sh hypr &`
+        (box :space-evenly false :spacing 8 :halign "center"
+          (label :text "󰨞") (label :text "Editar hyprland.conf (VSCode)"))))))
+
+;; ── Submenu: Cursor ──
+(defwidget aj-cursor []
+  (box :orientation "v" :space-evenly false :spacing 12
+    (box :class "perso-section" :orientation "v" :space-evenly false :spacing 6
+      (box :space-evenly false
+        (label :class "perso-sub" :hexpand true :halign "start" :text "Tamaño del cursor")
+        (label :class "val-badge" :text "${cursor_size}px"))
+      (scale :hexpand true :min 12 :max 64 :value cursor_size
+             :onchange "~/.config/hypr/scripts/appearance.sh set-cursor-size {}"))
+    (scroll :vscroll true :hscroll false :height 430
+      (box :orientation "v" :space-evenly false :spacing 6
+        (for t in cursors
+          (theme-row :name {t.name} :selected {t.selected}
+            :onclick `~/.config/hypr/scripts/appearance.sh set-cursor "${t.name}" && eww update cursor_cur="${t.name}" cursors="$(~/.config/hypr/scripts/appearance.sh list-cursor)"`))))))
+
+;; ── Submenu: Fuentes ──
+(defwidget aj-fonts []
+  (box :orientation "v" :space-evenly false :spacing 12
+    (box :class "perso-section" :orientation "v" :space-evenly false :spacing 6
+      (box :space-evenly false
+        (label :class "perso-sub" :hexpand true :halign "start" :text "Tamaño fuente (kitty)")
+        (label :class "val-badge" :text kitty_fs))
+      (scale :hexpand true :min 6 :max 28 :value kitty_fs
+             :onchange "~/.config/hypr/scripts/kitty_set.sh font {}"))
+    (label :class "perso-sub" :halign "start" :text "Fuente del sistema")
+    (scroll :vscroll true :hscroll false :height 410
+      (box :orientation "v" :space-evenly false :spacing 6
+        (for t in fonts
+          (theme-row :name {t.name} :selected {t.selected}
+            :onclick `~/.config/hypr/scripts/appearance.sh set-font "${t.name}" && eww update font_cur="${t.name}" fonts="$(~/.config/hypr/scripts/appearance.sh list-font)"`))))))
+
+;; ── Submenu: eww (paleta de colores + ventanas) ──
+(defwidget aj-eww []
+  (scroll :vscroll true :hscroll false :height 560
+    (box :orientation "v" :space-evenly false :spacing 14
+      (box :class "perso-section" :orientation "v" :space-evenly false :spacing 8
+        (label :class "perso-sub" :halign "start" :text "Paletas predefinidas")
+        (box :space-evenly true :spacing 6
+          (for p in eww_presets
+            (button :class "chip"
+                    :onclick `~/.config/eww/scripts/eww_color.sh preset ${p} && eww update ewwcols="$(~/.config/eww/scripts/eww_color.sh get)"`
+              {p}))))
+      (box :class "perso-section" :orientation "v" :space-evenly false :spacing 6
+        (label :class "perso-sub" :halign "start" :text "Colores (click = elegir)")
+        (color-row :key "bg"      :label "Fondo"       :hex {ewwcols.bg})
+        (color-row :key "bg_cell" :label "Fondo celda" :hex {ewwcols.bg_cell})
+        (color-row :key "surface" :label "Superficie"  :hex {ewwcols.surface})
+        (color-row :key "accent"  :label "Acento"      :hex {ewwcols.accent})
+        (color-row :key "accent2" :label "Acento 2"    :hex {ewwcols.accent2})
+        (color-row :key "fg"      :label "Texto"       :hex {ewwcols.fg})
+        (color-row :key "fg_dim"  :label "Texto tenue" :hex {ewwcols.fg_dim})
+        (color-row :key "lila"    :label "Lila"        :hex {ewwcols.lila}))
+      (box :class "perso-section" :orientation "v" :space-evenly false :spacing 6
+        (label :class "perso-sub" :halign "start" :text "Ventanas eww")
+        (for win in ewwwins
+          (box :class "conf-item" :space-evenly false :spacing 8
+            (label :class "conf-name" :hexpand true :halign "start" :text {win.name})
+            (button :class "mini-btn" :onclick `eww open --toggle ${win.name}` "󰈈")
+            (button :class "mini-btn" :onclick `~/.config/eww/scripts/conf_open.sh eww &` "󰨞")))))))
+
+;; ── Submenu: Configuraciones (lista dinamica de `conf --list`) ──
+(defwidget aj-confs []
+  (scroll :vscroll true :hscroll false :height 540
+    (box :orientation "v" :space-evenly false :spacing 6
+      (for c in confs
+        (button :class "conf-item" :onclick `eww update view=conf conf_sel="${c.name}"`
+          (box :space-evenly false :spacing 10
+            (label :class "conf-ico" :text "")
+            (label :class "conf-name" :hexpand true :halign "start" :text {c.name})
+            (label :class "conf-chev" :text "󰅂")))))))
+
+;; ── Detalle de un conf concreto (controles + editor) ──
+(defwidget aj-detail []
+  (box :orientation "v" :space-evenly false :spacing 16
+    ;; kitty: opacidad
+    (box :class "perso-section" :orientation "v" :space-evenly false :spacing 8
+         :visible {conf_sel == "kitty"}
+      (box :space-evenly false
+        (label :class "perso-sub" :hexpand true :halign "start" :text "Opacidad del fondo")
+        (label :class "val-badge" :text "${kitty_op}%"))
+      (scale :hexpand true :min 0 :max 100 :value kitty_op
+             :onchange "~/.config/hypr/scripts/kitty_opacity.sh {}"))
+
+    ;; sin controles rapidos (todo lo que no sea kitty)
+    (box :class "perso-section" :orientation "v" :space-evenly false :spacing 6
+         :visible {conf_sel != "kitty"}
+      (label :class "conf-empty" :wrap true :halign "start"
+             :text "Sin controles rapidos para «${conf_sel}». Usa el editor para cambios detallados."))
+
+    ;; Editar en VSCode (siempre)
+    (button :class "wp-browse" :onclick `~/.config/eww/scripts/conf_open.sh "${conf_sel}" &`
+      (box :space-evenly false :spacing 8 :halign "center"
+        (label :text "󰨞") (label :text "Editar en VSCode")))))
+
+;; ── Router del panel ──
+(defwidget perso []
+  (box :class "perso" :orientation "v" :space-evenly false :spacing 12
+    (box :class "perso-head" :space-evenly false
+      (button :class "perso-back" :visible {view != "home"}
+              :onclick `eww update view=${view == "conf" ? "confs" : "home"}` "󰁍")
+      (label :class "perso-title" :hexpand true :halign "start"
+             :text {view == "home"      ? "󰒓  Ajustes" :
+                    view == "wallpaper" ? "󰸉  Fondo de pantalla" :
+                    view == "gtk"       ? "󰏘  Tema GTK" :
+                    view == "icon"      ? "󰋩  Iconos" :
+                    view == "cursor"    ? "󰳽  Cursor" :
+                    view == "fonts"     ? "󰛖  Fuentes" :
+                    view == "hypr"      ? "  Hyprland" :
+                    view == "eww"       ? "󰕷  eww" :
+                    view == "confs"     ? "  Configuraciones" :
+                                          "  conf · ${conf_sel}"})
+      (button :class "perso-close" :onclick "eww close personalizacion" "󰅖"))
+    (box :visible {view == "home"}      (aj-home))
+    (box :visible {view == "wallpaper"} (aj-wallpaper))
+    (box :visible {view == "gtk"}       (aj-gtk))
+    (box :visible {view == "icon"}      (aj-icon))
+    (box :visible {view == "cursor"}    (aj-cursor))
+    (box :visible {view == "fonts"}     (aj-fonts))
+    (box :visible {view == "hypr"}      (aj-hypr))
+    (box :visible {view == "eww"}       (aj-eww))
+    (box :visible {view == "confs"}     (aj-confs))
+    (box :visible {view == "conf"}      (aj-detail))))
+
+;; ─── Ventanas ─────────────────────────────────────────────
+(defwindow dashboard
+  :monitor 0
+  :stacking "overlay"
+  :geometry (geometry :x "0px" :y "5px" :width "330px" :anchor "top right")
+  (dashboard))
+
+(defwindow calendario
+  :monitor 0
+  :stacking "overlay"
+  :geometry (geometry :x "829px" :y "0px" :anchor "top left")
+  (cal_widget))
+
+(defwindow sysmenu
+  :monitor 0
+  :stacking "overlay"
+  :geometry (geometry :x "5px" :y "5px" :width "300px" :anchor "top right")
+  ;; al sacar el raton del menu se cierra solo (sin tapar la pantalla)
+  (eventbox :onhoverlost "eww close sysmenu"
+    (sysmenu)))
+
+(defwindow personalizacion
+  :monitor 0
+  :stacking "overlay"
+  :geometry (geometry :x "5px" :y "5px" :width "560px" :anchor "top right")
+  (perso))

@@ -40,5 +40,17 @@ alias cat='bat'
 bindkey '\t' autosuggest-accept
 bindkey '^ ' expand-or-complete
 setopt AUTO_MENU
-eval "$(zoxide init zsh --cmd cd)"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Papelera recuperable (trash-cli) en vez de rm destructivo
+alias trash='trash-put'
+alias del='trash-put'
+alias tl='trash-list'
+alias tre='trash-restore'
+alias te='trash-empty'
+
+[ -f "$HOME/.zsh_secrets" ] && source "$HOME/.zsh_secrets"
+
+# zoxide init al FINAL del archivo (evita el warning del doctor)
+eval "$(zoxide init zsh --cmd cd)"
+

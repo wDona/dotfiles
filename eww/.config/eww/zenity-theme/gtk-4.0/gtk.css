@@ -1,0 +1,62 @@
+/* Tema morado solo para el zenity del calendario (cargado via XDG_CONFIG_HOME).
+   Paleta igual que eww/waybar/rofi. */
+
+window,
+.background,
+.view {
+  background-color: #140f1a;
+  color: #f0f0ff;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 14px;
+}
+
+headerbar,
+.titlebar {
+  background-color: #1c1228;
+  color: #f0f0ff;
+  border-bottom: 1px solid #2d1b4e;
+  box-shadow: none;
+}
+
+/* Area de texto editable */
+textview,
+textview text,
+scrolledwindow {
+  background-color: #1c1228;
+  color: #f0f0ff;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+textview text selection {
+  background-color: #d946ef;
+  color: #140f1a;
+}
+
+/* Botones */
+button {
+  background-image: none;
+  background-color: #2d1b4e;
+  color: #f0f0ff;
+  border: 1px solid #2d1b4e;
+  border-radius: 9px;
+  padding: 5px 16px;
+  margin: 4px;
+}
+
+button:hover {
+  background-color: #3a2566;
+}
+
+/* Boton Guardar (accion sugerida) */
+button.suggested-action,
+button.default {
+  background-color: #d946ef;
+  color: #140f1a;
+  border: 1px solid #d946ef;
+  font-weight: bold;
+}
+
+button.suggested-action:hover {
+  background-color: #ec4899;
+}

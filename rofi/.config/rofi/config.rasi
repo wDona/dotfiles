@@ -13,12 +13,13 @@ configuration {
     hover-select: true;
     me-select-entry: "";
     me-accept-entry: "MousePrimary";
+    kb-remove-word-back: "Alt+BackSpace";
 }
 
 //@theme "/dev/null"
 
 * {
-    bg-col:  #140f1a;
+    bg-col:  #140f1a80;
     bg-col-light: #1f1430;
     bg-input: #1c1228;
     border-col: #d946ef;

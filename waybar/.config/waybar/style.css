@@ -28,6 +28,16 @@ window#waybar {
     padding: 8px 14px;
 }
 
+/* Special "fullscreen" vacio: ocultar (GTK no soporta display:none, se colapsa) */
+#workspaces button.special.empty {
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    min-width: 0;
+    font-size: 0;
+    opacity: 0;
+}
+
 #workspaces button:hover {
     background: rgba(45, 27, 78, 0.2);
     border-color: rgba(217, 70, 239, 0.18);
@@ -41,7 +51,7 @@ window#waybar {
     box-shadow: 0 0 10px rgba(217, 70, 239, 0.15);
 }
 
-#pulseaudio, #cpu, #memory, #network {
+#pulseaudio, #cpu, #memory, #network, #custom-net {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
@@ -76,29 +86,46 @@ window#waybar {
     border-color: rgba(217, 70, 239, 0.6);
 }
 
-#pulseaudio { color: #ffd700; }
+#pulseaudio { color: #c9a0ff; }
 #cpu { color: #90ff90; }
 #memory { color: #c9a0ff; }
 #network { color: #ff9999; }
+#custom-net.online { color: #c9a0ff; }
+#custom-net.offline { color: #c9a0ff; }
+
+#custom-keyboard {
+    padding: 6px 12px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    color: #c9a0ff;
+    font-weight: 600;
+    transition: all 150ms ease;
+}
+#custom-keyboard:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
 
 #custom-power {
-    background: linear-gradient(135deg, rgba(217, 70, 239, 0.7), rgba(244, 114, 182, 0.5));
-    color: #fff;
+    background: rgba(45, 27, 78, 0.2);
+    color: #c9a0ff;
     border-radius: 12px;
-    padding: 6px 14px;
+    padding: 6px 12px;
     margin: 4px 4px;
     margin-right: 12px;
-    font-weight: bold;
     font-size: 18px;
-    border: 1px solid rgba(244, 114, 182, 0.6);
+    border: 1px solid rgba(217, 70, 239, 0.3);
     transition: all 150ms ease;
     min-width: 24px;
     min-height: 24px;
 }
 
 #custom-power:hover {
-    background: linear-gradient(135deg, rgba(217, 70, 239, 1), rgba(244, 114, 182, 0.8));
-    box-shadow: 0 0 15px rgba(217, 70, 239, 0.18);
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+    color: #ffffff;
 }
 
 #tray {
@@ -167,4 +194,66 @@ window#waybar {
 #custom-notification:hover {
     background: rgba(45, 27, 78, 0.3);
     border-color: rgba(217, 70, 239, 0.6);
+}
+
+/* Sin notis: campana atenuada */
+#custom-notification.none {
+    color: #8b8bb0;
+}
+
+/* Hay notis pero ya vistas: morado normal, sin alerta */
+#custom-notification.seen {
+    color: #c9a0ff;
+}
+
+/* Nuevas sin ver: solo el puntito del badge en la campana, sin recuadro */
+#custom-notification.new {
+    color: #c9a0ff;
+}
+
+/* Temporizador + boton hardware (drawer) */
+#custom-timer, #custom-hwtoggle {
+    padding: 6px 12px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    color: #c9a0ff;
+    transition: all 150ms ease;
+}
+#custom-timer.running {
+    color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.5);
+    background: rgba(255, 215, 0, 0.12);
+}
+#custom-timer.done {
+    color: #ec4899;
+    border-color: rgba(236, 72, 153, 0.7);
+    background: rgba(236, 72, 153, 0.18);
+}
+/* idle = sin temporizador: oculto (texto vacio, sin pill) */
+#custom-timer.idle {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    min-width: 0;
+}
+#custom-hwtoggle:hover, #custom-timer:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+/* el grupo no dibuja fondo propio */
+#hardware {
+    background: transparent;
+    border: none;
+}
+
+/* Musica: ancho fijo para que el scroll del titulo no mueva el centro */
+#custom-spotify {
+    margin: 4px 6px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    color: #c9a0ff;
+    font-weight: 500;
 }

@@ -10,6 +10,7 @@ declare -A CONFIGS=(
     [waybar]="$HOME/dotfiles/waybar/.config/waybar"
     [hypr]="$HOME/dotfiles/hypr/.config/hypr"
     [hyprland]="$HOME/dotfiles/hypr/.config/hypr"
+    [hyprlock]="$HOME/dotfiles/hypr/.config/hypr/hyprlock.conf"
     [kitty]="$HOME/dotfiles/kitty/.config/kitty"
     [starship]="$HOME/dotfiles/starship/.config/starship"
     [zsh]="$HOME/dotfiles/zsh/.zshrc"
@@ -21,11 +22,26 @@ declare -A CONFIGS=(
     [gsimplecal]="$HOME/dotfiles/gsimplecal/.config/gsimplecal"
     [xsettingsd]="$HOME/dotfiles/xsettingsd/.config/xsettingsd"
     [nwg-look]="$HOME/dotfiles/nwg-look/.config/nwg-look"
+    [eww]="$HOME/dotfiles/eww/.config/eww"
+    [swayosd]="$HOME/dotfiles/swayosd/.config/swayosd"
     [dotfiles]="$HOME/dotfiles"
 )
 
+CUSTOM_CONF_FILE="$HOME/.config/custom_confs"
+
+load_custom_confs() {
+    if [ -f "$CUSTOM_CONF_FILE" ]; then
+        while IFS='|' read -r alias path; do
+            [ -z "$alias" ] && continue
+            CONFIGS["$alias"]="$path"
+        done < "$CUSTOM_CONF_FILE"
+    fi
+}
+
+load_custom_confs
+
 # Sin argumentos, muestra los disponibles
-if [ -z "$1" ]; then
+if [ -z "$1" ] || [ "$1" = "--help" ]; then
     echo "Uso: conf.sh [programa]"
     echo ""
     echo "Programas disponibles:"
@@ -35,10 +51,24 @@ if [ -z "$1" ]; then
     exit 0
 fi
 
+# Output JSON para eww/integración
+if [ "$1" = "--list" ]; then
+    echo "{"
+    first=1
+    for key in $(echo "${!CONFIGS[@]}" | tr ' ' '\n' | sort); do
+        [ $first -eq 0 ] && echo ","
+        echo -n "  \"$key\": \"${CONFIGS[$key]}\""
+        first=0
+    done
+    echo ""
+    echo "}"
+    exit 0
+fi
+
 TARGET="${CONFIGS[$1]}"
 
 if [ -z "$TARGET" ]; then
-    echo "✗ '$1' no encontrado. Ejecuta 'conf.sh' sin argumentos para ver los disponibles."
+    echo "✗ '$1' no encontrado. Ejecuta 'conf' sin argumentos para ver los disponibles."
     exit 1
 fi
 

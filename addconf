@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# =============================================================================
+# addconf - Agrega configuraciones nuevas al comando conf
+# Uso: addconf [alias] [ruta]
+# Ejemplo: addconf firefox /home/user/.config/firefox
+# =============================================================================
+
+CUSTOM_CONF_FILE="$HOME/.config/custom_confs"
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Uso: addconf [alias] [ruta]"
+    echo "Ejemplo: addconf firefox /home/user/.config/firefox"
+    exit 1
+fi
+
+ALIAS="$1"
+PATH="$2"
+
+if [ ! -e "$PATH" ]; then
+    echo "✗ Ruta no existe: $PATH"
+    exit 1
+fi
+
+# Crea archivo si no existe
+touch "$CUSTOM_CONF_FILE"
+
+# Revisa si alias ya existe
+if grep -q "^$ALIAS|" "$CUSTOM_CONF_FILE" 2>/dev/null; then
+    echo "⚠ Alias '$ALIAS' ya existe. Reemplazando..."
+    grep -v "^$ALIAS|" "$CUSTOM_CONF_FILE" > "$CUSTOM_CONF_FILE.tmp"
+    mv "$CUSTOM_CONF_FILE.tmp" "$CUSTOM_CONF_FILE"
+fi
+
+# Agrega nueva entrada
+echo "$ALIAS|$PATH" >> "$CUSTOM_CONF_FILE"
+echo "✓ Alias '$ALIAS' agregado -> $PATH"

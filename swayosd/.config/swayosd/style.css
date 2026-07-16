@@ -1,0 +1,35 @@
+/* swayosd - tema morado translucido (a juego con waybar/rofi). */
+window#osd {
+  border-radius: 18px;
+  border: 1px solid rgba(217, 70, 239, 0.45);
+  background: rgba(20, 15, 26, 0.78); }
+  window#osd #container {
+    margin: 16px; }
+  window#osd image,
+  window#osd label {
+    color: #f0f0ff; }
+  window#osd progressbar:disabled,
+  window#osd image:disabled {
+    opacity: 0.5; }
+  window#osd progressbar,
+  window#osd segmentedprogress {
+    min-height: 8px;
+    border-radius: 999px;
+    background: transparent;
+    border: none; }
+  window#osd trough,
+  window#osd segment {
+    min-height: inherit;
+    border-radius: inherit;
+    border: none;
+    background: rgba(45, 27, 78, 0.6); }
+  window#osd progress,
+  window#osd segment.active {
+    min-height: inherit;
+    border-radius: inherit;
+    border: none;
+    background: #d946ef; }
+  window#osd segment {
+    margin-left: 8px; }
+    window#osd segment:first-child {
+      margin-left: 0; }
