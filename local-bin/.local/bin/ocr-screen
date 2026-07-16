@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# OCR de región: congela, seleccionas área, el texto va al portapapeles.
+set -euo pipefail
+
+img=$(mktemp --suffix=.png)
+trap 'rm -f "$img"' EXIT
+
+# --freeze para no capturar overlay (igual que tus screenshots)
+if command -v grimblast >/dev/null 2>&1; then
+  grimblast --freeze save area "$img" || exit 0
+else
+  grim -g "$(slurp)" "$img" || exit 0
+fi
+
+text=$(tesseract "$img" - -l spa+eng 2>/dev/null || true)
+
+if [ -n "${text//[[:space:]]/}" ]; then
+  printf '%s' "$text" | wl-copy
+  notify-send "OCR" "Texto copiado al portapapeles" -t 2000
+else
+  notify-send "OCR" "No se detectó texto" -t 2000
+fi

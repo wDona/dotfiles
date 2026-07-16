@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Volumen con barra SwayOSD SOLO en el monitor con foco.
+# Fallback a wpctl si swayosd no esta instalado/corriendo.
+mon=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused) | .name')
+m=${mon:+--monitor $mon}
+
+case "${1:-}" in
+  up)   swayosd-client $m --output-volume raise --max-volume 100 || wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ ;;
+  down) swayosd-client $m --output-volume lower || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
+  mute) swayosd-client $m --output-volume mute-toggle || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+esac

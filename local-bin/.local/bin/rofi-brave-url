@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Launcher de URLs con autocompletado del historial de Brave.
+#  - Escribe y autocompleta segun historial (matchea url Y titulo).
+#  - Enter en una entrada -> abre en Brave.
+#  - Texto libre con punto y sin espacios -> lo abre como URL.
+#  - Texto libre normal -> busqueda Google.
+#  - Alt+Supr sobre una entrada -> la oculta (blocklist propia, no toca Brave).
+set -euo pipefail
+
+PROFILE="$HOME/.config/BraveSoftware/Brave-Browser/Default"
+BLOCK="$HOME/.config/rofi/brave-url-block.txt"
+SEP=" ┃ "
+mkdir -p "$(dirname "$BLOCK")"; touch "$BLOCK"
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# Brave bloquea la BD -> copiamos History (+ wal/shm) y consultamos la copia.
+cp "$PROFILE/History" "$tmp/History" 2>/dev/null || { notify-send "Brave URL" "No se pudo leer el historial"; exit 1; }
+cp "$PROFILE/History-wal" "$tmp/" 2>/dev/null || true
+cp "$PROFILE/History-shm" "$tmp/" 2>/dev/null || true
+
+# "titulo ┃ url" ordenado por frecuencia, sin blocklist.
+list=$(sqlite3 -separator "$SEP" "$tmp/History" \
+  "SELECT COALESCE(NULLIF(title,''), url), url FROM urls
+   WHERE url NOT LIKE 'chrome%' ORDER BY visit_count DESC, last_visit_time DESC LIMIT 800;" 2>/dev/null \
+  | grep -vxFf "$BLOCK" 2>/dev/null || true)
+
+ret=0
+out=$(printf '%s\n' "$list" \
+  | rofi -dmenu -i -p "  Brave" \
+         -kb-custom-1 "Alt+Delete" \
+         -mesg "Enter: abrir · Alt+Supr: ocultar entrada") || ret=$?
+
+[ -z "${out:-}" ] && exit 0
+
+# Shift+Supr -> ocultar entrada del listado
+if [ "$ret" -eq 10 ]; then
+  printf '%s\n' "$out" >> "$BLOCK"
+  notify-send "Brave URL" "Entrada oculta del listado"
+  exec "$0"
+fi
+
+# Es entrada del historial si contiene el separador -> la url es el ultimo campo
+if printf '%s' "$out" | grep -qF "$SEP"; then
+  target="${out##* ┃ }"
+elif printf '%s' "$out" | grep -qE '^[^ ]+\.[^ ]+'; then
+  case "$out" in
+    http://*|https://*) target="$out" ;;
+    *) target="https://$out" ;;
+  esac
+else
+  target="https://www.google.com/search?q=$(printf '%s' "$out" | sed 's/ /+/g')"
+fi
+
+setsid brave "$target" >/dev/null 2>&1 &
