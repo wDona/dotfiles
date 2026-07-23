@@ -54,23 +54,21 @@ sudo pacman -S git stow
 git clone https://github.com/tuusuario/dotfiles.git ~/dotfiles
 ```
 
-### 3. Ejecuta el script de stow
+### 3. Bootstrap (paquetes + symlinks + gestion de energia)
 
 ```bash
-chmod +x ~/dotfiles/scripts/stow-setup.sh
-~/dotfiles/scripts/stow-setup.sh
+chmod +x ~/dotfiles/bootstrap.sh
+~/dotfiles/bootstrap.sh
 ```
 
-El script recorre automáticamente todas las carpetas del repositorio, elimina los archivos de configuración existentes que no sean symlinks y crea los symlinks con stow.
+Instala paquetes oficiales y AUR (`scripts/install.sh`), enlaza toda la config
+con stow (`scripts/stow-setup.sh`), instala `gcalcli` (Google Calendar del
+panel eww) y activa `power-profiles-daemon` si detecta bateria
+(`/sys/class/power_supply/BAT*`) — el panel de bateria de eww cambia de
+perfil (rendimiento/equilibrado/ahorro) via su D-Bus.
 
-### 4. Instalar TODAS mis aplicaciones (opcional, si no las tienes)
-### Cuidado 
-El siguiente script instala ABSOLUTAMENTE TODO lo que me he instalado. Mi recomendacion es que instales a mano lo que necesites o que le pidas a una IA que te diga los comandos para instalar lo justo y necesario desde mis archivos/scripts. 
-
-```bash
-chmod +x ~/dotfiles/scripts/install.sh
-~/dotfiles/scripts/install.sh
-```
+Si prefieres instalar solo lo que necesitas a mano, usa `scripts/stow-setup.sh`
+y `scripts/install.sh` por separado (mismo contenido, sin activar el daemon de energia).
 
 ### 5. Instala Oh My Zsh
 

@@ -396,6 +396,52 @@ $lila: #c9a0ff;
 }
 
 // ══════════════════════════════════════════════════════════
+// ─── MENU BATERIA (perfiles de energia) ───────────────────
+// ══════════════════════════════════════════════════════════
+.batmenu {
+  background-color: rgba(20, 15, 26, 0.96);
+  border: 2px solid $accent;
+  border-top: 2px solid rgba(217, 70, 239, 0.4);
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding: 14px;
+}
+.bat-title {
+  color: $accent2;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.bat-item {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 70, 239, 0.18);
+  padding: 10px 12px;
+  &:hover { background-color: $surface; }
+  &.sel {
+    border: 2px solid $accent;
+    background-color: rgba(217, 70, 239, 0.12);
+  }
+}
+.bat-ico {
+  color: $accent;
+  font-size: 16px;
+  margin-right: 4px;
+}
+.bat-lbl {
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+}
+.bat-check {
+  color: $accent2;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+// ══════════════════════════════════════════════════════════
 // ─── PERSONALIZACION (fondo de pantalla) ──────────────────
 // ══════════════════════════════════════════════════════════
 .perso {

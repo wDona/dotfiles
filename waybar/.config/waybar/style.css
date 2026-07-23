@@ -128,6 +128,43 @@ window#waybar {
     color: #ffffff;
 }
 
+#custom-battery {
+    padding: 6px 12px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    color: #c9a0ff;
+    transition: all 150ms ease;
+}
+#custom-battery.none {
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    min-width: 0;
+}
+#custom-battery:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+#custom-battery.charging {
+    color: #7ee787;
+    border-color: rgba(126, 231, 135, 0.5);
+    background: rgba(126, 231, 135, 0.12);
+    animation: battery-charge-pulse 1.6s ease-in-out infinite;
+}
+@keyframes battery-charge-pulse {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+#custom-battery.critical {
+    color: #ff5c5c;
+    border-color: rgba(255, 92, 92, 0.6);
+    background: rgba(255, 92, 92, 0.14);
+}
+
 #tray {
     margin: 4px 4px;
     padding: 4px 10px;

@@ -6,4 +6,4 @@ tm="$2"
 cy=$(date +%Y)
 cm=$(date +%-m)
 off=$(((ty - cy) * 12 + (tm - cm)))
-exec "$HOME/.config/eww/scripts/nav.sh" "$off"
+bash "$HOME/.config/eww/scripts/nav.sh" "$off"

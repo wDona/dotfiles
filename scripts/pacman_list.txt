@@ -45,6 +45,7 @@ nwg-look
 orchis-theme
 os-prober
 papirus-icon-theme
+python-gobject
 pavucontrol
 pipewire-alsa
 pipewire-pulse
@@ -60,6 +61,7 @@ sddm-kcm
 seahorse
 slurp
 starship
+python-pipx
 steam
 stow
 sudo

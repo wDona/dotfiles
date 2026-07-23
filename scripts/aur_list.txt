@@ -1,6 +1,7 @@
 android-studio
 brave-bin
 caesium-image-compressor-bin
+catppuccin-cursors-mocha
 carapace-bin
 fzf-tab-git
 google-chrome
