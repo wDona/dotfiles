@@ -10,16 +10,33 @@
 desc=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused==true) | .description')
 [ -z "$desc" ] && desc=$(hyprctl monitors -j 2>/dev/null | jq -r '.[0].description')
 
-# Modelos GDK conocidos por eww (una por linea, sin el "[N] ")
-gdk=$(eww open dashboard --screen __nope__ 2>&1 | grep -oP '^\s*\[[0-9]+\]\s+\K.+')
+# Modelos GDK conocidos por eww (una por linea, sin el "[N] "). Se cachea:
+# pedirlo cuesta abrir una ventana falsa y parsear el error (~80ms). Si el
+# monitor actual no aparece en la cache (p.ej. lo acabas de conectar en
+# caliente), se descarta y se repite fresco una vez (autocurativo).
+CACHE="$HOME/.cache/eww_gdk_monitors"
 
-while IFS= read -r m; do
-    [ -z "$m" ] && continue
-    if [[ "$desc" == *"$m"* ]]; then
-        echo "$m"
-        exit 0
-    fi
-done <<< "$gdk"
+fetch_fresh() {
+    eww open dashboard --screen __nope__ 2>&1 | grep -oP '^\s*\[[0-9]+\]\s+\K.+'
+}
+
+match() {
+    local list="$1" m
+    while IFS= read -r m; do
+        [ -z "$m" ] && continue
+        [[ "$desc" == *"$m"* ]] && { echo "$m"; return 0; }
+    done <<< "$list"
+    return 1
+}
+
+if [ -s "$CACHE" ]; then
+    gdk=$(cat "$CACHE")
+    match "$gdk" && exit 0
+fi
+
+gdk=$(fetch_fresh)
+printf '%s\n' "$gdk" > "$CACHE"
+match "$gdk" && exit 0
 
 # Fallback: primer monitor GDK
 echo "0"

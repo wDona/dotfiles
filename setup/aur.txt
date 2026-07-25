@@ -1,0 +1,12 @@
+brave-bin
+carapace-bin
+catppuccin-cursors-mocha
+eww
+fzf-tab-git
+grimblast-git
+hyprpolkit-agent
+mpvpaper
+sddm-astronaut-theme
+sddm-sugar-candy-git
+tela-circle-icon-theme-git
+visual-studio-code-bin

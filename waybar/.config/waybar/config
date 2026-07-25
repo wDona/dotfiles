@@ -19,6 +19,7 @@
     "modules-right": [
         "custom/weather",
         "custom/timer",
+        "custom/battery",
         "pulseaudio",
         "tray",
         "privacy",
@@ -91,6 +92,15 @@
         "format": "󰒓",
         "on-click": "~/.config/eww/scripts/toggle_sysmenu.sh",
         "tooltip": false
+    },
+    "custom/battery": {
+        "exec": "~/.config/waybar/scripts/battery.sh",
+        "return-type": "json",
+        "interval": 5,
+        "signal": 11,
+        "format": "{}",
+        "tooltip": true,
+        "on-click": "~/.config/eww/scripts/toggle_batmenu.sh"
     },
     "custom/spotify": {
         "exec": "~/.config/waybar/scripts/mediaplayer.sh",

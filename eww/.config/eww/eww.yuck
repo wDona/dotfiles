@@ -59,7 +59,7 @@
 (defwidget cal_day [d]
   (button :class "cal-cell ${d.today ? "today" : ""} ${d.dim ? "dim" : ""} ${d.date == cal_selected ? "selected" : ""} ${d.event ? "has-event" : ""}"
           :onclick "~/.config/eww/scripts/select.sh ${d.date}"
-          :onrightclick "~/.config/eww/scripts/note_edit.sh ${cal_offset} ${d.date} &"
+          :onrightclick "setsid -f ~/.config/eww/scripts/note_edit.sh ${cal_offset} ${d.date} >/dev/null 2>&1"
     (overlay
       (label :class "cal-num" :halign "center" :valign "center"
              :hexpand true :vexpand true :text {d.day})
@@ -108,7 +108,7 @@
 
     ;; Boton Hoy
     (box :class "cal-actions" :space-evenly false :halign "center"
-      (button :class "cal-today" :onclick "~/.config/eww/scripts/nav.sh 0 && eww update cal_picker=\"none\" cal_selected=\"\" event_input=\"\"" "Hoy"))
+      (button :class "cal-today" :onclick "setsid -f ~/.config/eww/scripts/today.sh >/dev/null 2>&1" "Hoy"))
 
     ;; Eventos del dia seleccionado (varios). Cada uno con su ✕ para borrar.
     (revealer :transition "slidedown" :reveal {cal_selected != ""} :duration "150ms"
@@ -126,7 +126,7 @@
           (evrow :show sev7_show :text sev7_text :off cal_offset :date cal_selected))
         (box :class "note-buttons" :space-evenly true :spacing 6
           (button :class "note-save"
-                  :onclick "~/.config/eww/scripts/note_edit.sh ${cal_offset} ${cal_selected} &"
+                  :onclick "setsid -f ~/.config/eww/scripts/note_edit.sh ${cal_offset} ${cal_selected} >/dev/null 2>&1"
                   "+ Evento")
           (button :class "note-close"
                   :onclick "eww update cal_selected=\"\""
@@ -141,6 +141,8 @@
 (defpoll ddate :interval "300s" "date +'%A, %d %B'")
 (defpoll kbinfo    :interval "1s" :initial "{\"text\":\"\"}" "~/.config/waybar/scripts/kb_switch.sh status")
 (defpoll timerinfo :interval "1s" :initial "{\"text\":\"\",\"class\":\"idle\"}" "/home/wdona/.config/waybar/scripts/timer.sh status")
+(defpoll power_profile :interval "3s" :initial "balanced" "~/.config/eww/scripts/get_profile.sh")
+(defpoll brightness_pct :interval "2s" :initial 50 "~/.config/eww/scripts/get_brightness.sh")
 
 ;; Fila: icono + nombre a la izq, valor a la der, barra de uso debajo (opcional)
 (defwidget statrow [icon name val color ?pct ?show]
@@ -217,12 +219,39 @@
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰔛")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Temporizador")
-          (label :class "sm-sub" :text {timerinfo.class == "idle" ? "" : timerinfo.text}))))
+          (label :class "sm-sub" :text {timerinfo.class == "idle" ? "" : timerinfo.text})))
+      (box :class "sm-item" :orientation "v" :space-evenly false :spacing 6
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰃟")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Brillo")
+          (label :class "val-badge" :text "${brightness_pct}%"))
+        (scale :hexpand true :min 1 :max 100 :value brightness_pct
+               :onchange "~/.config/eww/scripts/set_brightness.sh {}")))
     (box :class "sm-sep")
     (box :class "sm-power" :space-evenly true :spacing 8
       (button :class "sm-pwr poweroff" :tooltip "Apagar"        :onclick "eww close sysmenu & systemctl poweroff"   "󰐥")
       (button :class "sm-pwr reboot"   :tooltip "Reiniciar"     :onclick "eww close sysmenu & systemctl reboot"     "󰜉")
       (button :class "sm-pwr logout"   :tooltip "Cerrar sesion" :onclick "eww close sysmenu & hyprctl dispatch exit" "󰍃"))))
+
+
+;; ══════════════════════════════════════════════════════════
+;; ─── MENU BATERIA (perfiles de energia) ───────────────────
+;; ══════════════════════════════════════════════════════════
+;; Fila de perfil seleccionable (reusa el patron de theme-row)
+(defwidget bat-item [icon label profile]
+  (button :class {power_profile == profile ? "bat-item sel" : "bat-item"}
+          :onclick "~/.config/eww/scripts/set_profile.sh ${profile}"
+    (box :space-evenly false :spacing 10
+      (label :class "bat-ico" :text icon)
+      (label :class "bat-lbl" :hexpand true :halign "start" :text label)
+      (label :class "bat-check" :text {power_profile == profile ? "󰄬" : ""}))))
+
+(defwidget batmenu []
+  (box :class "batmenu" :orientation "v" :space-evenly false :spacing 8
+    (label :class "bat-title" :halign "start" :text "Modo de rendimiento")
+    (bat-item :icon "󰓅" :label "Rendimiento" :profile "performance")
+    (bat-item :icon "󰾅" :label "Equilibrado"  :profile "balanced")
+    (bat-item :icon "󰾆" :label "Ahorro de bateria" :profile "power-saver")))
 
 
 ;; ══════════════════════════════════════════════════════════
@@ -490,7 +519,7 @@
 (defwindow calendario
   :monitor 0
   :stacking "overlay"
-  :geometry (geometry :x "829px" :y "0px" :anchor "top left")
+  :geometry (geometry :x "829px" :y "0px" :width "346px" :height "580px" :anchor "top left")
   (cal_widget))
 
 (defwindow sysmenu
@@ -500,6 +529,15 @@
   ;; al sacar el raton del menu se cierra solo (sin tapar la pantalla)
   (eventbox :onhoverlost "eww close sysmenu"
     (sysmenu)))
+
+(defwindow batmenu
+  :monitor 0
+  :stacking "overlay"
+  ;; desplazado a la derecha para caer bajo el icono de bateria (a la
+  ;; izquierda de pulseaudio/tray/custom-power en modules-right)
+  :geometry (geometry :x "140px" :y "5px" :width "230px" :anchor "top right")
+  (eventbox :onhoverlost "eww close batmenu"
+    (batmenu)))
 
 (defwindow personalizacion
   :monitor 0
