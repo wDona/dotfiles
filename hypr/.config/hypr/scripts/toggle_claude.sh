@@ -6,6 +6,7 @@
 # Terminales IntelliJ flotantes se mueven junto con Claude.
 CLASS=claude-term
 HIDE=special:claudehide
+HIDE_NAME=claudehide
 INTEL_CLASS="jetbrains-idea"
 INTEL_TITLE="Terminal"
 
@@ -15,6 +16,15 @@ addr=$(echo "$data" | jq -r ".[] | select(.class==\"$CLASS\") | .address" | head
 # Buscar terminales flotantes de IntelliJ
 get_intel_terminals() {
     echo "$data" | jq -r ".[] | select(.class==\"$INTEL_CLASS\" and .title==\"$INTEL_TITLE\") | .address"
+}
+
+# El stash tiene que estar SIEMPRE oculto: mientras un special esta desplegado en
+# el monitor, Hyprland abre dentro de el cualquier ventana nueva. En claudehide
+# solo deben vivir Claude y las terminales de IntelliJ, asi que se cierra tras
+# cada toggle (idempotente: no hace nada si ya estaba oculto).
+close_stash() {
+    [ "$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .specialWorkspace.name')" = "$HIDE" ] \
+        && hyprctl dispatch togglespecialworkspace "$HIDE_NAME"
 }
 
 if [ -z "$addr" ] || [ "$addr" = "null" ]; then
@@ -45,3 +55,5 @@ else
         fi
     done
 fi
+
+close_stash

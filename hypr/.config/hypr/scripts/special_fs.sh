@@ -34,5 +34,5 @@ echo "$cur" > "/tmp/hypr_fs/$active"
 
 # Manda la activa al special, lo muestra y la pone fullscreen
 hyprctl dispatch movetoworkspacesilent "$SP,address:$active"
-hyprctl dispatch togglespecialworkspace
+hyprctl dispatch togglespecialworkspace "$SP"
 hyprctl dispatch fullscreen 0
