@@ -1,0 +1,43 @@
+# =============================================================================
+# deps.txt - Lo que los configs de este repo REALMENTE ejecutan.
+#
+# No es un volcado de "lo que tengo instalado" (eso es packages.txt, generado
+# con pacman -Qqen y lleno de cosas que solo instale una vez para probar).
+# Aqui solo entra un paquete si algun config o script lo invoca: al lado de
+# cada uno esta el fichero que lo llama. Si no puedes escribir esa columna,
+# no va en esta lista.
+#
+# Formato: un paquete por linea. Los comentarios se filtran en bootstrap.sh.
+# =============================================================================
+
+# --- Notificaciones y sonido -------------------------------------------------
+libnotify              # notify-send: battery_notify.sh, timer.sh, y ~15 scripts mas
+libpulse               # paplay: swaync/notif_sound.sh
+playerctl              # waybar modulo custom/media, mediaplayer.sh, spotify_vol.sh
+
+# --- Panel de eww / waybar ---------------------------------------------------
+lm_sensors             # sensors -j: eww/scripts/sysinfo.sh (temperatura CPU/GPU)
+iproute2               # ip: eww/scripts/sysinfo.sh (IP y trafico de red)
+iputils                # ping: waybar/scripts/net_status.sh, eww/scripts/toggle_weather.sh
+glib2                  # gdbus/gsettings: battery.sh, get_profile.sh, appearance.sh
+curl                   # eww/scripts/weather.sh
+
+# --- Fondo de pantalla y capturas --------------------------------------------
+ffmpeg                 # hypr/scripts/wallpaper.sh: primer frame de fondos en video
+imagemagick            # magick: hypr/scripts/wallpaper.sh, miniaturas del selector
+zenity                 # hypr/scripts/wallpaper.sh: dialogo de seleccion de fichero
+gpu-screen-recorder    # hypr/conf.d/keybinds.conf: grabacion de pantalla
+tesseract              # local-bin/ocr-screen
+tesseract-data-spa     # ocr-screen usa -l spa+eng: sin los datos no reconoce nada
+tesseract-data-eng     # idem
+
+# --- Lanzador de rofi --------------------------------------------------------
+sqlite                 # sqlite3: rofi-brave-url y launch_rofi.sh leen el historial de Brave
+gtk3                   # gtk-launch: launch_rofi.sh arranca los .desktop
+fontconfig             # fc-list: hypr/scripts/appearance.sh lista las fuentes
+
+# --- Dotfiles ----------------------------------------------------------------
+stow                   # gestiona los symlinks de $HOME (ver README)
+
+# --- Integracion con el movil ------------------------------------------------
+kdeconnect             # kdeconnectd, arrancado desde hypr/conf.d/exec.conf

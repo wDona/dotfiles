@@ -39,7 +39,11 @@ fi
 
 # -- 2. Paquetes oficiales ---------------------------------------------------
 step "Paquetes oficiales (pacman)"
-pacman -Syu --needed --noconfirm - < "$SETUP/packages.txt"
+# deps.txt = lo que los configs ejecutan de verdad (obligatorio).
+# packages.txt = volcado de pacman -Qqen, el resto del entorno (comodidad).
+grep -vE '^\s*(#|$)' "$SETUP/deps.txt" | awk '{print $1}' \
+    | pacman -Syu --needed --noconfirm -
+pacman -S --needed --noconfirm - < "$SETUP/packages.txt"
 
 # -- 3. yay + AUR ------------------------------------------------------------
 step "yay (helper de AUR)"
