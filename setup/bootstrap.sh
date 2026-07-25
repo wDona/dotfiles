@@ -37,6 +37,13 @@ if ! grep -q '^\[multilib\]' /etc/pacman.conf; then
     printf '\n[multilib]\nInclude = /etc/pacman.d/mirrorlist\n' >> /etc/pacman.conf
 fi
 
+# Con una linea lenta, pacman aborta la transaccion entera ("Operation too
+# slow") si una descarga baja de 1 byte/s 10 segundos seguidos. En un -Syu de
+# 1 GB con kernel y jdk eso pasa constantemente y no se llega a instalar nada.
+if ! grep -q '^DisableDownloadTimeout' /etc/pacman.conf; then
+    sed -i '/^\[options\]/a DisableDownloadTimeout' /etc/pacman.conf
+fi
+
 # -- 2. Paquetes oficiales ---------------------------------------------------
 step "Paquetes oficiales (pacman)"
 # deps.txt = lo que los configs ejecutan de verdad (obligatorio).
