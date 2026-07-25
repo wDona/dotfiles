@@ -1,0 +1,3 @@
+@colbymchenry/codegraph
+lean-ctx-bin
+opencode-ai
