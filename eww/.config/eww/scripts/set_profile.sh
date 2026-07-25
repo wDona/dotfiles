@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# Cambia el perfil de energia (power-profiles-daemon) via D-Bus y refresca UI.
+# Cambia el perfil de energia y refresca la UI. Usa powerprofile (kernel),
+# no power-profiles-daemon: ppd esta enmascarado para que tlp siga vivo.
 profile="$1"
 case "$profile" in
     performance|balanced|power-saver) ;;
     *) echo "uso: $0 performance|balanced|power-saver" >&2; exit 1 ;;
 esac
 
-gdbus call --system --dest net.hadess.PowerProfiles \
-    --object-path /net/hadess/PowerProfiles \
-    --method org.freedesktop.DBus.Properties.Set net.hadess.PowerProfiles ActiveProfile \
-    "<'${profile}'>" >/dev/null 2>&1
+# Sin contrasena gracias a /etc/sudoers.d/10-powerprofile (solo estos 3 args).
+sudo -n /usr/local/bin/powerprofile set "$profile" >/dev/null 2>&1
 
 # Ahorro real extra que power-profiles-daemon no toca: wifi powersave y brillo.
 wifi_conn=$(nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | awk -F: '$2=="802-11-wireless"{print $1; exit}')

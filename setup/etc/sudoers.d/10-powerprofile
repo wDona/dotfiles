@@ -1,0 +1,7 @@
+# El selector de perfiles de eww llama a 'sudo powerprofile set <perfil>' desde
+# un click: no puede pararse a pedir contrasena. Se permite solo eso.
+#
+# Tres comandos exactos, sin comodines: con 'set *' se podria colar cualquier
+# argumento. La ruta es /usr/local/bin (de root); si apuntara a $HOME el propio
+# usuario podria reescribir el script y darse root.
+%wheel ALL=(root) NOPASSWD: /usr/local/bin/powerprofile set performance, /usr/local/bin/powerprofile set balanced, /usr/local/bin/powerprofile set power-saver

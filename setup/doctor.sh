@@ -120,6 +120,16 @@ else
     ok "gestion de energia: tlp=$tlp ppd=$ppd ($ppd_state)"
 fi
 
+# powerprofile sustituye a ppd para el selector de eww y el perfil de waybar.
+if [[ -x /usr/local/bin/powerprofile ]]; then
+    ok "powerprofile instalado (perfil actual: $(/usr/local/bin/powerprofile get 2>/dev/null))"
+    sudo -n /usr/local/bin/powerprofile set "$(/usr/local/bin/powerprofile get)" >/dev/null 2>&1 \
+        && ok "sudo sin contrasena para powerprofile" \
+        || bad "falta /etc/sudoers.d/10-powerprofile: el selector de eww no podra cambiar el perfil"
+else
+    bad "/usr/local/bin/powerprofile ausente (lo instala bootstrap.sh) - selector de energia muerto"
+fi
+
 printf '\n'
 ((fails == 0)) && printf '\033[1;32m✓ Todo en orden.\033[0m\n' \
     || printf '\033[1;31m✗ %s comprobacion(es) fallidas.\033[0m\n' "$fails"

@@ -83,6 +83,14 @@ find "$DOTFILES" -path '*/.git' -prune -o \
 step "Configuracion de sistema (/etc)"
 # sddm.conf.d (wayland + dvorak + tema), pam.d/sddm (keyring) y vconsole.
 cp -a "$SETUP/etc/." /etc/
+# sudo ignora (y avisa de) cualquier fichero de sudoers.d que no sea 0440 root:root.
+chown root:root /etc/sudoers.d/*; chmod 0440 /etc/sudoers.d/*
+# Un sudoers roto deja el sistema sin sudo: mejor enterarse aqui que al reiniciar.
+visudo -c >/dev/null || { echo "✗ /etc/sudoers.d invalido" >&2; exit 1; }
+
+# powerprofile: perfiles de energia sin ppd (ver seccion 9). Va a /usr/local/bin
+# como root porque /etc/sudoers.d/10-powerprofile apunta ahi.
+install -o root -g root -m 0755 "$SETUP/usr-local-bin/powerprofile" /usr/local/bin/powerprofile
 
 # -- 7. Servicios ------------------------------------------------------------
 step "Servicios del sistema"

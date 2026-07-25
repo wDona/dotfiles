@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# =============================================================================
+# powerprofile - Perfiles de energia sin power-profiles-daemon.
+#
+# ppd lleva Conflicts=tlp.service: no pueden convivir, y este repo quiere tlp
+# (ver setup/bootstrap.sh, seccion 9). Pero el selector de eww y la barra de
+# waybar siguen queriendo tres perfiles. Este script los da hablando
+# directamente con el kernel, que es lo que ppd hacia por dentro:
+#
+#   platform_profile   /sys/firmware/acpi/platform_profile
+#   governor + EPP     /sys/devices/system/cpu/cpu*/cpufreq/...
+#
+# Uso:  powerprofile get                     (cualquier usuario)
+#       sudo powerprofile set <perfil>       (root; ver /etc/sudoers.d/10-powerprofile)
+#       perfiles: performance | balanced | power-saver
+#
+# OJO: vive en /usr/local/bin y es de root a proposito. La regla de sudoers
+# apunta aqui, asi que si estuviera en $HOME cualquiera con tu cuenta podria
+# reescribirlo y tener root gratis. bootstrap.sh lo copia desde el repo.
+# =============================================================================
+set -uo pipefail
+
+PP=/sys/firmware/acpi/platform_profile
+PP_CHOICES=/sys/firmware/acpi/platform_profile_choices
+
+# El nombre del perfil "bajo consumo" cambia segun el portatil (quiet, cool,
+# low-power...). Se coge el primero que ofrezca ESTA maquina.
+pp_for() {
+    local want=$1 choices
+    choices=$(cat "$PP_CHOICES" 2>/dev/null) || return 1
+    local cand
+    case $want in
+        performance) cand="performance balanced-performance balanced" ;;
+        balanced)    cand="balanced balanced-performance" ;;
+        power-saver) cand="quiet low-power cool balanced" ;;
+    esac
+    for c in $cand; do
+        [[ " $choices " == *" $c "* ]] && { echo "$c"; return 0; }
+    done
+    return 1
+}
+
+write_cpu() {
+    local gov=$1 epp=$2 f
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [[ -w $f ]] && echo "$gov" > "$f" 2>/dev/null
+    done
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+        [[ -w $f ]] && echo "$epp" > "$f" 2>/dev/null
+    done
+    return 0
+}
+
+case "${1:-}" in
+get)
+    # Se lee del platform_profile, que es el unico sitio donde el perfil
+    # sobrevive a un cambio de gobernador hecho por tlp al enchufar/desenchufar.
+    cur=$(cat "$PP" 2>/dev/null)
+    case "$cur" in
+        performance|balanced-performance) echo performance ;;
+        balanced)                         echo balanced ;;
+        quiet|low-power|cool)             echo power-saver ;;
+        *)
+            # Sin platform_profile: se deduce del gobernador.
+            gov=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null)
+            [[ $gov == performance ]] && echo performance || echo balanced
+            ;;
+    esac
+    ;;
+set)
+    profile=${2:-}
+    case "$profile" in
+        performance) gov=performance; epp=performance ;;
+        balanced)    gov=powersave;   epp=balance_performance ;;
+        power-saver) gov=powersave;   epp=power ;;
+        *) echo "uso: $0 set performance|balanced|power-saver" >&2; exit 1 ;;
+    esac
+    [[ $EUID -eq 0 ]] || { echo "✗ 'set' necesita root: sudo $0 set $profile" >&2; exit 1; }
+
+    if target=$(pp_for "$profile"); then
+        echo "$target" > "$PP" 2>/dev/null || true
+    fi
+    write_cpu "$gov" "$epp"
+
+    # ponytail: tlp reaplica gobernador y EPP al enchufar/desenchufar, asi que
+    # el perfil elegido a mano dura hasta el siguiente cambio de alimentacion.
+    # El platform_profile si sobrevive, y de ahi lo lee 'get'. Si algun dia
+    # molesta: TLP_PERSISTENT_DEFAULT=1 en /etc/tlp.conf.
+    ;;
+*)
+    echo "uso: $0 get|set <perfil>" >&2; exit 1 ;;
+esac

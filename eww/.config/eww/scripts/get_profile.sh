@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Perfil de energia activo (power-profiles-daemon), para defpoll de eww.
-gdbus call --system --dest net.hadess.PowerProfiles \
-    --object-path /net/hadess/PowerProfiles \
-    --method org.freedesktop.DBus.Properties.Get net.hadess.PowerProfiles ActiveProfile \
-    2>/dev/null | grep -oP "'\K[^']+" | head -1
+# Perfil de energia activo, para defpoll de eww.
+# Antes lo daba power-profiles-daemon por D-Bus; ppd esta enmascarado porque
+# mata a tlp (Conflicts=), asi que lo lee powerprofile del kernel directamente.
+exec /usr/local/bin/powerprofile get 2>/dev/null

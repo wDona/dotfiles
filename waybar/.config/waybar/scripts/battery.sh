@@ -14,10 +14,7 @@ if [ -z "$cap" ]; then
     exit 0
 fi
 
-profile=$(gdbus call --system --dest net.hadess.PowerProfiles \
-    --object-path /net/hadess/PowerProfiles \
-    --method org.freedesktop.DBus.Properties.Get net.hadess.PowerProfiles ActiveProfile \
-    2>/dev/null | grep -oP "'\K[^']+" | head -1)
+profile=$(/usr/local/bin/powerprofile get 2>/dev/null)
 
 case "$profile" in
     performance) prof_lbl="rendimiento" ;;

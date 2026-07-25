@@ -25,20 +25,23 @@ TAREAS SUELTAS
   relinkar             ~/dotfiles/setup/link.sh
   refrescar paquetes   pacman -Qqen > setup/packages.txt
                        pacman -Qqem > setup/aur.txt
-  panel de energia     sudo systemctl unmask --now power-profiles-daemon
-  de eww (usa ppd)     sudo systemctl disable --now tlp
-
-  volver a tlp         sudo systemctl mask --now power-profiles-daemon
-                       sudo systemctl enable --now tlp
+  perfiles de energia  ya no hace falta tocar nada: manda tlp y el selector
+                       de eww usa /usr/local/bin/powerprofile (kernel directo).
+                       Probar:  powerprofile get
+                                sudo powerprofile set balanced
 
 OJO
   - bootstrap crea NOPASSWD temporal en /etc/sudoers.d (makepkg y yay no
     corren como root). Se borra al salir, incluso si falla.
   - hypr/conf.d/env.conf tiene /home/wdona a pelo: cambialo si el usuario
     del PC nuevo no se llama igual.
-  - tlp y power-profiles-daemon no pueden estar activos a la vez: ppd lleva
-    Conflicts=tlp.service y lo mata. Con 'disable' no basta, ppd se activa por
-    D-Bus y lo despiertan battery.sh y get_profile.sh al pintar la barra; hay
-    que enmascararlo. Enmascarado, el selector de perfiles de eww deja de
-    responder y waybar muestra el perfil como "?": es lo esperado.
+  - power-profiles-daemon queda ENMASCARADO a proposito: lleva
+    Conflicts=tlp.service y mataba a tlp en cada arranque. Con 'disable' no
+    bastaba, se activaba por D-Bus solo con que waybar pintase la barra.
+    El selector de eww no lo echa de menos: powerprofile hace lo mismo
+    escribiendo platform_profile, gobernador y EPP.
+  - powerprofile vive en /usr/local/bin (de root) y no en el repo enlazado:
+    /etc/sudoers.d/10-powerprofile le da NOPASSWD, y un script con sudo
+    NOPASSWD que el usuario pueda editar es root gratis. bootstrap.sh lo
+    copia desde setup/usr-local-bin/.
   - link.sh aparta lo que estorbe como .bkup, no borra nada.
