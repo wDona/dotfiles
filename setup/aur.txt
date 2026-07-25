@@ -4,7 +4,6 @@ catppuccin-cursors-mocha
 eww
 fzf-tab-git
 grimblast-git
-hyprpolkit-agent
 mpvpaper
 sddm-astronaut-theme
 sddm-sugar-candy-git

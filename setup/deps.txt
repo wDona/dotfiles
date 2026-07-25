@@ -39,5 +39,11 @@ fontconfig             # fc-list: hypr/scripts/appearance.sh lista las fuentes
 # --- Dotfiles ----------------------------------------------------------------
 stow                   # gestiona los symlinks de $HOME (ver README)
 
+# --- Sesion ------------------------------------------------------------------
+hyprpolkitagent        # hypr/conf.d/exec.conf:8. Sin el, ningun dialogo grafico
+                       # puede pedir contrasena de root. Ojo al nombre: en
+                       # aur.txt estaba como "hyprpolkit-agent" y no existe;
+                       # esta en extra, sin guiones.
+
 # --- Integracion con el movil ------------------------------------------------
 kdeconnect             # kdeconnectd, arrancado desde hypr/conf.d/exec.conf
