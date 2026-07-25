@@ -113,11 +113,21 @@ command -v uv >/dev/null 2>&1 || \
     asuser bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
 
 # -- 9. Energia --------------------------------------------------------------
-# tlp gestiona la energia (activado arriba). power-profiles-daemon se instala
-# pero queda parado: los dos a la vez se pelean por el governor de la CPU.
-# Para usar el selector de perfiles de eww: desactivar tlp y activar ppd.
-step "Energia"
-systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
+# tlp gestiona la energia (activado arriba). power-profiles-daemon lleva
+# Conflicts=tlp.service: en cuanto arranca, systemd mata tlp.
+#
+# No basta con 'disable': ppd tiene activacion por D-Bus
+# (net.hadess.PowerProfiles), y los propios widgets de este repo lo despiertan
+# solos: waybar/scripts/battery.sh y eww/scripts/get_profile.sh consultan ese
+# bus en cada refresco. Resultado con 'disable' a secas: tlp arranca al boot y
+# muere por SIGTERM segundos despues, en cuanto pinta la barra. 'mask' es lo
+# unico que corta tambien la activacion por D-Bus.
+#
+# Para usar el selector de perfiles de eww en vez de tlp:
+#   sudo systemctl unmask --now power-profiles-daemon
+#   sudo systemctl disable --now tlp
+step "Energia (tlp manda; ppd enmascarado)"
+systemctl mask --now power-profiles-daemon.service 2>/dev/null || true
 
 printf '\n\033[1;32m✓ Bootstrap completo.\033[0m Reinicia y luego solo queda iniciar sesion:\n'
 cat <<'EOF'

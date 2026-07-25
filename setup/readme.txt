@@ -25,13 +25,20 @@ TAREAS SUELTAS
   relinkar             ~/dotfiles/setup/link.sh
   refrescar paquetes   pacman -Qqen > setup/packages.txt
                        pacman -Qqem > setup/aur.txt
-  panel de energia     sudo systemctl disable --now tlp
-  de eww (usa ppd)     sudo systemctl enable --now power-profiles-daemon
+  panel de energia     sudo systemctl unmask --now power-profiles-daemon
+  de eww (usa ppd)     sudo systemctl disable --now tlp
+
+  volver a tlp         sudo systemctl mask --now power-profiles-daemon
+                       sudo systemctl enable --now tlp
 
 OJO
   - bootstrap crea NOPASSWD temporal en /etc/sudoers.d (makepkg y yay no
     corren como root). Se borra al salir, incluso si falla.
   - hypr/conf.d/env.conf tiene /home/wdona a pelo: cambialo si el usuario
     del PC nuevo no se llama igual.
-  - tlp y power-profiles-daemon no pueden estar activos a la vez.
+  - tlp y power-profiles-daemon no pueden estar activos a la vez: ppd lleva
+    Conflicts=tlp.service y lo mata. Con 'disable' no basta, ppd se activa por
+    D-Bus y lo despiertan battery.sh y get_profile.sh al pintar la barra; hay
+    que enmascararlo. Enmascarado, el selector de perfiles de eww deja de
+    responder y waybar muestra el perfil como "?": es lo esperado.
   - link.sh aparta lo que estorbe como .bkup, no borra nada.

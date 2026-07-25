@@ -107,9 +107,18 @@ step "Conflictos conocidos"
 # necesita ppd, el resto del tiempo manda tlp. Nunca los dos a la vez.
 tlp=$(systemctl is-active tlp.service 2>/dev/null)
 ppd=$(systemctl is-active power-profiles-daemon.service 2>/dev/null)
-[[ $tlp == active && $ppd == active ]] \
-    && bad "tlp y power-profiles-daemon activos a la vez (ver README)" \
-    || ok "gestion de energia: tlp=$tlp ppd=$ppd"
+ppd_state=$(systemctl is-enabled power-profiles-daemon.service 2>/dev/null)
+if [[ $tlp == active && $ppd_state == masked ]]; then
+    ok "energia: tlp activo, ppd enmascarado"
+elif [[ $tlp == failed && $ppd == active ]]; then
+    # ppd se activa por D-Bus aunque este 'disabled': lo despiertan
+    # battery.sh y get_profile.sh, y su Conflicts= mata tlp.
+    bad "tlp muerto por ppd (Conflicts=). Arreglo: sudo systemctl mask --now power-profiles-daemon && sudo systemctl start tlp"
+elif [[ $ppd == active && $tlp == active ]]; then
+    bad "tlp y power-profiles-daemon activos a la vez (ver README)"
+else
+    ok "gestion de energia: tlp=$tlp ppd=$ppd ($ppd_state)"
+fi
 
 printf '\n'
 ((fails == 0)) && printf '\033[1;32m✓ Todo en orden.\033[0m\n' \
