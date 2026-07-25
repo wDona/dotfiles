@@ -1,0 +1,12 @@
+[Unit]
+Description=Hyprland session
+Documentation=man:systemd.special(7)
+# graphical-session.target rechaza el arranque manual: solo se puede activar
+# como dependencia. Este target es el que Hyprland arranca (ver exec.conf) y
+# BindsTo/Before hacen que graphical-session.target suba con el. Sin esto,
+# wireplumber.service muere con "Dependency failed" por el Requisite= de su
+# drop-in y el sistema se queda con "Dummy Output".
+BindsTo=graphical-session.target
+Before=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target
