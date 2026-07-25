@@ -7,6 +7,11 @@ off="${1:-0}"
 EVENTS="$HOME/.config/eww/events.json"
 OWNER_CACHE="$HOME/.cache/eww_gcal_owner"
 
+# Lock: serializa con addevent.sh (push+pull) para que el sync de fondo del
+# open NUNCA pise un evento recien subido con datos mas viejos.
+exec 9>"$HOME/.cache/eww_cal_sync.lock"
+flock 9
+
 command -v gcalcli >/dev/null 2>&1 || exit 0   # sin gcalcli: no tocar nada
 
 # Calendario propietario (cacheado; el read-only "Festivos" se ignora).
@@ -15,7 +20,7 @@ if [ ! -s "$OWNER_CACHE" ]; then
         | awk '$1=="owner"{$1="";sub(/^[ \t]+/,"");print;exit}' > "$OWNER_CACHE"
 fi
 OWNER=$(cat "$OWNER_CACHE" 2>/dev/null)
-[ -z "$OWNER" ] && { bash "$HOME/.config/eww/scripts/nav.sh" "$off"; exit 0; }
+[ -z "$OWNER" ] && { bash "$HOME/.config/eww/scripts/nav.sh" "$(eww get cal_offset 2>/dev/null || echo "$off")"; exit 0; }
 
 # Ventana: -13 meses a +13 meses respecto al mes visible.
 base=$(date -d "$(date +%Y-%m-01) ${off} month" +%Y-%m-01)
@@ -24,7 +29,7 @@ end=$(date -d "$base +13 month" +%Y-%m-%d)
 
 raw=$(gcalcli --nocolor --calendar "$OWNER" agenda "$start" "$end" --tsv 2>/dev/null)
 # Si no hay ni cabecera, gcalcli fallo (red caida) -> NO pisar el cache.
-printf '%s\n' "$raw" | head -1 | grep -q '^start_date' || { bash "$HOME/.config/eww/scripts/nav.sh" "$off"; exit 0; }
+printf '%s\n' "$raw" | head -1 | grep -q '^start_date' || { bash "$HOME/.config/eww/scripts/nav.sh" "$(eww get cal_offset 2>/dev/null || echo "$off")"; exit 0; }
 
 # Construir events.json: fecha -> titulos unidos por " · ".
 tmp=$(mktemp)
@@ -42,4 +47,4 @@ printf '%s\n' "$raw" | awk -F'\t' 'NR>1 && $1!="" {
 # Validar JSON antes de reemplazar.
 if jq -e . "$tmp" >/dev/null 2>&1; then mv "$tmp" "$EVENTS"; else rm -f "$tmp"; fi
 
-bash "$HOME/.config/eww/scripts/nav.sh" "$off"
+bash "$HOME/.config/eww/scripts/nav.sh" "$(eww get cal_offset 2>/dev/null || echo "$off")"

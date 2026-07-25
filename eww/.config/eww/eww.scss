@@ -601,3 +601,102 @@ scale slider {
   min-height: 14px;
   margin: -5px;
 }
+
+// ══════════════════════════════════════════════════
+// ─── CLIMA ────────────────────────────────────────
+// ══════════════════════════════════════════════════
+
+.wt-box {
+  background-color: $bg;
+  border: 2px solid $accent;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 4px;
+}
+
+.wt-city {
+  color: $accent2;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.wt-refresh {
+  color: $fg-dim;
+  font-size: 15px;
+  padding: 4px 8px;
+  border-radius: 10px;
+
+  &:hover {
+    background-color: $surface;
+    color: $lila;
+  }
+}
+
+// ── Actual ──
+.wt-now-ico {
+  color: $accent;
+  font-size: 58px;
+  padding: 0 6px;
+}
+
+.wt-now-temp {
+  color: $fg;
+  font-size: 42px;
+  font-weight: bold;
+}
+
+.wt-now-desc {
+  color: $lila;
+  font-size: 13px;
+}
+
+// ── Metricas ──
+.wt-stats {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  padding: 10px 4px;
+}
+
+.wt-stat-ico { color: $lila;    font-size: 16px; }
+.wt-stat-val { color: $fg;      font-size: 14px; font-weight: bold; }
+.wt-stat-lbl { color: $fg-dim;  font-size: 10px; }
+
+.wt-sep {
+  background-color: $surface;
+  min-height: 1px;
+}
+
+// ── Pronostico ──
+.wt-day {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  padding: 10px 4px;
+  margin: 0 2px;
+}
+
+.wt-day-name { color: $accent2; font-size: 12px; font-weight: bold; }
+.wt-day-ico  { color: $lila;    font-size: 22px; }
+.wt-day-max  { color: $fg;      font-size: 13px; font-weight: bold; }
+.wt-day-min  { color: $fg-dim;  font-size: 13px; }
+
+// ── Avisos AEMET ──
+// El color lo pone AEMET (amarillo/naranja/rojo), no la paleta del rice: es
+// informacion, no decoracion. Tonos apagados para que no canten tanto.
+$aviso-yellow: #ffd700;
+$aviso-orange: #ff9d3d;
+$aviso-red:    #ff5c5c;
+
+.wt-alert {
+  background-color: $bg-cell;
+  border-radius: 10px;
+  border-left: 3px solid $fg-dim;
+  padding: 7px 11px;
+
+  &.yellow { border-left-color: $aviso-yellow; .wt-alert-ico { color: $aviso-yellow; } }
+  &.orange { border-left-color: $aviso-orange; .wt-alert-ico { color: $aviso-orange; } }
+  &.red    { border-left-color: $aviso-red;    .wt-alert-ico { color: $aviso-red; } }
+}
+
+.wt-alert-ico  { font-size: 15px; }
+.wt-alert-txt  { color: $fg;     font-size: 13px; font-weight: bold; }
+.wt-alert-when { color: $fg-dim; font-size: 12px; }

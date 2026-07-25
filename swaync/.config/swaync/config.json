@@ -18,6 +18,7 @@
   "layer": "overlay",
   "cssPriority": "application",
   "widgets": [
+    "title",
     "mpris",
     "buttons-grid",
     "dnd",

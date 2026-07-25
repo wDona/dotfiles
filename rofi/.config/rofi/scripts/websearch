@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Modo rofi "web": abre en Brave lo que teclees.
+#  - Texto tipo dominio (foo.com) -> URL directa.
+#  - Resto -> busqueda en Google.
+# Se usa dentro de combi con el launcher de apps. Custom input = Ctrl+Enter.
+
+query="$1"
+
+if [ -z "$query" ]; then
+  # Texto plano (este rofi no parsea markup en filas de script). El prefijo 🌐 lo pone {mode}.
+  printf '%s\0nonselectable\x1ftrue\x1ficon\x1fbrave\n' "Escribe y Ctrl+Enter para buscar"
+  exit 0
+fi
+
+case "$query" in
+  http://*|https://*)
+    url="$query" ;;                                  # URL completa
+  *)
+    if printf '%s' "$query" | grep -qE '^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$'; then
+      url="https://$query"                           # dominio tipo foo.com
+    else
+      url="https://www.google.com/search?q=$(printf '%s' "$query" | sed 's/ /+/g')"
+    fi ;;
+esac
+
+setsid brave "$url" >/dev/null 2>&1 &

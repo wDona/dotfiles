@@ -17,9 +17,11 @@
         "custom/clock"
     ],
     "modules-right": [
+        "custom/weather",
         "custom/timer",
         "pulseaudio",
         "tray",
+        "privacy",
         "custom/power"
     ],
     "hyprland/workspaces": {
@@ -52,6 +54,23 @@
         "interval": 10,
         "on-click": "~/.config/eww/scripts/toggle_cal.sh",
         "tooltip": false
+    },
+    "privacy": {
+        "icon-spacing": 6,
+        "icon-size": 14,
+        "transition-duration": 200,
+        "modules": [
+            {
+                "type": "screenshare",
+                "tooltip": true,
+                "tooltip-icon-size": 20
+            },
+            {
+                "type": "audio-in",
+                "tooltip": true,
+                "tooltip-icon-size": 20
+            }
+        ]
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
@@ -104,6 +123,12 @@
         "tooltip": true,
         "tooltip-format": "Claude Code (click / Super+C)",
         "on-click": "~/.config/hypr/scripts/toggle_claude.sh"
+    },
+    "custom/weather": {
+        "exec": "~/.config/eww/scripts/weather.sh bar",
+        "interval": 900,
+        "tooltip": false,
+        "on-click": "~/.config/eww/scripts/toggle_weather.sh"
     },
     "custom/timer": {
         "exec": "~/.config/waybar/scripts/timer.sh bar",

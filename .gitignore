@@ -20,3 +20,7 @@
 # Ignorar backups locales
 **/*.bkup
 **/.zsh_secrets
+
+# Generado por hypr_tweak.sh (panel Ajustes de eww): es estado local, no config.
+# stow-setup.sh lo crea vacio para que el source de hyprland.conf no falle.
+hypr/.config/hypr/conf.d/overrides.conf

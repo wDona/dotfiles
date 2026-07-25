@@ -22,6 +22,8 @@ else
     eww open calendario --screen "$mon"
     # submap: ESC cierra el calendario (resto de teclas pasan normal)
     hyprctl dispatch submap calendar >/dev/null 2>&1
-    # pull de Google en segundo plano (refresca el grid al terminar)
-    setsid "$CONFIG_DIR/scripts/cal_sync.sh" 0 >/dev/null 2>&1 &
+    # pull de Google en segundo plano (refresca el grid al terminar).
+    # nice+ionice: que no le robe CPU/red a la UI cuando navegas con las
+    # flechitas justo despues de abrir.
+    setsid nice -n 19 ionice -c3 "$CONFIG_DIR/scripts/cal_sync.sh" 0 >/dev/null 2>&1 &
 fi

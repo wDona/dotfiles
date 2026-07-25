@@ -28,6 +28,10 @@
 (defvar view "home")        ;; "home" | "conf"
 (defvar conf_sel "")        ;; alias del conf abierto en detalle
 (defvar confs "[]")         ;; [{name,path}] desde `conf --list`
+
+;; Clima. Lo rellena toggle_weather.sh antes de abrir (no defpoll: el widget
+;; solo existe mientras esta abierto y el script ya cachea 30 min).
+(defvar weather_json "{\"ok\":false,\"city\":\"\",\"icon\":\"\",\"temp\":\"--\",\"desc\":\"\",\"feels\":\"--\",\"hum\":\"--\",\"wind\":\"--\",\"days\":[]}")
 (defvar themes_gtk "[]")    ;; [{name,selected}]
 (defvar themes_icon "[]")   ;; [{name,selected}]
 (defvar kitty_op 75)        ;; opacidad kitty 0-100
@@ -502,3 +506,71 @@
   :stacking "overlay"
   :geometry (geometry :x "5px" :y "5px" :width "560px" :anchor "top right")
   (perso))
+
+;; ══════════════════════════════════════════════════════════
+;; ─── CLIMA ────────────────────────────────────────────────
+;; ══════════════════════════════════════════════════════════
+
+;; Una columna del pronostico (dia, icono, max/min)
+(defwidget wt-day [d]
+  (box :class "wt-day" :orientation "v" :space-evenly false :spacing 6
+    (label :class "wt-day-name" :text {d.name})
+    (label :class "wt-day-ico"  :text {d.icon})
+    (box :space-evenly false :spacing 5 :halign "center"
+      (label :class "wt-day-max" :text "${d.max}°")
+      (label :class "wt-day-min" :text "${d.min}°"))))
+
+;; Una metrica del bloque inferior (sensacion / humedad / viento)
+(defwidget wt-stat [icon label value]
+  (box :class "wt-stat" :orientation "v" :space-evenly false :spacing 2
+    (label :class "wt-stat-ico" :text icon)
+    (label :class "wt-stat-val" :text value)
+    (label :class "wt-stat-lbl" :text label)))
+
+(defwidget weather []
+  (box :class "wt-box" :orientation "v" :space-evenly false :spacing 14
+    ;; cabecera: ciudad + boton refrescar
+    (box :class "wt-header" :space-evenly false
+      (label :class "wt-city" :hexpand true :halign "start"
+             :text {weather_json.city})
+      (button :class "wt-refresh" :tooltip "Actualizar"
+              :onclick "rm -f ~/.cache/eww-weather.json; eww update weather_json=\"$(~/.config/eww/scripts/weather.sh json)\""
+              "󰑐"))
+
+    ;; actual: iconazo + temperatura + descripcion
+    (box :class "wt-now" :space-evenly false :spacing 16
+      (label :class "wt-now-ico" :text {weather_json.icon})
+      (box :orientation "v" :space-evenly false :valign "center"
+        (label :class "wt-now-temp" :halign "start" :text "${weather_json.temp}°")
+        (label :class "wt-now-desc" :halign "start" :text {weather_json.desc})))
+
+    ;; metricas
+    (box :class "wt-stats" :space-evenly true
+      (wt-stat :icon "󰔏" :label "Sensacion" :value "${weather_json.feels}°")
+      (wt-stat :icon "󰖎"   :label "Humedad"   :value "${weather_json.hum}%")
+      (wt-stat :icon "󰖝"  :label "Viento"    :value "${weather_json.wind}km/h"))
+
+    (box :class "wt-sep")
+
+    ;; pronostico
+    (box :class "wt-days" :space-evenly true
+      (for d in {weather_json.days}
+        (wt-day :d d)))
+
+    ;; avisos AEMET (solo si hay alguno vigente amarillo o superior)
+    (box :class "wt-sep" :visible {weather_json.has_alerts})
+    (box :class "wt-alerts" :orientation "v" :space-evenly false :spacing 6
+         :visible {weather_json.has_alerts}
+      (for a in {weather_json.alerts}
+        (box :class "wt-alert ${a.color}" :space-evenly false :spacing 9
+          (label :class "wt-alert-ico" :text "󰀦")
+          (label :class "wt-alert-txt" :hexpand true :halign "start" :text {a.text})
+          (label :class "wt-alert-when" :text {a.when}))))))
+
+(defwindow clima
+  :monitor 0
+  :stacking "overlay"
+  :geometry (geometry :x "5px" :y "5px" :width "330px" :anchor "top right")
+  ;; sin onhoverlost: al abrirlo desde la barra el cursor no esta encima
+  ;; todavia y se cerraria solo. Se cierra con otro click en el modulo.
+  (weather))

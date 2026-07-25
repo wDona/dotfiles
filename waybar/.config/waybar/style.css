@@ -93,6 +93,52 @@ window#waybar {
 #custom-net.online { color: #c9a0ff; }
 #custom-net.offline { color: #c9a0ff; }
 
+#custom-weather {
+    padding: 6px 12px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    transition: all 150ms ease;
+    font-weight: 500;
+    color: #c9a0ff;
+}
+
+#custom-weather:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+
+/* Privacidad: solo aparece cuando algo captura pantalla o micro.
+   La pill va en el CONTENEDOR (#privacy), no en cada icono: asi los dos
+   comparten una sola capsula en vez de salir dos sueltas. Los items solo
+   ponen color. */
+#privacy {
+    padding: 6px 11px;
+    margin: 4px 2px;
+    border-radius: 12px;
+    background: rgba(45, 27, 78, 0.2);
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    transition: all 150ms ease;
+}
+
+#privacy:hover {
+    background: rgba(45, 27, 78, 0.32);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+
+#privacy-item {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
+/* Rojo solo en el icono: GTK3 no tiene selector de padre (:has), asi que el
+   contenedor no puede saber si dentro hay screenshare para tenirse entero. */
+#privacy-item.screenshare { color: #ff5c5c; }
+#privacy-item.audio-in    { color: #c9a0ff; }
+
 #custom-keyboard {
     padding: 6px 12px;
     margin: 4px 2px;

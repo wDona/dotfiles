@@ -49,4 +49,8 @@ for package in "$DOTFILES"/*/; do
     echo ""
 done
 
+# overrides.conf lo genera hypr_tweak.sh y no esta en el repo, pero hyprland.conf
+# lo hace source: se crea vacio si falta.
+touch "$HOME/.config/hypr/conf.d/overrides.conf"
+
 echo "✓ Proceso completado."

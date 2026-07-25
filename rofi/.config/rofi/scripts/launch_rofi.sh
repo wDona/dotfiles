@@ -40,12 +40,27 @@ CACHE="$HOME/.cache/rofi_apps.cache"
 existing=()
 for d in "${dirs[@]}"; do [ -d "$d" ] && existing+=("$d"); done
 
-if [ ! -f "$CACHE" ] || \
-   [ -n "$(find "${existing[@]}" -name '*.desktop' -newer "$CACHE" -print -quit 2>/dev/null)" ]; then
-  files=()
+# Sin cache -> parsear todo. Con cache -> parsear SOLO los .desktop nuevos/modificados
+# y fusionarlos encima (la entrada fresca gana por nombre, el resto se conserva).
+files=()
+if [ -f "$CACHE" ]; then
+  # -newer sobre los .desktop no basta: pacman conserva el mtime del paquete, que
+  # suele ser mas viejo que la cache -> apps recien instaladas nunca se veian.
+  # El mtime del DIR si cambia al añadir/quitar ficheros: re-parsea ese dir entero.
+  for d in "${existing[@]}"; do
+    [ "$d" -nt "$CACHE" ] || continue
+    for f in "$d"/*.desktop; do [ -e "$f" ] && files+=("$f"); done
+  done
+  while IFS= read -r f; do files+=("$f"); done \
+    < <(find "${existing[@]}" -name '*.desktop' -newer "$CACHE" 2>/dev/null)
+else
   for d in "${existing[@]}"; do
     for f in "$d"/*.desktop; do [ -e "$f" ] && files+=("$f"); done
   done
+fi
+
+if [ ${#files[@]} -gt 0 ]; then
+  new=$(mktemp)
   # UN solo awk sobre todos los archivos (no fork por archivo). Dedup por nombre
   # en orden de prioridad (primer dir gana). Salta NoDisplay/Hidden.
   awk -F= '
@@ -64,8 +79,19 @@ if [ ! -f "$CACHE" ] || \
       if($1=="Hidden"    && hidden==""   ){sub(/^Hidden=/,"");    hidden=$0}
     }
     END{ flush() }
-  ' "${files[@]}" > "$CACHE" 2>/dev/null
+  ' "${files[@]}" > "$new" 2>/dev/null
+  [ -f "$CACHE" ] && cat "$CACHE" >> "$new"
+  awk -F'\t' 'NF && !seen[$1]++' "$new" > "$CACHE"
+  rm -f "$new"
 fi
+
+# Purga entradas cuyo .desktop ya no existe (borrar no dispara el -newer de arriba).
+# Solo listado de nombres, sin parsear -> barato.
+ids=$(mktemp); pruned=$(mktemp)
+find "${existing[@]}" -name '*.desktop' -printf '%f\n' 2>/dev/null | sort -u > "$ids"
+awk -F'\t' 'NR==FNR{keep[$0];next} $3 in keep' "$ids" "$CACHE" > "$pruned"
+[ -s "$pruned" ] && mv "$pruned" "$CACHE"
+rm -f "$ids" "$pruned"
 
 apps=()   # cada elemento: "count<TAB>name<TAB>icon"
 while IFS=$'\t' read -r name icon id; do
