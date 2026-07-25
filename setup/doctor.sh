@@ -28,7 +28,9 @@ while read -r pkg; do
 done < <(grep -vE '^\s*(#|$)' "$SETUP/deps.txt" | awk '{print $1}')
 if ((${#missing[@]})); then
     bad "faltan: ${missing[*]}"
-    echo "      sudo pacman -S --needed ${missing[*]}"
+    # -Syu y no -S: con la base de datos vieja pacman pide una version que el
+    # mirror ya ha rotado y falla con un 404 en el .sig.
+    echo "      sudo pacman -Syu ${missing[*]}"
 else
     ok "todos instalados"
 fi
