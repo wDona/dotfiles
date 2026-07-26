@@ -56,6 +56,13 @@ while read -r pkg; do
     npm ls -g --depth=0 "$pkg" >/dev/null 2>&1 \
         && ok "npm $pkg" || bad "npm $pkg (npm install -g $pkg)"
 done < <(grep -vE '^\s*(#|$)' "$SETUP/npm-global.txt")
+# 'npm ls' solo mira que el paquete este: lean-ctx-bin baja su binario nativo en
+# un postinstall, y npm >=12 lo bloquea por defecto. Sin binario el paquete
+# figura instalado y todos los hooks de ~/.claude/settings.json revientan.
+LEANCTX_BIN="$HOME/.npm-global/lib/node_modules/lean-ctx-bin/bin/lean-ctx"
+[[ -x $LEANCTX_BIN ]] \
+    && ok "binario de lean-ctx" \
+    || bad "falta el binario de lean-ctx (npm install -g --allow-scripts lean-ctx-bin lean-ctx-bin) - hooks de Claude rotos"
 
 # -- 3. Referencias rotas en los propios configs ------------------------------
 # Un exec-once o un on-click que apunta a un script borrado falla en silencio:

@@ -120,7 +120,11 @@ asuser pipx install --force gcalcli
 
 asuser npm config set prefix "$USER_HOME/.npm-global"
 mapfile -t npm_pkgs < <(grep -vE '^\s*(#|$)' "$SETUP/npm-global.txt")
-asuser env PATH="$USER_HOME/.npm-global/bin:$PATH" npm install -g "${npm_pkgs[@]}"
+# npm >=12 bloquea los postinstall por defecto. lean-ctx-bin descarga ahi su
+# binario nativo: sin el, el paquete queda instalado pero vacio y todos los
+# hooks de lean-ctx de ~/.claude/settings.json fallan con "No such file".
+asuser env PATH="$USER_HOME/.npm-global/bin:$PATH" \
+    npm install -g --allow-scripts lean-ctx-bin "${npm_pkgs[@]}"
 
 command -v uv >/dev/null 2>&1 || \
     asuser sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
