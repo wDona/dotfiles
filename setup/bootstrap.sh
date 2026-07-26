@@ -144,6 +144,13 @@ command -v uv >/dev/null 2>&1 || \
 step "Energia (tlp manda; ppd enmascarado)"
 systemctl mask --now power-profiles-daemon.service 2>/dev/null || true
 
+# -- 10. Verificacion --------------------------------------------------------
+# doctor.sh sale con 1 si algo falla y aqui hay set -e: || true para que el
+# resumen de abajo se imprima igual. Antes del reinicio es normal que fallen
+# las comprobaciones que dependen de la sesion (keyring, servicios de usuario).
+step "Verificacion (doctor.sh)"
+asuser "$SETUP/doctor.sh" || true
+
 printf '\n\033[1;32m✓ Bootstrap completo.\033[0m Reinicia y luego solo queda iniciar sesion:\n'
 cat <<'EOF'
   - gcalcli init            (Google Calendar del panel de eww)
