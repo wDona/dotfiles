@@ -123,8 +123,16 @@ mapfile -t npm_pkgs < <(grep -vE '^\s*(#|$)' "$SETUP/npm-global.txt")
 # npm >=12 bloquea los postinstall por defecto. lean-ctx-bin descarga ahi su
 # binario nativo: sin el, el paquete queda instalado pero vacio y todos los
 # hooks de lean-ctx de ~/.claude/settings.json fallan con "No such file".
+#
+# --allow-scripts solo vale para esta instalacion. La aprobacion permanente va
+# en ~/package.json (npm la guarda por proyecto, y $HOME cuenta como uno);
+# --no-allow-scripts-pin la deja sin version, si no cada actualizacion de
+# lean-ctx vuelve a quedarse sin binario. || true: npm <12 no conoce el
+# subcomando y no es motivo para abortar el bootstrap.
 asuser env PATH="$USER_HOME/.npm-global/bin:$PATH" \
     npm install -g --allow-scripts lean-ctx-bin "${npm_pkgs[@]}"
+asuser bash -c 'cd "$HOME" && npm install-scripts approve lean-ctx-bin \
+    --no-allow-scripts-pin' || true
 
 command -v uv >/dev/null 2>&1 || \
     asuser sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
