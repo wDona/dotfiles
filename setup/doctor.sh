@@ -110,6 +110,20 @@ if command -v wpctl >/dev/null 2>&1; then
         || bad "solo 'Dummy Output': ninguna tarjeta de sonido activa"
 fi
 
+# Si el keyring de login no lleva la misma contrasena que el usuario, PAM no lo
+# desbloquea y Brave/VS Code/agentes vuelven a pedir la clave en cada arranque.
+if systemctl --user is-active --quiet gnome-keyring-daemon.socket; then
+    case $(busctl --user get-property org.freedesktop.secrets \
+            /org/freedesktop/secrets/collection/login \
+            org.freedesktop.Secret.Collection Locked 2>/dev/null) in
+        "b false") ok "keyring de login desbloqueado" ;;
+        "b true")  bad "keyring bloqueado: su contrasena no es la del usuario (ver README)" ;;
+        *)         bad "no hay keyring de login (se crea en el primer login grafico)" ;;
+    esac
+else
+    bad "gnome-keyring-daemon.socket parado"
+fi
+
 # -- 6. Conflictos conocidos --------------------------------------------------
 step "Conflictos conocidos"
 # Los dos se pelean por el governor de la CPU; el selector de perfiles de eww
