@@ -143,6 +143,11 @@
 (defpoll timerinfo :interval "1s" :initial "{\"text\":\"\",\"class\":\"idle\"}" "/home/wdona/.config/waybar/scripts/timer.sh status")
 (defpoll power_profile :interval "3s" :initial "balanced" "~/.config/eww/scripts/get_profile.sh")
 (defpoll brightness_pct :interval "2s" :initial 50 "~/.config/eww/scripts/get_brightness.sh")
+;; set_brightness.sh necesita brightnessctl: sin el, el slider no haria nada,
+;; asi que se oculta la fila entera. Intervalo largo = se resuelve al arrancar
+;; el daemon y tras instalarlo se corrige solo sin tener que recargar.
+(defpoll has_brightnessctl :interval "1h" :initial "false"
+         "command -v brightnessctl >/dev/null 2>&1 && echo true || echo false")
 
 ;; Fila: icono + nombre a la izq, valor a la der, barra de uso debajo (opcional)
 (defwidget statrow [icon name val color ?pct ?show]
@@ -221,6 +226,7 @@
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Temporizador")
           (label :class "sm-sub" :text {timerinfo.class == "idle" ? "" : timerinfo.text})))
       (box :class "sm-item" :orientation "v" :space-evenly false :spacing 6
+           :visible {has_brightnessctl == "true"}
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰃟")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Brillo")
@@ -519,7 +525,11 @@
 (defwindow calendario
   :monitor 0
   :stacking "overlay"
-  :geometry (geometry :x "829px" :y "0px" :width "346px" :height "580px" :anchor "top left")
+  ;; anchor centrado: el x absoluto de antes (829px) estaba calibrado a ojo
+  ;; para 1920 de ancho y se salia por la derecha en DP-1 (1360).
+  ;; sin :height -> la ventana se ajusta al contenido (5 o 6 semanas, panel de
+  ;; eventos desplegado o no) en lugar de quedarse en 580px fijos.
+  :geometry (geometry :x "0px" :y "0px" :width "346px" :anchor "top center")
   (cal_widget))
 
 (defwindow sysmenu
@@ -612,3 +622,44 @@
   ;; sin onhoverlost: al abrirlo desde la barra el cursor no esta encima
   ;; todavia y se cerraria solo. Se cierra con otro click en el modulo.
   (weather))
+
+;; ══════════════════════════════════════════════════════════
+;; ─── VOLUMEN ──────────────────────────────────────────────
+;; ══════════════════════════════════════════════════════════
+
+;; Sondeo rapido para que el popup refleje cambios hechos fuera (rueda del
+;; raton sobre la barra, teclas de volumen, pavucontrol). 300ms es suficiente
+;; para que se sienta inmediato sin castigar la CPU.
+;; Ojo: no puede ser mucho mas lento o al arrastrar el slider el valor
+;; sondeado llega tarde y "tira" del pulgar hacia atras.
+(defpoll vol_pct   :interval "300ms" `~/.config/eww/scripts/vol.sh get`)
+(defpoll vol_muted :interval "300ms" `~/.config/eww/scripts/vol.sh muted`)
+
+(defwidget volmenu []
+  (box :class "volmenu" :orientation "v" :space-evenly false :spacing 10
+    (box :space-evenly false :spacing 10
+      ;; Click en el icono = silenciar. El icono ya indica el estado.
+      (button :class "vol-ico ${vol_muted == "true" ? "muted" : ""}"
+              :onclick "~/.config/eww/scripts/vol.sh toggle"
+        {vol_muted == "true" ? "󰝟" : "󰕾"})
+      (label :class "vol-val" :hexpand true :halign "end"
+             :text {vol_muted == "true" ? "Silenciado" : "${vol_pct}%"}))
+
+    ;; :onchange dispara en CADA paso del arrastre, no al soltar: por eso el
+    ;; volumen cambia en vivo con el boton del raton pulsado.
+    (scale :class "vol-scale"
+           :hexpand true
+           :min 0
+           :max 100
+           :value vol_pct
+           :onchange "~/.config/eww/scripts/vol.sh set {}")))
+
+(defwindow volumen
+  :monitor 0
+  :stacking "overlay"
+  ;; x calibrado para caer bajo el modulo pulseaudio, que en modules-right va
+  ;; entre custom/battery y tray.
+  :geometry (geometry :x "95px" :y "5px" :width "240px" :anchor "top right")
+  ;; se cierra solo al sacar el raton, igual que batmenu/sysmenu
+  (eventbox :onhoverlost "eww close volumen"
+    (volmenu)))

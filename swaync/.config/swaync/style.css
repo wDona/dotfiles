@@ -1,12 +1,98 @@
+/* ══════════════════════════════════════════════════════════
+   CRISTAL
+   El desenfoque lo pone Hyprland, no GTK. Ver conf.d/styles.conf:
+     layerrule = blur true,        match:namespace swaync-control-center
+     layerrule = ignore_alpha 0.2, match:namespace swaync-control-center
+     layerrule = blur true,        match:namespace swaync-notification-window
+     layerrule = ignore_alpha 0.2, match:namespace swaync-notification-window
+
+   Los alpha de aqui (0.42) tienen que quedar POR ENCIMA de ese 0.2 o
+   Hyprland no difumina nada. Y la capa de notificaciones ocupa la pantalla
+   entera siendo casi toda transparente: sin el umbral difuminaria todo el
+   escritorio.
+
+   GTK no tiene backdrop-filter, asi que lo unico que se hace aqui es la
+   lamina translucida. PLANA: sin degradados, sin filos inset y sin sombra
+   exterior (ver la nota en .notification: la sombra rompe el redondeo).
+   ══════════════════════════════════════════════════════════ */
+
 /* Contenedor de la notificación (el "cuadrado") */
 .notification {
-    background: rgba(28, 18, 38, 0.95); /* Fondo morado oscuro profundo */
+    background-color: rgba(10, 10, 10, 0.42);
     border-radius: 12px;               /* Bordes redondos tipo Ubuntu */
-    border: 1px solid rgba(217, 70, 239, 0.4); /* Borde magenta suave */
     margin: 0;                  /* Espaciado entre notificaciones */
     padding: 4px 8px;
 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    /* PLANO: sin filos inset ni degradados (leen como degradado vertical).
+       Y sin sombra exterior: el halo del box-shadow supera el ignore_alpha de
+       la layerrule, asi que Hyprland difumina el rectangulo entero del halo en
+       vez de la caja redondeada y el panel sale con esquinas cuadradas. */
+}
+
+/* HOVER
+   swaync usa SOLO este archivo (no lo mezcla con /etc/xdg/swaync/style.css),
+   asi que el resaltado que se veia no lo pintaba swaync: el area clicable del
+   centro es un GtkButton (.notification-default-action) y le caia el prelight
+   OPACO del tema GTK. Ademas ese boton vive dentro del padding de
+   .notification, asi que solo se colereaba el trozo del medio y quedaban
+   fuera los bordes y la X.
+
+   Arreglo: botones internos SIEMPRE planos, y el hover se pinta sobre la
+   lamina entera desde .notification-row (un GtkListBoxRow, que si recibe el
+   prelight de toda la fila). Con alpha, para no perder el cristal. */
+.notification-default-action,
+.notification-default-action:hover,
+.notification-content,
+.notification-content:hover,
+.notification-background,
+.notification-row,
+.notification-row:hover,
+.notification-row:focus {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+}
+
+/* La lamina entera. Se listan los tres niveles porque GTK asigna el prelight
+   al widget mas profundo bajo el puntero y, segun donde caiga el raton (texto,
+   icono, X), el que recibe :hover no siempre es el mismo. */
+.notification-row:hover .notification,
+.notification-row:focus .notification,
+.notification-background:hover .notification,
+.notification:hover {
+    /* Morado lavado hacia blanco, no gris: sube el canal RGB entero y lo
+       tiñe hacia el accent. Alpha 0.55 > 0.42 en reposo y muy por encima del
+       ignore_alpha 0.2 de la layerrule, asi que Hyprland sigue difuminando. */
+    background-color: rgba(126, 100, 178, 0.55);
+}
+
+/* Y el padding va en el boton interior, no en .notification: asi el fondo de
+   la lamina llega hasta el borde redondeado en vez de dejar un marco muerto. */
+.notification {
+    padding: 0;
+}
+
+.notification-default-action {
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* Superficies internas con fondo propio (la X, los botones de accion): sin
+   esto se quedan como parches oscuros sobre la lamina ya iluminada. El rosa
+   de .close-button:hover mas abajo sigue ganando por orden de cascada. */
+.notification-row:hover .close-button,
+.notification:hover .close-button {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.notification-row:hover .notification-action > button,
+.notification:hover .notification-action > button {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.notification-alt-actions,
+.notification-action {
+    background: transparent;
 }
 
 /* Título de la notificación */
@@ -26,7 +112,6 @@
 
 /* La barra lateral de color (acento Ubuntu) */
 .notification-default {
-    border-left: 4px solid #d946ef; /* Línea magenta de acento a la izquierda */
     border-radius: 15px;
 }
 
@@ -71,8 +156,10 @@
 }
 
 /* Botón de cerrar (X) */
+/* Superficies internas en NEGRO translucido: sobre la lamina oscura el blanco
+   las agrisa, el negro las hunde y mantiene el ahumado. */
 .close-button {
-    background: #2d1b4e;
+    background: rgba(0, 0, 0, 0.22);
     color: #ec4899;
     text-shadow: none;
     padding: 2px;
@@ -87,9 +174,9 @@
 }
 
 .control-center {
-    background: rgba(18, 12, 26, 0.96);
+    background-color: rgba(10, 10, 10, 0.42);
+    /* Sin sombra exterior: ver la nota en .notification (rompe el redondeo). */
     border-radius: 24px;
-    border: 2px solid rgba(217, 70, 239, 0.4);
     margin-top: 10px;
 
     /* FORZAR TAMAÑO DINÁMICO */
@@ -132,7 +219,7 @@
 .widget-buttons-grid {
     padding: 8px;
     border-radius: 15px;
-    background: rgba(45, 27, 78, 0.5);
+    background: rgba(0, 0, 0, 0.16);
 }
 
 /* Los 2 botones reparten todo el ancho (≈50% cada uno) */
@@ -156,8 +243,8 @@
     border-radius: 10px;
     font-size: 18px;
     color: #c9a0ff;
-    background: rgba(217, 70, 239, 0.12);
-    border: 1px solid rgba(217, 70, 239, 0.3);
+    background: rgba(0, 0, 0, 0.16);
+    border: 1px solid rgba(0, 0, 0, 0.35);
     transition: all 150ms ease;
 }
 
@@ -169,8 +256,8 @@
 }
 
 .control-center .widget-buttons-grid > flowbox > flowboxchild > button:hover {
-    background: rgba(217, 70, 239, 0.28);
-    border-color: rgba(217, 70, 239, 0.6);
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(0, 0, 0, 0.55);
     color: #f0f0ff;
 }
 
@@ -188,7 +275,7 @@
 
 /* Botón de "Limpiar todo" */
 .widget-title > button {
-    background: rgba(45, 27, 78, 0.8);
+    background: rgba(0, 0, 0, 0.22);
     color: #c8c0e0;
     border-radius: 10px;
     padding: 5px 10px;

@@ -11,10 +11,11 @@
   "positionX": "center",
   "positionY": "top",
   "control-center-width": 400,
-  "control-center-height": 450,
+  "control-center-height": -1,
+  "fit-to-screen": false,
   "control-center-margin-top": 10,
-  "control-center-margin-bottom": 100,
-  "fit-empty-placeholder": true,
+  "control-center-margin-bottom": 8,
+  "fit-empty-placeholder": false,
   "layer": "overlay",
   "cssPriority": "application",
   "widgets": [
@@ -40,20 +41,17 @@
     "buttons-grid": {
       "actions": [
         {
-          "label": "󰝞",
+          "label": "\udb81\udf5e",
           "command": "~/.config/swaync/spotify_vol.sh down 5"
         },
         {
-          "label": "󰝝",
+          "label": "\udb81\udf5d",
           "command": "~/.config/swaync/spotify_vol.sh up 5"
         }
       ]
     },
     "notifications": {
-      "text": "Notificaciones",
-      "group-by-app": true,
-      "group-by-app-max": 3,
-      "group-by-app-collapsed-max": 1
+      "vexpand": false
     }
   },
   "notification-action": [

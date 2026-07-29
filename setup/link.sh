@@ -41,4 +41,17 @@ for pkg in "$DOTFILES"/*/; do
     echo "✓ $name"
 done
 
+# Estado local generado por hypr_tweak.sh: esta en .gitignore, asi que un clon
+# limpio no lo trae y el `source` final de hyprland.conf falla al arrancar.
+OVERRIDES="$HOME/.config/hypr/conf.d/overrides.conf"
+if [[ ! -e "$OVERRIDES" ]]; then
+    mkdir -p "$(dirname "$OVERRIDES")"
+    cat > "$OVERRIDES" <<'EOF'
+# Generado por hypr_tweak.sh (panel Ajustes eww). No editar a mano.
+# Vacio hasta el primer `hypr_tweak.sh set`: solo existe para que el
+# `source` final de hyprland.conf no falle.
+EOF
+    echo "✓ overrides.conf (placeholder)"
+fi
+
 echo "✓ Enlaces completos."

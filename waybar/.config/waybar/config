@@ -83,8 +83,9 @@
                 "  "
             ]
         },
-        "on-click": "~/.config/eww/scripts/close_cal.sh; pavucontrol",
-        "on-click-right": "swayosd-client --output-volume mute-toggle",
+        "on-click": "~/.config/eww/scripts/toggle_vol.sh",
+        "on-click-right": "~/.config/eww/scripts/close_cal.sh; pavucontrol",
+        "on-click-middle": "swayosd-client --output-volume mute-toggle",
         "on-scroll-up": "swayosd-client --output-volume raise",
         "on-scroll-down": "swayosd-client --output-volume lower"
     },

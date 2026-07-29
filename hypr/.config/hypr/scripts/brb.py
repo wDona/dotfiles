@@ -3,9 +3,11 @@
 
 Usage: brb.py [minutes] [message...]
 No args -> rofi prompt: "10 café"  (first token = minutes, rest = message)
+             con historial de entradas anteriores para reutilizar.
+             Alt+Supr sobre una entrada la borra del historial.
 Any key / click closes it.
 """
-import sys, subprocess, time
+import os, sys, subprocess, time
 import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib, Gdk
@@ -20,22 +22,74 @@ window { background: linear-gradient(135deg, #1a1b26, #24283b); }
 """
 
 
-def parse(argv):
-    if argv:
-        raw = " ".join(argv)
-    else:
-        raw = subprocess.run(
-            ["rofi", "-dmenu", "-p", "BRB", "-l", "0",
-             "-mesg", "minutos + mensaje  (ej: 10 café)"],
-            capture_output=True, text=True, input="",
-        ).stdout.strip()
-    if not raw:
-        sys.exit(0)
+HIST = os.path.join(
+    os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"),
+    "brb_history",
+)
+MAX_HIST = 15
+
+
+def load_history():
+    try:
+        with open(HIST, encoding="utf-8") as f:
+            return [ln.strip() for ln in f if ln.strip()]
+    except FileNotFoundError:
+        return []
+
+
+def save_history(entries):
+    os.makedirs(os.path.dirname(HIST), exist_ok=True)
+    with open(HIST, "w", encoding="utf-8") as f:
+        for e in entries[:MAX_HIST]:
+            f.write(e + "\n")
+
+
+def remember(raw):
+    """Mueve raw al principio del historial (sin duplicarlo)."""
+    entries = [e for e in load_history() if e != raw]
+    entries.insert(0, raw)
+    save_history(entries)
+
+
+def split(raw):
     head, _, rest = raw.partition(" ")
     try:
         return int(head), (rest.strip() or "Vuelvo enseguida")
     except ValueError:
+        # Sin numero delante: el texto entero es el mensaje, 5 min por defecto.
         return 5, raw
+
+
+def parse(argv):
+    if argv:
+        raw = " ".join(argv)
+        remember(raw)
+        return split(raw)
+
+    # Bucle porque Alt+Supr borra del historial y vuelve a abrir el menu, en
+    # vez de salir: asi se pueden limpiar varias entradas de una sentada.
+    while True:
+        hist = load_history()
+        proc = subprocess.run(
+            ["rofi", "-dmenu", "-p", "BRB",
+             # -l al tamaño real: con historial vacio queda en 0 y el menu se
+             # colapsa como antes, sin dejar un hueco de lista vacia.
+             "-l", str(min(len(hist), 8)),
+             "-kb-custom-1", "Alt+Delete",
+             "-mesg", "minutos + mensaje (ej: 10 café) · Alt+Supr borra del historial"],
+            capture_output=True, text=True, input="\n".join(hist),
+        )
+        raw = proc.stdout.strip()
+
+        if proc.returncode == 10:          # Alt+Supr
+            if raw:
+                save_history([e for e in load_history() if e != raw])
+            continue
+        if proc.returncode != 0 or not raw:  # Escape / vacio
+            sys.exit(0)
+
+        remember(raw)
+        return split(raw)
 
 
 def on_activate(app, minutes, message):

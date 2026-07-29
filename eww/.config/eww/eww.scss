@@ -1,12 +1,55 @@
 // Paleta morada (igual que rofi / waybar / swaync)
-$bg: #140f1a;
-$bg-cell: #1c1228;
-$surface: #2d1b4e;
+$bg: #140f1a;          // opaco a proposito: se usa tambien como COLOR DE TEXTO
+                       // sobre fondos accent (.tg-on, .note-save, .cal-cell.today)
 $accent: #d946ef;
 $accent2: #ec4899;
 $fg: #f0f0ff;
 $fg-dim: #5a4a6a;
 $lila: #c9a0ff;
+
+// ══════════════════════════════════════════════════════════
+// ─── CRISTAL ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// El desenfoque lo pone Hyprland, no GTK: ver conf.d/styles.conf
+//   layerrule = blur true, match:namespace gtk-layer-shell
+// Las 6 ventanas de eww comparten ese namespace, asi que una regla las cubre.
+//
+// Aqui solo se define lo que Hyprland NO puede hacer: la lamina translucida.
+// PLANA y NEGRA NEUTRA: nada de degradados, filos inset ni tintes de color.
+// El color lo tiene que poner el wallpaper atravesando el cristal, no la
+// lamina; una lamina teñida tapa el fondo y se lee como pintura plana.
+//
+// OJO con el alpha: en eww las celdas internas cubren casi toda la superficie
+// del panel y SE APILAN sobre la lamina. Con lamina 0.75 y celdas 0.30 encima
+// el compuesto se va a ~0.83 y el panel se lee opaco aunque el blur funcione.
+// Por eso la lamina de eww va mas baja que la de kitty (0.75): kitty no tiene
+// celdas encima, eww si.
+//
+// Suelo duro: el alpha de $glass debe quedar POR ENCIMA del ignore_alpha 0.15
+// de la layerrule, o Hyprland deja de difuminar del todo.
+$glass:       rgba(10, 10, 10, 0.42);       // lamina de la ventana
+
+// Superficies internas en negro translucido: hunden la celda y mantienen el
+// ahumado, y siguen dejando pasar el fondo difuminado. Flojas a proposito:
+// cada punto de alpha aqui se suma al de la lamina.
+$bg-cell: rgba(0, 0, 0, 0.14);
+$surface: rgba(255, 255, 255, 0.10);   // solo hover: aqui si hace falta luz
+
+// Lamina de vidrio PLANA. Sin degradados y sin filos inset: un "inset 0 1px"
+// claro arriba mas uno oscuro abajo se lee como un degradado vertical aunque
+// sean solo dos lineas de 1px. No volver a meterlos.
+//
+// NI SOMBRA EXTERIOR TAMPOCO, y esta es la importante porque no es obvia:
+// un `box-shadow: 0 10px 30px` pinta un halo semitransparente ALREDEDOR del
+// panel, esquinas incluidas. Ese halo tiene alpha por encima del ignore_alpha
+// 0.15 de la layerrule, asi que Hyprland lo trata como superficie a difuminar
+// y el blur pasa a cubrir el rectangulo entero del halo en vez de la caja
+// redondeada. Resultado: el panel se ve con esquinas cuadradas por mucho
+// border-radius que lleve. Sin sombra, las esquinas quedan en alpha 0, caen
+// por debajo del umbral y el blur respeta el redondeo.
+@mixin glass {
+  background-color: $glass;
+}
 
 * {
   all: unset;
@@ -14,8 +57,10 @@ $lila: #c9a0ff;
 }
 
 .cal-box {
-  background-color: $bg;
-  border: 2px solid $accent;
+  @include glass;
+  // Sin borde: la lamina se recorta contra el wallpaper solo con el
+  // border-radius y la sombra exterior del mixin. El magenta se conserva
+  // unicamente en los estados .sel (seleccion).
   border-radius: 16px;
   padding: 14px;
   margin: 4px;
@@ -244,10 +289,7 @@ $lila: #c9a0ff;
 // ─── DASHBOARD HARDWARE ───────────────────────────────────
 // ══════════════════════════════════════════════════════════
 .dash {
-  background-color: rgba(20, 15, 26, 0.96);
-  border-left: 2px solid $accent;
-  border-top: 2px solid rgba(217, 70, 239, 0.4);
-  border-bottom: 2px solid rgba(217, 70, 239, 0.4);
+  @include glass;
   border-top-left-radius: 22px;
   border-bottom-left-radius: 22px;
   padding: 22px 20px;
@@ -320,7 +362,7 @@ $lila: #c9a0ff;
   font-weight: bold;
   padding: 9px 6px;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   &:hover { background-color: $surface; color: #ffffff; }
 }
 .tool-timer.running {
@@ -340,9 +382,7 @@ $lila: #c9a0ff;
 // ─── MENU SISTEMA (power + herramientas) ──────────────────
 // ══════════════════════════════════════════════════════════
 .sysmenu {
-  background-color: rgba(20, 15, 26, 0.96);
-  border: 2px solid $accent;
-  border-top: 2px solid rgba(217, 70, 239, 0.4);
+  @include glass;
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 18px;
   border-top-left-radius: 6px;
@@ -354,7 +394,7 @@ $lila: #c9a0ff;
 .sm-item {
   background-color: $bg-cell;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   padding: 11px 13px;
   &:hover { background-color: $surface; }
 }
@@ -376,7 +416,7 @@ $lila: #c9a0ff;
 
 // ── Separador ──
 .sm-sep {
-  background-color: rgba(217, 70, 239, 0.22);
+  background-color: rgba(255, 255, 255, 0.10);
   min-height: 1px;
   margin: 4px 2px;
 }
@@ -391,7 +431,7 @@ $lila: #c9a0ff;
   font-size: 20px;
   padding: 12px 0;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   &:hover { background-color: $surface; color: #ffffff; }
 }
 
@@ -399,9 +439,7 @@ $lila: #c9a0ff;
 // ─── MENU BATERIA (perfiles de energia) ───────────────────
 // ══════════════════════════════════════════════════════════
 .batmenu {
-  background-color: rgba(20, 15, 26, 0.96);
-  border: 2px solid $accent;
-  border-top: 2px solid rgba(217, 70, 239, 0.4);
+  @include glass;
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 18px;
   border-top-left-radius: 6px;
@@ -417,7 +455,7 @@ $lila: #c9a0ff;
 .bat-item {
   background-color: $bg-cell;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   padding: 10px 12px;
   &:hover { background-color: $surface; }
   &.sel {
@@ -445,8 +483,7 @@ $lila: #c9a0ff;
 // ─── PERSONALIZACION (fondo de pantalla) ──────────────────
 // ══════════════════════════════════════════════════════════
 .perso {
-  background-color: rgba(20, 15, 26, 0.96);
-  border: 2px solid $accent;
+  @include glass;
   // mismo redondeo que las ventanas de Hyprland (decoration:rounding = 16)
   border-radius: 16px;
   padding: 14px;
@@ -476,7 +513,7 @@ $lila: #c9a0ff;
 .wp-card {
   background-color: $bg-cell;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   padding: 8px;
   &:hover { background-color: $surface; }
   &.sel {
@@ -510,7 +547,7 @@ $lila: #c9a0ff;
   font-weight: bold;
   padding: 11px 13px;
   border-radius: 12px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   margin-top: 4px;
   &:hover { background-color: $surface; color: $accent; }
 }
@@ -530,7 +567,7 @@ $lila: #c9a0ff;
 .cat-card {
   background-color: $bg-cell;
   border-radius: 14px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   padding: 16px 16px;
   &:hover { background-color: $surface; }
 }
@@ -556,7 +593,7 @@ $lila: #c9a0ff;
   font-size: 12px;
   padding: 7px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   &:hover { background-color: $surface; }
   &.sel {
     border: 2px solid $accent;
@@ -574,7 +611,7 @@ $lila: #c9a0ff;
 .conf-item {
   background-color: $bg-cell;
   border-radius: 10px;
-  border: 1px solid rgba(217, 70, 239, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.35);
   padding: 10px 13px;
   &:hover { background-color: $surface; }
 }
@@ -653,8 +690,7 @@ scale slider {
 // ══════════════════════════════════════════════════
 
 .wt-box {
-  background-color: $bg;
-  border: 2px solid $accent;
+  @include glass;
   border-radius: 16px;
   padding: 18px;
   margin: 4px;
@@ -746,3 +782,37 @@ $aviso-red:    #ff5c5c;
 .wt-alert-ico  { font-size: 15px; }
 .wt-alert-txt  { color: $fg;     font-size: 13px; font-weight: bold; }
 .wt-alert-when { color: $fg-dim; font-size: 12px; }
+
+// ══════════════════════════════════════════════════════════
+// ─── VOLUMEN ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+.volmenu {
+  @include glass;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.vol-ico {
+  color: $lila;
+  font-size: 19px;
+  padding: 4px 9px;
+  border-radius: 10px;
+  background-color: $bg-cell;
+
+  &:hover { background-color: $surface; color: #ffffff; }
+
+  // Silenciado: el icono ya cambia de glifo, el color refuerza el estado.
+  &.muted { color: $accent2; }
+}
+
+.vol-val {
+  color: $fg;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+// El slider reutiliza los estilos globales de `scale` (trough/highlight/slider)
+// que ya usan los sliders de Ajustes, asi que aqui solo se le da aire.
+.vol-scale {
+  margin: 2px 2px 0 2px;
+}

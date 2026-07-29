@@ -61,10 +61,9 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 . "$HOME/.local/bin/env"
-
 # lean-ctx shell hook — begin
-if [ -f "$HOME/.config/lean-ctx/shell-hook.zsh" ]; then
-. "$HOME/.config/lean-ctx/shell-hook.zsh"
+if [ -f "/home/wdona/.config/lean-ctx/shell-hook.zsh" ]; then
+. "/home/wdona/.config/lean-ctx/shell-hook.zsh"
 fi
 # lean-ctx shell hook — end
 

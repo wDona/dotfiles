@@ -120,8 +120,7 @@ fi
 # -matching normal: 'fox' coincide con 'firefox'.
 # -sort + fzf: prioriza prefijo / mejor match (apps o web, lo que coincida antes va primero).
 sel=$(rofi -dmenu -i -p "Buscar" -show-icons -matching normal -sort -sorting-method fzf \
-        -kb-cancel 'Escape,MousePrimary' \
-        -mesg '🌐' < "$tmp")
+        -kb-cancel 'Escape,MousePrimary' < "$tmp")
 [ -z "$sel" ] && exit 0
 
 # App conocida -> lanzar (+1 uso); entrada de historial -> abrir url; resto -> web

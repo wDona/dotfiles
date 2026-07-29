@@ -98,11 +98,13 @@ case "$1" in
         PRESETS="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/timer_presets"
         [ -f "$PRESETS" ] || printf '30s\n5m\n10m\n1h\n1h30m\n' > "$PRESETS"
         menu=$( { echo "Cronometro"; sort_presets; echo "[+] Nuevo preset"; echo "[-] Borrar preset"; } )
-        inp=$(printf '%s\n' "$menu" | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "Temporizador (o escribe: 5m, 2:30, @18:30)")
+        inp=$(printf '%s\n' "$menu" | rofi -dmenu -kb-cancel 'Escape,MousePrimary' \
+                -p "Temporizador" -mesg "Elige un preset o escribe: 5m · 1h30m · 2:30 · @18:30")
         [ -z "$inp" ] && exit 0
         case "$inp" in
             "[+] Nuevo preset")
-                nuevo=$(rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "Nuevo preset (5m, 1h30m, 2:30, @18:30)")
+                nuevo=$(rofi -dmenu -kb-cancel 'Escape,MousePrimary' \
+                          -p "Nuevo preset" -mesg "Formato: 5m · 1h30m · 2:30 · @18:30")
                 nuevo="${nuevo//[[:space:]]/}"; [ -z "$nuevo" ] && exit 0
                 if [[ "$nuevo" == @* ]]; then
                     date -d "${nuevo#@}" +%s >/dev/null 2>&1 || { notify-send "Temporizador" "Hora no valida: $nuevo"; exit 0; }

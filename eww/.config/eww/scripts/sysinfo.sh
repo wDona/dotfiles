@@ -23,39 +23,67 @@ mem=$(( 100 * mused / mtot ))
 mem_used=$(awk "BEGIN{printf \"%.1f\", $mused/1048576}")
 mem_total=$(awk "BEGIN{printf \"%.1f\", $mtot/1048576}")
 
-# ── DISCOS (todos los fisicos; muestra uso del montaje principal) ──
+# ── DISCOS (particiones montadas; una fila por particion) ──
+# Monta jes a ignorar (la ESP es estatica y no aporta). Vacia la variable
+# para que aparezcan todos.
+DISK_SKIP='^(/boot|/boot/efi|/efi)$'
 DISK_ICON=$'\Uf02ca'
-gb() { awk "BEGIN{printf \"%.0f\", $1/1073741824}"; }
+# Nombres bonitos por punto de montaje; el resto cae al nombre del dispositivo.
+disk_label() {
+    case "$1" in
+        /)      echo "Sistema" ;;
+        /data)  echo "Datos" ;;
+        *)      echo "${2#/dev/}  $1" ;;
+    esac
+}
+# Tamano legible: TB / GB con decimal por debajo de 10 / MB / KB.
+hsize() {
+    awk "BEGIN{b=$1
+        if(b>=1099511627776) printf \"%.2f TB\", b/1099511627776
+        else if(b>=10737418240) printf \"%.0f GB\", b/1073741824
+        else if(b>=1073741824) printf \"%.1f GB\", b/1073741824
+        else if(b>=1048576) printf \"%.0f MB\", b/1048576
+        else printf \"%.0f KB\", b/1024}"
+}
 di=0
-while read -r dname dsize; do
+seen=""
+while read -r src mp; do
     [ "$di" -ge 4 ] && break
-    mounts=$(lsblk -nro MOUNTPOINT "/dev/$dname" 2>/dev/null | grep -v '^\[' | grep -v '^[[:space:]]*$')
-    if grep -qx '/' <<<"$mounts"; then mp="/"; else mp=$(head -1 <<<"$mounts"); fi
-    if [ -n "$mp" ]; then
-        read -r dpct dused dtot < <(df -B1 --output=pcent,used,size "$mp" 2>/dev/null | tail -1 | tr -d '%')
-        eval "d${di}_name=\"$dname  $mp\" d${di}_val=\"$(gb "$dused") / $(gb "$dtot") GB\" d${di}_pct=${dpct:-0}"
-    else
-        eval "d${di}_name=\"$dname\" d${di}_val=\"$dsize · sin montar\" d${di}_pct=0"
-    fi
-    eval "d${di}_show=true"
+    # btrfs reporta "/dev/nvme0n1p3[/@]": nos quedamos con el dispositivo.
+    dev=${src%%[*}
+    # Un mismo dispositivo puede tener varios subvolumenes montados (@, @home,
+    # @var_log...): todos comparten el espacio, asi que solo la primera fila.
+    case " $seen " in *" $dev "*) continue ;; esac
+    [ -n "$DISK_SKIP" ] && [[ $mp =~ $DISK_SKIP ]] && continue
+    seen="$seen $dev"
+    read -r dpct dused dtot < <(df -B1 --output=pcent,used,size "$mp" 2>/dev/null | tail -1 | tr -d '%')
+    [ -n "$dtot" ] || continue
+    eval "d${di}_show=true \
+          d${di}_name=\"$(disk_label "$mp" "$dev")\" \
+          d${di}_val=\"$(hsize "$dused") / $(hsize "$dtot")\" \
+          d${di}_pct=${dpct:-0}"
     di=$((di+1))
-done < <(lsblk -dnro NAME,SIZE,TYPE 2>/dev/null | awk '$3=="disk"{print $1, $2}')
+done < <(findmnt -rno SOURCE,TARGET --real 2>/dev/null | grep '^/dev/')
 while [ "$di" -lt 4 ]; do eval "d${di}_show=false d${di}_name='' d${di}_val='' d${di}_pct=0"; di=$((di+1)); done
 
 # ── Temps ──
-cputemp=$(sensors -j 2>/dev/null | python3 -c "
-import sys,json
-try: d=json.load(sys.stdin)
-except: print(0); sys.exit()
-v=d.get('k10temp-pci-00c3',{}).get('Tctl',{}).get('temp1_input',0)
-print(round(v))" 2>/dev/null)
-gputemp=$(sensors -j 2>/dev/null | python3 -c "
-import sys,json
-try: d=json.load(sys.stdin)
-except: print(0); sys.exit()
-e=d.get('amdgpu-pci-0300',{}).get('edge',{})
-v=next((e[k] for k in e if k.endswith('_input')),0)
-print(round(v))" 2>/dev/null)
+# Lee sensors por PREFIJO de chip, no por direccion PCI: la direccion cambia
+# al mover tarjetas o tras updates de BIOS y dejaba la lectura a 0.
+SENSORS_CACHE=$(sensors -u 2>/dev/null)
+# $1 = regex de chip, $2 = nombre de la magnitud (edge, Tctl, junction...)
+sens() {
+    awk -v chipre="$1" -v want="$2" '
+        /^[^[:space:]]/ && !/:/     { chip=$0; next }
+        /^[^[:space:]].*:$/         { feat=substr($0, 1, length($0)-1); next }
+        /_input:/ {
+            if (chip ~ chipre && feat == want) { printf "%d\n", $2 + 0.5; exit }
+        }' <<<"$SENSORS_CACHE"
+}
+cputemp=$(sens '^k10temp-' 'Tctl')
+[ -z "$cputemp" ] && cputemp=$(sens '^coretemp-' 'Package id 0')
+# edge = temperatura del die; junction es el hotspot, como reserva.
+gputemp=$(sens '^amdgpu-' 'edge')
+[ -z "$gputemp" ] && gputemp=$(sens '^amdgpu-' 'junction')
 [ -z "$cputemp" ] && cputemp=0
 [ -z "$gputemp" ] && gputemp=0
 

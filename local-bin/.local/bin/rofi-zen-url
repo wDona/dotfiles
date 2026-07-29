@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Launcher de URLs con autocompletado del historial de Zen.
+# Gemelo de rofi-brave-url, pero Zen es base Firefox, no Chromium:
+#   - el historial vive en places.sqlite (tabla moz_places), no en History (urls)
+#   - el perfil esta en ~/.config/zen/, no en ~/.config/BraveSoftware/
+#
+#  - Escribe y autocompleta segun historial (matchea url Y titulo).
+#  - Enter en una entrada -> abre en Zen.
+#  - Texto libre con punto y sin espacios -> lo abre como URL.
+#  - Texto libre normal -> busqueda Google.
+#  - Alt+Supr sobre una entrada -> la oculta (blocklist propia, no toca Zen).
+set -euo pipefail
+
+ZEN_DIR="$HOME/.config/zen"
+BLOCK="$HOME/.config/rofi/zen-url-block.txt"
+SEP=" ┃ "
+mkdir -p "$(dirname "$BLOCK")"; touch "$BLOCK"
+
+# OJO con profiles.ini: hay DOS perfiles y las dos claves "Default" significan
+# cosas distintas. El "Default=1" de una seccion [ProfileN] apunta aqui a
+# "nckkx84t.Default Profile", que esta vacio. El perfil que Zen abre de verdad
+# es el "Default=<ruta>" de la seccion [InstallXXXX]. Se lee ese.
+PROFILE=""
+rel=$(awk -F= '
+    /^\[Install/  { in_install = 1; next }
+    /^\[/         { in_install = 0 }
+    in_install && $1 == "Default" { print $2; exit }
+' "$ZEN_DIR/profiles.ini" 2>/dev/null || true)
+[ -n "$rel" ] && [ -d "$ZEN_DIR/$rel" ] && PROFILE="$ZEN_DIR/$rel"
+
+# Fallback: el perfil cuyo places.sqlite se toco mas recientemente.
+if [ -z "$PROFILE" ]; then
+    PROFILE=$(find "$ZEN_DIR" -maxdepth 2 -name places.sqlite -printf '%T@ %h\n' 2>/dev/null \
+              | sort -rn | head -1 | cut -d' ' -f2-)
+fi
+
+if [ -z "$PROFILE" ] || [ ! -f "$PROFILE/places.sqlite" ]; then
+    notify-send "Zen URL" "No se encontro el perfil de Zen"
+    exit 1
+fi
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# Zen bloquea la BD -> copiamos places.sqlite (+ wal/shm) y consultamos la copia.
+cp "$PROFILE/places.sqlite" "$tmp/places.sqlite" 2>/dev/null || {
+    notify-send "Zen URL" "No se pudo leer el historial"; exit 1; }
+cp "$PROFILE/places.sqlite-wal" "$tmp/" 2>/dev/null || true
+cp "$PROFILE/places.sqlite-shm" "$tmp/" 2>/dev/null || true
+
+# "titulo ┃ url" ordenado por frecuencia, sin blocklist.
+# hidden=0 descarta redirecciones intermedias que Firefox guarda pero nunca
+# muestra; sin eso el listado se llena de URLs que el usuario no visito.
+list=$(sqlite3 -separator "$SEP" "$tmp/places.sqlite" \
+  "SELECT COALESCE(NULLIF(title,''), url), url FROM moz_places
+   WHERE url NOT LIKE 'about:%' AND url NOT LIKE 'chrome%' AND hidden = 0
+   ORDER BY visit_count DESC, last_visit_date DESC LIMIT 800;" 2>/dev/null \
+  | grep -vxFf "$BLOCK" 2>/dev/null || true)
+
+ret=0
+out=$(printf '%s\n' "$list" \
+  | rofi -dmenu -i -p "  Zen" \
+         -kb-custom-1 "Alt+Delete" \
+         -mesg "Enter: abrir · Alt+Supr: ocultar entrada") || ret=$?
+
+[ -z "${out:-}" ] && exit 0
+
+# Alt+Supr -> ocultar entrada del listado
+if [ "$ret" -eq 10 ]; then
+  printf '%s\n' "$out" >> "$BLOCK"
+  notify-send "Zen URL" "Entrada oculta del listado"
+  exec "$0"
+fi
+
+# Es entrada del historial si contiene el separador -> la url es el ultimo campo
+if printf '%s' "$out" | grep -qF "$SEP"; then
+  target="${out##* ┃ }"
+elif printf '%s' "$out" | grep -qE '^[^ ]+\.[^ ]+'; then
+  case "$out" in
+    http://*|https://*) target="$out" ;;
+    *) target="https://$out" ;;
+  esac
+else
+  target="https://www.google.com/search?q=$(printf '%s' "$out" | sed 's/ /+/g')"
+fi
+
+setsid zen-browser "$target" >/dev/null 2>&1 &

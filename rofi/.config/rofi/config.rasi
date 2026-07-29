@@ -19,11 +19,39 @@ configuration {
 //@theme "/dev/null"
 
 * {
-    bg-col:  #140f1a80;
+    /* ── Cristal ──────────────────────────────────────────────────
+       El desenfoque lo pone Hyprland (conf.d/styles.conf):
+           layerrule = blur true,         match:namespace rofi
+           layerrule = ignore_alpha 0.25, match:namespace rofi
+       El alpha de bg-col (0xbf = 75%) tiene que quedar POR ENCIMA de ese
+       0.25 o Hyprland no difumina la lamina.
+
+       IMPORTANTE: bg-col se pinta UNA sola vez, en `window`. Antes lo
+       repetian tambien mainbox y listview, y al apilarse tres capas al 50%
+       el resultado era ~87% opaco: por eso no se veia el blur por mucho
+       alpha que se le pusiera. mainbox/listview van transparentes.
+
+       Lamina NEGRA NEUTRA, mismo punto que kitty (background #0a0a0a,
+       background_opacity 0.75). Nada de teñirla de morado: el color lo tiene
+       que poner el wallpaper atravesando el cristal, no la lamina. Teñida se
+       lee como pintura plana, no como vidrio.                            */
+    bg-col:  #0a0a0abf;
+    /* Version opaca del fondo. Hace falta porque bg-col se usa tambien como
+       COLOR DE TEXTO sobre el chip magenta del prompt, y un texto con alpha
+       sobre cristal se vuelve ilegible. */
+    bg-solid: #0a0a0a;
+
+    /* Superficies internas en negro translucido: hunden la celda y mantienen
+       el ahumado, dejando pasar el fondo difuminado. */
+    glass-cell:  #0000004d;
+    glass-edge:  #ffffff26;
+
     bg-col-light: #1f1430;
-    bg-input: #1c1228;
+    /* Caja de busqueda: mas oscura que las celdas de la lista para que hunda
+       y se lea como campo de entrada, no como un elemento mas. */
+    bg-input: #00000080;
     border-col: #d946ef;
-    selected-col: #2d1b4e;
+    selected-col: #d946ef38;
     blue: #d946ef;
     fg-col: #f0f0ff;
     fg-col2: #ec4899;
@@ -46,21 +74,23 @@ window {
     enabled:             true;
     margin:              0px;
     padding:             0px;
-    border:              2px solid;
+    /* Sin borde: la lamina se recorta contra el fondo solo con el radius. */
+    border:              0px;
     border-radius:       18px;
-    border-color:        #d946ef;
     background-color:    @bg-col;
 }
 
+/* Transparente: el fondo ya lo pone `window`. Ver la nota en bg-col. */
 mainbox {
-    background-color: @bg-col;
+    background-color: transparent;
 }
 
 inputbar {
     children: [prompt,entry];
     background-color: @bg-input;
-    border: 1px solid;
-    border-color: @selected-col;
+    /* Sin borde tampoco aqui: el campo ya se distingue por su fondo, que es
+       mas oscuro que las celdas de la lista. */
+    border: 0px;
     border-radius: 12px;
     padding: 4px;
     margin: 14px 14px 0px 14px;
@@ -69,7 +99,7 @@ inputbar {
 prompt {
     background-color: @blue;
     padding: 6px 12px;
-    text-color: @bg-col;
+    text-color: @bg-solid;
     border-radius: 8px;
     margin: 0px;
     vertical-align: 0.5;
@@ -85,13 +115,40 @@ entry {
     vertical-align: 0.5;
 }
 
+/* Texto de ayuda (-mesg, el de "Enter: abrir · Alt+Supr: ..."). Por defecto
+   rofi lo pega al borde izquierdo sin padding ninguno. */
+message {
+    margin:  10px 14px 0px 14px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background-color: @glass-cell;
+    /* El tema por defecto de rofi le mete aqui un "border: 2px dash 0px 0px",
+       que es la linea punteada que salia encima del texto. */
+    border: 0px;
+}
+
+/* El centrado va en el textbox, no en el message: el message es solo la caja
+   contenedora y alinearla no mueve el texto de dentro.
+   Y va como `textbox` a secas, NO como `message textbox`: rofi parsea el
+   selector descendente sin quejarse pero luego no lo resuelve contra el
+   widget, asi que la regla se queda sin aplicar. El widget del -mesg se llama
+   literalmente "textbox"; prompt y entry tienen nombre propio, asi que esta
+   regla no los toca. */
+textbox {
+    expand: true;
+    text-color: @fg-dim;
+    horizontal-align: 0.5;
+    vertical-align: 0.5;
+}
+
 listview {
     border: 0px 0px 0px;
     padding: 6px 0px 0px;
     margin: 10px 0px 0px 20px;
     columns: 2;
     lines: 6;
-    background-color: @bg-col;
+    /* Transparente: el fondo ya lo pone `window`. Ver la nota en bg-col. */
+    background-color: transparent;
 }
 
 element {
@@ -101,20 +158,20 @@ element {
     padding:                     8px;
     border:                      0px solid;
     border-radius:               12px;
-    background-color:            @bg-input;
+    background-color:            @glass-cell;
     text-color:                  @fg-col;
     cursor:                      pointer;
 }
 
 element normal normal,
 element alternate normal {
-    background-color:            @bg-input;
+    background-color:            @glass-cell;
     text-color:                  @fg-col;
 }
 
 element normal active,
 element alternate active {
-    background-color:            @bg-input;
+    background-color:            @glass-cell;
     text-color:                  @fg-col2;
 }
 
