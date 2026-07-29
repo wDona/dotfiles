@@ -34,9 +34,9 @@ dirs=(
   /usr/share/applications
 )
 
-# Cache de apps parseadas: "name<TAB>icon<TAB>id" (sin uso, eso se aplica en runtime).
+# Cache de apps parseadas: "name<TAB>icon<TAB>id<TAB>meta" (sin uso, eso se aplica en runtime).
 # Parsear .desktop es lo caro -> solo se regenera si algun .desktop cambio.
-CACHE="$HOME/.cache/rofi_apps.cache"
+CACHE="$HOME/.cache/rofi_apps2.cache"
 existing=()
 for d in "${dirs[@]}"; do [ -d "$d" ] && existing+=("$d"); done
 
@@ -66,9 +66,10 @@ if [ ${#files[@]} -gt 0 ]; then
   awk -F= '
     function flush(){
       if(fname!="" && name!="" && nodisplay!="true" && hidden!="true" && !(name in seen)){
-        seen[name]=1; print name"\t"icon"\t"id
+        meta=kw" "gen; gsub(/[;\t]+/," ",meta)
+        seen[name]=1; print name"\t"icon"\t"id"\t"meta
       }
-      name="";icon="";nodisplay="";hidden="";sec=""
+      name="";icon="";nodisplay="";hidden="";kw="";gen="";sec=""
     }
     FILENAME!=fname{ flush(); fname=FILENAME; nf=split(FILENAME,a,"/"); id=a[nf] }
     /^\[/{ sec=$0 }
@@ -77,6 +78,9 @@ if [ ${#files[@]} -gt 0 ]; then
       if($1=="Icon"      && icon==""     ){sub(/^Icon=/,"");      icon=$0}
       if($1=="NoDisplay" && nodisplay=="" ){sub(/^NoDisplay=/,""); nodisplay=$0}
       if($1=="Hidden"    && hidden==""   ){sub(/^Hidden=/,"");    hidden=$0}
+      # Alias de busqueda: matchean pero no se muestran (campo meta de rofi).
+      if($1=="Keywords"    && kw=="" ){sub(/^Keywords=/,"");    kw=$0}
+      if($1=="GenericName" && gen==""){sub(/^GenericName=/,""); gen=$0}
     }
     END{ flush() }
   ' "${files[@]}" > "$new" 2>/dev/null
@@ -93,17 +97,17 @@ awk -F'\t' 'NR==FNR{keep[$0];next} $3 in keep' "$ids" "$CACHE" > "$pruned"
 [ -s "$pruned" ] && mv "$pruned" "$CACHE"
 rm -f "$ids" "$pruned"
 
-apps=()   # cada elemento: "count<TAB>name<TAB>icon"
-while IFS=$'\t' read -r name icon id; do
+apps=()   # cada elemento: "count<TAB>name<TAB>icon<TAB>meta"
+while IFS=$'\t' read -r name icon id meta; do
   [ -z "$name" ] && continue
   APP_ID["$name"]="$id"
-  apps+=("${USE[$name]:-0}"$'\t'"$name"$'\t'"$icon")
+  apps+=("${USE[$name]:-0}"$'\t'"$name"$'\t'"$icon"$'\t'"$meta")
 done < "$CACHE"
 
 # Ordenar apps por uso desc, luego nombre asc -> emitir formato rofi (icono por fila)
 if [ ${#apps[@]} -gt 0 ]; then
-  while IFS=$'\t' read -r cnt name icon; do
-    printf '%s\0icon\x1f%s\n' "$name" "$icon" >> "$tmp"
+  while IFS=$'\t' read -r cnt name icon meta; do
+    printf '%s\0icon\x1f%s\x1fmeta\x1f%s\n' "$name" "$icon" "$meta" >> "$tmp"
   done < <(printf '%s\n' "${apps[@]}" | sort -t$'\t' -k1,1nr -k2,2)
 fi
 

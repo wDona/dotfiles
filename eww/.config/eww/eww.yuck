@@ -31,7 +31,9 @@
 
 ;; Clima. Lo rellena toggle_weather.sh antes de abrir (no defpoll: el widget
 ;; solo existe mientras esta abierto y el script ya cachea 30 min).
-(defvar weather_json "{\"ok\":false,\"city\":\"\",\"icon\":\"\",\"temp\":\"--\",\"desc\":\"\",\"feels\":\"--\",\"hum\":\"--\",\"wind\":\"--\",\"days\":[]}")
+;; days siempre trae 4 elementos: el widget los indexa por posicion (rejilla
+;; 2x2) y con la lista vacia reventaria antes del primer update.
+(defvar weather_json "{\"ok\":false,\"city\":\"\",\"icon\":\"\",\"temp\":\"--\",\"desc\":\"\",\"feels\":\"--\",\"hum\":\"--\",\"wind\":\"--\",\"days\":[{\"name\":\"\",\"icon\":\"\",\"max\":\"--\",\"min\":\"--\",\"alerts\":[]},{\"name\":\"\",\"icon\":\"\",\"max\":\"--\",\"min\":\"--\",\"alerts\":[]},{\"name\":\"\",\"icon\":\"\",\"max\":\"--\",\"min\":\"--\",\"alerts\":[]},{\"name\":\"\",\"icon\":\"\",\"max\":\"--\",\"min\":\"--\",\"alerts\":[]}],\"huerfanos\":0}")
 (defvar themes_gtk "[]")    ;; [{name,selected}]
 (defvar themes_icon "[]")   ;; [{name,selected}]
 (defvar kitty_op 75)        ;; opacidad kitty 0-100
@@ -559,14 +561,25 @@
 ;; ─── CLIMA ────────────────────────────────────────────────
 ;; ══════════════════════════════════════════════════════════
 
-;; Una columna del pronostico (dia, icono, max/min)
+;; Una card del pronostico: dia, icono, max/min y los avisos de ESE dia.
+;; Van en rejilla 2x2, asi que hay ancho de sobra para el nombre del aviso al
+;; lado de la hora; el tooltip da el rango largo con el dia.
 (defwidget wt-day [d]
   (box :class "wt-day" :orientation "v" :space-evenly false :spacing 6
-    (label :class "wt-day-name" :text {d.name})
-    (label :class "wt-day-ico"  :text {d.icon})
-    (box :space-evenly false :spacing 5 :halign "center"
+    (box :space-evenly false
+      (label :class "wt-day-name" :hexpand true :halign "start" :text {d.name})
+      (label :class "wt-day-ico"  :text {d.icon}))
+    (box :space-evenly false :spacing 6 :halign "start"
       (label :class "wt-day-max" :text "${d.max}°")
-      (label :class "wt-day-min" :text "${d.min}°"))))
+      (label :class "wt-day-min" :text "${d.min}°"))
+    (box :orientation "v" :space-evenly false :spacing 3
+         :visible {arraylength(d.alerts) > 0}
+      (for a in {d.alerts}
+        (box :class "wt-alert ${a.color}" :space-evenly false :spacing 6
+             :tooltip "${a.text}: ${a.when}"
+          (label :class "wt-alert-ico" :text {a.icon})
+          (label :class "wt-alert-txt" :hexpand true :halign "start" :text {a.text})
+          (label :class "wt-alert-when" :text {a.hours}))))))
 
 ;; Una metrica del bloque inferior (sensacion / humedad / viento)
 (defwidget wt-stat [icon label value]
@@ -600,20 +613,16 @@
 
     (box :class "wt-sep")
 
-    ;; pronostico
-    (box :class "wt-days" :space-evenly true
-      (for d in {weather_json.days}
-        (wt-day :d d)))
-
-    ;; avisos AEMET (solo si hay alguno vigente amarillo o superior)
-    (box :class "wt-sep" :visible {weather_json.has_alerts})
-    (box :class "wt-alerts" :orientation "v" :space-evenly false :spacing 6
-         :visible {weather_json.has_alerts}
-      (for a in {weather_json.alerts}
-        (box :class "wt-alert ${a.color}" :space-evenly false :spacing 9
-          (label :class "wt-alert-ico" :text "󰀦")
-          (label :class "wt-alert-txt" :hexpand true :halign "start" :text {a.text})
-          (label :class "wt-alert-when" :text {a.when}))))))
+    ;; pronostico en rejilla 2x2. Indices fijos porque el script siempre manda
+    ;; 4 dias (hoy + 3), que es justo el horizonte de los avisos de AEMET: por
+    ;; eso cada aviso cabe dentro de su card y no hace falta lista aparte.
+    (box :class "wt-days" :orientation "v" :space-evenly false :spacing 8
+      (box :space-evenly true :spacing 8
+        (wt-day :d {weather_json.days[0]})
+        (wt-day :d {weather_json.days[1]}))
+      (box :space-evenly true :spacing 8
+        (wt-day :d {weather_json.days[2]})
+        (wt-day :d {weather_json.days[3]})))))
 
 (defwindow clima
   :monitor 0

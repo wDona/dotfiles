@@ -137,6 +137,7 @@
     },
     "custom/weather": {
         "exec": "~/.config/eww/scripts/weather.sh bar",
+        "return-type": "json",
         "interval": 900,
         "tooltip": false,
         "on-click": "~/.config/eww/scripts/toggle_weather.sh"

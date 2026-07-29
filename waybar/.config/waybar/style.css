@@ -8,6 +8,9 @@ window#waybar {
     background: transparent; /* Transparente: el blur del compositor solo se ve bajo los modulos */
     /*border-bottom: 2px solid rgba(255, 255, 255, 0.1);*/
     color: #f0f0ff;
+    /* Sin padding: la barra se queda en 30px. GTK recorta box-shadow contra el
+       borde de la capa, asi que un halo exterior SIEMPRE saldria cortado a esta
+       altura. Por eso el glow de hover es inset (ver final del archivo). */
 }
 
 #workspaces button {
@@ -17,7 +20,7 @@ window#waybar {
     margin-bottom: 3px;
     color: #c9a0ff;
     border-radius: 10px;
-    background: rgba(10, 10, 10, 0.12);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
     font-weight: 500;
@@ -39,7 +42,7 @@ window#waybar {
 }
 
 #workspaces button:hover {
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border-color: rgba(88, 72, 104, 0.55);
     color: #e8d0ff;
 }
@@ -48,14 +51,13 @@ window#waybar {
     color: #fff;
     background: linear-gradient(135deg, rgba(217, 70, 239, 0.8), rgba(244, 114, 182, 0.6));
     border: 1px solid #d946ef;
-    box-shadow: 0 0 10px rgba(217, 70, 239, 0.15);
 }
 
 #pulseaudio, #cpu, #memory, #network, #custom-net {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
     font-weight: 500;
@@ -66,7 +68,7 @@ window#waybar {
 }
 
 #pulseaudio:hover, #cpu:hover, #memory:hover, #network:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
@@ -74,7 +76,7 @@ window#waybar {
     padding: 6px 14px;
     margin: 4px 4px;
     border-radius: 12px;
-    background: rgba(0, 0, 0, 0.16);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     color: #e8e8ff;
     font-weight: 600;
@@ -82,7 +84,7 @@ window#waybar {
 }
 
 #clock:hover, #custom-clock:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
@@ -97,7 +99,7 @@ window#waybar {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
     font-weight: 500;
@@ -105,8 +107,26 @@ window#waybar {
 }
 
 #custom-weather:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
+}
+
+/* Aviso AEMET vigente hoy: el modulo se tiñe del color del nivel. Los mismos
+   tonos que los chips del widget de eww (~/.config/eww/eww.scss). */
+#custom-weather.yellow {
+    color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.55);
+    background: rgba(255, 215, 0, 0.12);
+}
+#custom-weather.orange {
+    color: #ff9d3d;
+    border-color: rgba(255, 157, 61, 0.55);
+    background: rgba(255, 157, 61, 0.12);
+}
+#custom-weather.red {
+    color: #ff5c5c;
+    border-color: rgba(255, 92, 92, 0.60);
+    background: rgba(255, 92, 92, 0.14);
 }
 
 /* Privacidad: solo aparece cuando algo captura pantalla o micro.
@@ -117,13 +137,13 @@ window#waybar {
     padding: 6px 11px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
 }
 
 #privacy:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
@@ -143,19 +163,19 @@ window#waybar {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     color: #c9a0ff;
     font-weight: 600;
     transition: all 150ms ease;
 }
 #custom-keyboard:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
 #custom-power {
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     color: #c9a0ff;
     border-radius: 12px;
     padding: 6px 12px;
@@ -169,7 +189,7 @@ window#waybar {
 }
 
 #custom-power:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
     color: #ffffff;
 }
@@ -178,7 +198,7 @@ window#waybar {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     color: #c9a0ff;
     transition: all 150ms ease;
@@ -191,7 +211,7 @@ window#waybar {
     min-width: 0;
 }
 #custom-battery:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 #custom-battery.charging {
@@ -215,13 +235,13 @@ window#waybar {
     margin: 4px 4px;
     padding: 4px 10px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
 }
 
 #tray:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
@@ -252,25 +272,25 @@ window#waybar {
     margin-left: 12px;
     margin-right: 8px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     transition: all 150ms ease;
 }
 
 #custom-launcher:hover {
     color: #f472b6;
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
-    /* El glow SI sigue magenta: una sombra negra sobre barra oscura no se ve,
-       y aqui la sombra es el feedback de hover, no decoracion. */
-    box-shadow: 0 0 12px rgba(217, 70, 239, 0.30);
+    /* Sin glow a proposito: esta pastilla no lleva margen vertical, ocupa los
+       30px enteros de la barra y cualquier halo exterior saldria recortado.
+       Aqui el feedback de hover es el color + el borde. */
 }
 
 #custom-notification {
     margin: 4px 4px;
     padding: 6px 12px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     color: #e8e8ff;
     font-weight: 500;
@@ -278,7 +298,7 @@ window#waybar {
 }
 
 #custom-notification:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 
@@ -302,7 +322,7 @@ window#waybar {
     padding: 6px 12px;
     margin: 4px 2px;
     border-radius: 12px;
-    background: rgba(10, 10, 10, 0.14);
+    background: rgba(10, 10, 10, 0.03);
     border: 1px solid rgba(88, 72, 104, 0.55);
     color: #c9a0ff;
     transition: all 150ms ease;
@@ -326,7 +346,7 @@ window#waybar {
     min-width: 0;
 }
 #custom-hwtoggle:hover, #custom-timer:hover {
-    background: rgba(10, 10, 10, 0.24);
+    background: rgba(10, 10, 10, 0.08);
     border-color: rgba(124, 102, 145, 0.70);
 }
 /* el grupo no dibuja fondo propio */
@@ -342,6 +362,11 @@ window#waybar {
     border-radius: 12px;
     color: #c9a0ff;
     font-weight: 500;
+    /* Sin fondo en reposo (es texto, no pastilla), pero con el borde ya
+       reservado en transparente: asi el hover lo tiñe sin mover el layout. */
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 150ms ease;
 }
 
 /* Bordes en gris-morado oscuro (88,72,104 = el $fg-dim del rice, #5a4a6a) en
@@ -355,5 +380,82 @@ window#waybar {
    meterlos aqui. El unico relieve permitido es el borde, que es uniforme.
 
    Suelo duro para los fondos: el ignore_alpha de la layerrule de waybar
-   (conf.d/styles.conf, ahora 0.05). Por debajo de ese valor Hyprland deja
-   de difuminar y se pierde el blur entero. */
+   (conf.d/styles.conf, ahora 0.01). Por debajo de ese valor Hyprland deja
+   de difuminar y se pierde el blur entero. Los fondos estan en 0.03: lo
+   minimo que dispara el blur sin que la lamina tiña de negro. Si se quiere
+   mas o menos oscuro, la palanca NO es este alpha (vuelve la pintura
+   negra) sino brightness/vibrancy_darkness del blur en styles.conf. */
+
+/* ── Hover, unico para toda la barra ──────────────────────────────────
+   Fondo + borde + glow, los tres en un sitio: antes cada modulo repetia el
+   fondo y el borde y a #custom-net y #custom-spotify se les habia olvidado.
+   Va al final para pisar las reglas de arriba sin tocarlas una a una.
+   Glow magenta: una sombra negra sobre barra oscura no se ve, y aqui la
+   sombra es el feedback de hover, no decoracion.
+   Radio 4px, no 12: con la barra en 30px y pastillas de 22px solo hay 4px de
+   aire, y GTK recorta box-shadow contra el borde de la capa. Un halo mas
+   ancho sale cortado por abajo. Para subirlo hay que subir height + padding
+   de window#waybar a la vez, y eso es pantalla reservada.
+   #custom-launcher va aparte: ocupa la barra entera de alto y el halo no le
+   cabe. */
+#workspaces button:hover,
+#pulseaudio:hover,
+#cpu:hover,
+#memory:hover,
+#network:hover,
+#custom-net:hover,
+#clock:hover,
+#custom-clock:hover,
+#custom-weather:hover,
+#privacy:hover,
+#custom-keyboard:hover,
+#custom-power:hover,
+#custom-battery:hover,
+#tray:hover,
+#custom-notification:hover,
+#custom-timer:hover,
+#custom-hwtoggle:hover,
+#custom-spotify:hover {
+    background: rgba(10, 10, 10, 0.08);
+    border-color: rgba(124, 102, 145, 0.70);
+    box-shadow: 0 0 4px rgba(217, 70, 239, 0.55);
+}
+
+/* Los modulos que se ocultan colapsando la pastilla no deben pintarse ni
+   brillar en su sitio vacio. */
+#custom-battery.none:hover,
+#custom-timer.idle:hover,
+#workspaces button.special.empty:hover {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/* Los que ya llevan color propio se quedan con el suyo en hover: la regla de
+   arriba es la ultima del archivo y si no se les repite el fondo aqui les
+   pisaria el relleno (el activo se volvia oscuro al pasar por encima). El
+   glow si lo conservan. */
+#workspaces button.active:hover {
+    background: linear-gradient(135deg, rgba(217, 70, 239, 0.8), rgba(244, 114, 182, 0.6));
+    border-color: #d946ef;
+}
+
+#custom-timer.running:hover {
+    background: rgba(255, 215, 0, 0.12);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+#custom-timer.done:hover {
+    background: rgba(236, 72, 153, 0.18);
+    border-color: rgba(236, 72, 153, 0.7);
+}
+
+#custom-battery.charging:hover {
+    background: rgba(126, 231, 135, 0.12);
+    border-color: rgba(126, 231, 135, 0.5);
+}
+
+#custom-battery.critical:hover {
+    background: rgba(255, 92, 92, 0.14);
+    border-color: rgba(255, 92, 92, 0.6);
+}

@@ -748,18 +748,19 @@ scale slider {
   min-height: 1px;
 }
 
-// ── Pronostico ──
+// ── Pronostico (rejilla 2x2) ──
+// Cards anchas (~147px): el dia y el icono comparten fila, y debajo caben los
+// avisos de ese dia con su nombre entero.
 .wt-day {
   background-color: $bg-cell;
-  border-radius: 12px;
-  padding: 10px 4px;
-  margin: 0 2px;
+  border-radius: 14px;
+  padding: 10px 12px;
 }
 
-.wt-day-name { color: $accent2; font-size: 12px; font-weight: bold; }
-.wt-day-ico  { color: $lila;    font-size: 22px; }
-.wt-day-max  { color: $fg;      font-size: 13px; font-weight: bold; }
-.wt-day-min  { color: $fg-dim;  font-size: 13px; }
+.wt-day-name { color: $accent2; font-size: 13px; font-weight: bold; }
+.wt-day-ico  { color: $lila;    font-size: 26px; }
+.wt-day-max  { color: $fg;      font-size: 17px; font-weight: bold; }
+.wt-day-min  { color: $fg-dim;  font-size: 14px; }
 
 // ── Avisos AEMET ──
 // El color lo pone AEMET (amarillo/naranja/rojo), no la paleta del rice: es
@@ -768,20 +769,29 @@ $aviso-yellow: #ffd700;
 $aviso-orange: #ff9d3d;
 $aviso-red:    #ff5c5c;
 
-.wt-alert {
-  background-color: $bg-cell;
-  border-radius: 10px;
-  border-left: 3px solid $fg-dim;
-  padding: 7px 11px;
-
-  &.yellow { border-left-color: $aviso-yellow; .wt-alert-ico { color: $aviso-yellow; } }
-  &.orange { border-left-color: $aviso-orange; .wt-alert-ico { color: $aviso-orange; } }
-  &.red    { border-left-color: $aviso-red;    .wt-alert-ico { color: $aviso-red; } }
+// Chip de una linea dentro de la card de su dia: icono del tipo + tipo + horas.
+// El nivel tiñe fondo y borde, asi se lee de un vistazo sin leyenda. El rango
+// completo con el dia va en el tooltip.
+@mixin aviso($c) {
+  background-color: rgba($c, 0.12);
+  border-color: rgba($c, 0.45);
+  .wt-alert-ico, .wt-alert-when { color: $c; }
 }
 
-.wt-alert-ico  { font-size: 15px; }
-.wt-alert-txt  { color: $fg;     font-size: 13px; font-weight: bold; }
-.wt-alert-when { color: $fg-dim; font-size: 12px; }
+.wt-alert {
+  background-color: $bg-cell;
+  border: 1px solid $surface;
+  border-radius: 8px;
+  padding: 3px 7px;
+
+  &.yellow { @include aviso($aviso-yellow); }
+  &.orange { @include aviso($aviso-orange); }
+  &.red    { @include aviso($aviso-red); }
+}
+
+.wt-alert-ico  { font-size: 13px; }
+.wt-alert-txt  { color: $fg;     font-size: 11px; font-weight: bold; }
+.wt-alert-when { color: $fg-dim; font-size: 10px; }
 
 // ══════════════════════════════════════════════════════════
 // ─── VOLUMEN ──────────────────────────────────────────────
