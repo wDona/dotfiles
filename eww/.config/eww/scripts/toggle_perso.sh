@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Toggle del panel de Ajustes de eww (fondo, apariencia, configuraciones).
 # Refresca todo el estado antes de abrir.
+
+# Una sola instancia a la vez: sin esto, dos pulsaciones seguidas pasan las dos
+# el check de active-windows y abren la ventana duplicada.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/eww_perso.lock"
+flock -n 9 || exit 0
+
 WP="$HOME/.config/hypr/scripts/wallpaper.sh"
 APP="$HOME/.config/hypr/scripts/appearance.sh"
 HT="$HOME/.config/hypr/scripts/hypr_tweak.sh"
@@ -55,4 +61,4 @@ eww update \
     bt_state="$("$HOME/.config/eww/scripts/bluetooth.sh" list)"
 
 mon=$("$(dirname "$0")/eww_screen.sh")
-eww open personalizacion --screen "$mon"
+eww open --toggle personalizacion --screen "$mon"

@@ -28,22 +28,24 @@ mem_total=$(awk "BEGIN{printf \"%.1f\", $mtot/1048576}")
 # para que aparezcan todos.
 DISK_SKIP='^(/boot|/boot/efi|/efi)$'
 DISK_ICON=$'\Uf02ca'
-# Nombres bonitos por punto de montaje; el resto cae al nombre del dispositivo.
+# Etiqueta = punto de montaje (cabe en la fila; el nombre del dispositivo
+# desbordaba y GTK lo cortaba con "…").
 disk_label() {
     case "$1" in
-        /)      echo "Sistema" ;;
-        /data)  echo "Datos" ;;
-        *)      echo "${2#/dev/}  $1" ;;
+        /) echo "Sistema  /" ;;
+        *) echo "$1" ;;
     esac
 }
-# Tamano legible: TB / GB con decimal por debajo de 10 / MB / KB.
-hsize() {
-    awk "BEGIN{b=$1
-        if(b>=1099511627776) printf \"%.2f TB\", b/1099511627776
-        else if(b>=10737418240) printf \"%.0f GB\", b/1073741824
-        else if(b>=1073741824) printf \"%.1f GB\", b/1073741824
-        else if(b>=1048576) printf \"%.0f MB\", b/1048576
-        else printf \"%.0f KB\", b/1024}"
+# "usado / total UNIDAD": una sola unidad (la del total) para que la fila quepa.
+dpair() {
+    awk "BEGIN{u=$1; t=$2
+        if(t>=1099511627776){d=1099511627776; n=\"TB\"}
+        else if(t>=1073741824){d=1073741824; n=\"GB\"}
+        else if(t>=1048576){d=1048576; n=\"MB\"}
+        else {d=1024; n=\"KB\"}
+        uu=u/d; tt=t/d
+        fmt = (tt<10) ? \"%.1f / %.1f %s\" : \"%.0f / %.0f %s\"
+        printf fmt, uu, tt, n}"
 }
 di=0
 seen=""
@@ -60,7 +62,7 @@ while read -r src mp; do
     [ -n "$dtot" ] || continue
     eval "d${di}_show=true \
           d${di}_name=\"$(disk_label "$mp" "$dev")\" \
-          d${di}_val=\"$(hsize "$dused") / $(hsize "$dtot")\" \
+          d${di}_val=\"$(dpair "$dused" "$dtot")\" \
           d${di}_pct=${dpct:-0}"
     di=$((di+1))
 done < <(findmnt -rno SOURCE,TARGET --real 2>/dev/null | grep '^/dev/')
