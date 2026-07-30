@@ -27,12 +27,12 @@ $lila: #c9a0ff;
 //
 // Suelo duro: el alpha de $glass debe quedar POR ENCIMA del ignore_alpha 0.15
 // de la layerrule, o Hyprland deja de difuminar del todo.
-$glass:       rgba(10, 10, 10, 0.42);       // lamina de la ventana
+$glass:       rgba(10, 10, 10, 0.24);       // lamina de la ventana
 
 // Superficies internas en negro translucido: hunden la celda y mantienen el
 // ahumado, y siguen dejando pasar el fondo difuminado. Flojas a proposito:
 // cada punto de alpha aqui se suma al de la lamina.
-$bg-cell: rgba(0, 0, 0, 0.14);
+$bg-cell: rgba(0, 0, 0, 0.08);
 $surface: rgba(255, 255, 255, 0.10);   // solo hover: aqui si hace falta luz
 
 // Lamina de vidrio PLANA. Sin degradados y sin filos inset: un "inset 0 1px"
