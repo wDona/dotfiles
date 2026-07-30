@@ -93,12 +93,42 @@ noexec=$(find "$DOTFILES" -path '*/.git' -prune -o \
 
 # -- 4. Symlinks --------------------------------------------------------------
 step "Enlaces de configuracion"
+
+# Lista hasta 10 rutas indentadas bajo el mensaje de bad(), y resume el resto:
+# con un paquete entero sin enlazar esto serian cientos de lineas.
+listado() {
+    local n=0 l
+    for l in "$@"; do
+        ((n++ < 10)) && printf '\n      %s' "$l"
+    done
+    ((n > 10)) && printf '\n      ... y %d mas' "$((n - 10))"
+}
+
 # SingletonLock/SingletonCookie (Chromium-based) y *.lock de Firefox/Zen son
 # symlinks colgantes normales de apps abiertas, no algo que gestione link.sh.
-dangling=$(find -L "$HOME/.config" "$HOME/.local/bin" -maxdepth 3 -type l 2>/dev/null \
-    | grep -vE '/(SingletonLock|SingletonCookie|SingletonSocket|lock)$' | wc -l)
-((dangling == 0)) && ok "sin symlinks rotos" \
-    || bad "$dangling symlink(s) rotos" "$SETUP/link.sh"
+mapfile -t rotos < <(find -L "$HOME/.config" "$HOME/.local/bin" -maxdepth 3 -type l 2>/dev/null \
+    | grep -vE '/(SingletonLock|SingletonCookie|SingletonSocket|lock)$')
+((${#rotos[@]} == 0)) && ok "sin symlinks rotos" \
+    || bad "${#rotos[@]} symlink(s) rotos:$(listado "${rotos[@]}")" "$SETUP/link.sh"
+
+# Ausentes: estan en el repo pero no enlazados en $HOME. El check de arriba NO
+# los ve, porque no hay symlink roto que encontrar: sencillamente no existe.
+# Pasa cada vez que un paquete gana ficheros y no se vuelve a correr link.sh
+# (paso con conf/addconf, con MangoHud y con waybar/variants).
+# Misma logica que link.sh para decidir que cuenta como enlazado.
+ausentes=()
+for pkg in "$DOTFILES"/*/; do
+    [[ "$(basename "$pkg")" == setup ]] && continue
+    while IFS= read -r -d '' src; do
+        rel=${src#"$pkg"}
+        [[ "$rel" == ".gitignore" ]] && continue
+        dst="$HOME/$rel"
+        [[ -e "$dst" && "$(readlink -f "$dst")" == "$src" ]] && continue
+        ausentes+=("$rel")
+    done < <(find "$pkg" -type f -print0)
+done
+((${#ausentes[@]} == 0)) && ok "todo el repo esta enlazado" \
+    || bad "${#ausentes[@]} fichero(s) del repo sin enlazar:$(listado "${ausentes[@]}")" "$SETUP/link.sh"
 
 # -- 5. Servicios de usuario --------------------------------------------------
 step "Servicios de usuario"
