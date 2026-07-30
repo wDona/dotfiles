@@ -49,6 +49,7 @@
 (defvar ewwwins "[]")       ;; ventanas eww auto-descubiertas
 (defvar eww_presets "[\"morado\",\"dracula\",\"nord\",\"catppuccin\",\"gruvbox\"]")
 (defvar hypr_t "{\"gaps_in\":0,\"gaps_out\":0,\"border_size\":0,\"rounding\":0}")
+(defvar bt_state "{\"powered\":false,\"connected\":[],\"available\":[]}")
 
 ;; ─── Fila de evento (texto + boton borrar) ───────────────
 (defwidget evrow [show text off date]
@@ -323,6 +324,7 @@
       (cat-card :icon "󰏘" :title "Tema GTK" :sub {gtk_cur != "" ? gtk_cur : "Apariencia de las apps"} :target "gtk")
       (cat-card :icon "󰋩" :title "Iconos" :sub {icon_cur != "" ? icon_cur : "Set de iconos"} :target "icon")
       (cat-card :icon "󰳽" :title "Cursor" :sub {cursor_cur != "" ? cursor_cur : "Puntero del raton"} :target "cursor")
+      (cat-card :icon "󰂯" :title "Bluetooth" :sub {bt_state.powered ? "${arraylength(bt_state.connected)} conectado(s)" : "Desactivado"} :target "bt")
       (cat-card :icon "󰛖" :title "Fuentes" :sub "Sistema y terminal" :target "fonts")
       (cat-card :icon "" :title "Hyprland" :sub "Gaps, blur, opacidad, bordes" :target "hypr")
       (cat-card :icon "󰕷" :title "eww" :sub "Paleta de colores y ventanas" :target "eww")
@@ -425,6 +427,32 @@
           (theme-row :name {t.name} :selected {t.selected}
             :onclick `~/.config/hypr/scripts/appearance.sh set-font "${t.name}" && eww update font_cur="${t.name}" fonts="$(~/.config/hypr/scripts/appearance.sh list-font)"`))))))
 
+;; ── Submenu: Bluetooth ──
+(defwidget aj-bt []
+  (box :orientation "v" :space-evenly false :spacing 10
+    (aj-toggle :label "Bluetooth" :on {bt_state.powered ? 1 : 0}
+      :onclick `~/.config/eww/scripts/bluetooth.sh power ${bt_state.powered ? "off" : "on"} &`)
+    (button :class "wp-browse" :onclick `~/.config/eww/scripts/bluetooth.sh refresh &`
+      (box :space-evenly false :spacing 8 :halign "center"
+        (label :text "󰑐") (label :text "Refrescar")))
+    (label :class "perso-sub" :halign "start" :visible {arraylength(bt_state.connected) > 0} :text "Conectados")
+    (box :orientation "v" :space-evenly false :spacing 6 :visible {arraylength(bt_state.connected) > 0}
+      (for d in {bt_state.connected}
+        (bt-row :name {d.name} :mac {d.mac} :connected true)))
+    (label :class "perso-sub" :halign "start" :text "Disponibles")
+    (scroll :vscroll true :hscroll false :height 300
+      (box :orientation "v" :space-evenly false :spacing 6
+        (for d in {bt_state.available}
+          (bt-row :name {d.name} :mac {d.mac} :connected false))))))
+
+;; Fila de dispositivo bluetooth (conectar / desconectar)
+(defwidget bt-row [name mac connected]
+  (box :class "conf-item" :space-evenly false :spacing 10
+    (label :class "conf-name" :hexpand true :halign "start" :limit-width 30 :text name)
+    (button :class {connected ? "tg tg-on" : "tg tg-off"}
+            :onclick `~/.config/eww/scripts/bluetooth.sh ${connected ? "disconnect" : "connect"} "${mac}" &`
+      {connected ? "Desconectar" : "Conectar"})))
+
 ;; ── Submenu: eww (paleta de colores + ventanas) ──
 (defwidget aj-eww []
   (scroll :vscroll true :hscroll false :height 560
@@ -501,6 +529,7 @@
                     view == "icon"      ? "󰋩  Iconos" :
                     view == "cursor"    ? "󰳽  Cursor" :
                     view == "fonts"     ? "󰛖  Fuentes" :
+                    view == "bt"        ? "󰂯  Bluetooth" :
                     view == "hypr"      ? "  Hyprland" :
                     view == "eww"       ? "󰕷  eww" :
                     view == "confs"     ? "  Configuraciones" :
@@ -512,6 +541,7 @@
     (box :visible {view == "icon"}      (aj-icon))
     (box :visible {view == "cursor"}    (aj-cursor))
     (box :visible {view == "fonts"}     (aj-fonts))
+    (box :visible {view == "bt"}       (aj-bt))
     (box :visible {view == "hypr"}      (aj-hypr))
     (box :visible {view == "eww"}       (aj-eww))
     (box :visible {view == "confs"}     (aj-confs))

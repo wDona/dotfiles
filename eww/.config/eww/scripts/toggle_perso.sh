@@ -51,7 +51,8 @@ eww update \
     cursor_size="$cursz" \
     ewwcols="$("$EC" get)" \
     ewwwins="$("$EWIN")" \
-    eww_presets="$("$EC" list-presets)"
+    eww_presets="$("$EC" list-presets)" \
+    bt_state="$("$HOME/.config/eww/scripts/bluetooth.sh" list)"
 
 mon=$("$(dirname "$0")/eww_screen.sh")
 eww open personalizacion --screen "$mon"

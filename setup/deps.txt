@@ -14,6 +14,8 @@
 libnotify              # notify-send: battery_notify.sh, timer.sh, y ~15 scripts mas
 libpulse               # paplay: swaync/notif_sound.sh
 playerctl              # waybar modulo custom/media, mediaplayer.sh, spotify_vol.sh
+bluez                  # backend bluetooth: eww/scripts/bluetooth.sh (bluetoothctl)
+bluez-utils            # bluetoothctl: eww/scripts/bluetooth.sh
 
 # --- Panel de eww / waybar ---------------------------------------------------
 lm_sensors             # sensors -j: eww/scripts/sysinfo.sh (temperatura CPU/GPU)

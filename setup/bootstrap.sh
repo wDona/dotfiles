@@ -101,7 +101,15 @@ install -o root -g root -m 0755 "$SETUP/usr-local-bin/powerprofile" /usr/local/b
 
 # -- 7. Servicios ------------------------------------------------------------
 step "Servicios del sistema"
-systemctl enable NetworkManager.service sddm.service tlp.service
+systemctl enable NetworkManager.service sddm.service tlp.service bluetooth.service \
+    ananicy-cpp.service grub-btrfsd.service
+
+# Snapshots pre/post pacman: da por hecho que / ya esta particionado como
+# subvolumen btrfs (ver cabecera del script). "create-config" no hace nada
+# si el config "root" ya existe.
+step "Snapper (snapshots de /)"
+snapper list-configs | grep -q '^root ' || snapper -c root create-config /
+systemctl enable snapper-timeline.timer snapper-cleanup.timer
 
 step "Servicios de usuario (audio, keyring)"
 UNITS=(pipewire.socket pipewire-pulse.socket wireplumber.service

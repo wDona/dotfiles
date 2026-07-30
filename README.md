@@ -33,7 +33,8 @@ Reinicia. Lo unico que queda a mano:
 5. Enlaza los dotfiles (`setup/link.sh`) y da `+x` a todos los scripts.
 6. Copia `setup/etc/` a `/etc/`: config de SDDM (wayland + dvorak + tema),
    PAM de SDDM (keyring) y `vconsole.conf`.
-7. Activa servicios: `NetworkManager`, `sddm`, `tlp` y, de usuario,
+7. Activa servicios: `NetworkManager`, `sddm`, `tlp`, `bluetooth`, `ananicy-cpp`,
+   `grub-btrfsd`, timers de `snapper` (crea el config `root` si falta) y, de usuario,
    pipewire/wireplumber, `gnome-keyring-daemon.socket`, `p11-kit-server.socket`.
 8. Instala lo que no esta en pacman: `gcalcli` (pipx), los globales de npm
    (`setup/npm-global.txt`), `uv` y Claude Code.
@@ -44,6 +45,18 @@ estorben a un symlink se apartan como `.bkup` en vez de borrarse.
 > ⚠️ Durante la ejecucion crea `/etc/sudoers.d/00-dotfiles-bootstrap` con
 > NOPASSWD temporal (`makepkg` y `yay` no corren como root y llaman a `sudo`
 > por su cuenta). Se borra siempre al terminar, incluso si el script falla.
+
+### Verificar / arreglar: `setup/doctor.sh`
+
+```bash
+~/dotfiles/setup/doctor.sh          # solo comprueba
+~/dotfiles/setup/doctor.sh --fix    # comprueba y, por cada fallo, ofrece arreglarlo (pregunta antes de tocar nada)
+```
+
+Sirve tras un `git pull` o cuando algo dejo de funcionar. Repasa paquetes
+(`deps.txt`/`aur.txt`), herramientas fuera de pacman, symlinks, servicios y
+conflictos conocidos (tlp/ppd). Lo que necesita contrasena o sesion grafica
+(keyring, audio, servicios de usuario) solo lo avisa, no lo arregla solo.
 
 ## 🔐 Keyring (gnome-keyring + SDDM + PAM)
 
@@ -67,6 +80,46 @@ solo funciona si haces el cambio:
 ```bash
 sudo systemctl disable --now tlp
 sudo systemctl enable --now power-profiles-daemon
+```
+
+## 🎮 Gaming / rendimiento
+
+Hardware: Ryzen 7 5700X + RX 7800 XT (RADV), 32 GB RAM, `linux-lts`.
+
+- `gamemode` + `lib32-gamemode`: Steam lo activa solo por juego.
+- `mangohud` + `lib32-mangohud`: overlay de FPS/frametime/1% low, config en
+  `MangoHud/.config/MangoHud/MangoHud.conf` (toggle `Shift_R+F12`).
+- `gamescope`: compositor para forzar resolucion/FPS por juego cuando hace falta.
+- VRR activo en el monitor principal (DP-2, 1920x1080 @ 239.96 Hz); los otros
+  dos van a ~60 Hz sin VRR, es normal.
+- `scx-scheds` esta instalado pero **sin usar**: el paquete de Arch no trae
+  unidad systemd (`scx_loader.service` no existe), solo binarios sueltos.
+  Se descarto activarlo.
+- `cachyos-ananicy-rules-git` (AUR) da las reglas a `ananicy-cpp`; sin ellas
+  el demonio no hace nada (`ananicy-cpp-rules` no existe en repos oficiales).
+
+> ⚠️ **Pendiente en la BIOS:** CPPC desactivado. Sin el, el kernel no gestiona
+> frecuencias (`/sys/devices/system/cpu/cpu0/cpufreq/` no existe, sin
+> `amd_pstate`) y `gamemode` no puede fijar gobernador `performance` porque no
+> hay ninguno. Es el mayor pendiente para los 1% low. Activar en
+> `Advanced → AMD CBS → NBIO → CPPC = Enabled`. Verificar despues:
+> `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver` (deberia decir
+> `amd-pstate-epp`).
+
+## 📸 Snapshots (snapper + btrfs)
+
+Da por hecho que `/` ya esta en un subvolumen btrfs (particionado hecho antes
+del bootstrap, ver seccion de instalacion). A partir de ahi:
+
+- `snapper` con config `root`, snapshot automatico antes/despues de cada
+  transaccion de pacman (via `snap-pac`) mas timers `snapper-timeline` (cada
+  hora) y `snapper-cleanup` (purga los viejos).
+- `grub-btrfsd`: regenera el menu de GRUB con una entrada por snapshot, para
+  arrancar directamente desde uno si algo rompe.
+
+```bash
+snapper list                    # ver snapshots
+sudo snapper rollback <numero>  # revertir (pide reiniciar)
 ```
 
 ## 🗂️ Estructura
