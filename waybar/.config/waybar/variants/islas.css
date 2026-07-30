@@ -1,0 +1,46 @@
+/* Variante: TRES ISLAS.
+   La barra no dibuja nada; el cristal pasa a cada grupo (.modules-*). Cada
+   isla es corta, asi que el radio 999 SI se lee como capsula, y el hueco
+   central deja de ser fondo muerto.
+
+   GTK no aplica padding sobre .modules-* de forma fiable en todas las
+   versiones, asi que el aire de los extremos se hace con margin en el
+   primer/ultimo modulo de cada isla (ver abajo). */
+
+window#waybar {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.modules-left,
+.modules-center,
+.modules-right {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    margin: 0 6px;
+}
+
+/* Curva de los extremos: 20px de radio se comerian el modulo del borde. */
+.modules-left  { margin-left: 10px; }
+.modules-right { margin-right: 10px; }
+
+#custom-launcher { margin-left: 8px; }
+/* El titulo cierra la isla izquierda: sin margen derecho el texto muere en la
+   curva del extremo, y sin el izquierdo se pega a los workspaces. */
+#window { margin-left: 12px; margin-right: 20px; }
+/* Workspace sin ventanas: el titulo va vacio y la isla arrastraria 32px de
+   aire por un texto que no existe. OJO con el selector: waybar pone .empty
+   en la BARRA, no en el modulo (man 5 waybar-hyprland-window), asi que
+   "#window.empty" no casa nunca. GTK no tiene display:none; margin y padding
+   a 0 es el equivalente. */
+window#waybar.empty #window {
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    border-width: 0;
+}
+#custom-power    { margin-right: 8px; }
+#custom-notification { margin-left: 6px; }
+#custom-clock        { margin-right: 6px; }

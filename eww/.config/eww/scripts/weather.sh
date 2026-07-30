@@ -209,7 +209,18 @@ bar)
     fetch || { echo '{"text":"","class":""}'; exit 0; }
     read -r code temp day < <(jq -r '.current | "\(.weather_code) \(.temperature_2m|round) \(.is_day)"' "$CACHE")
     cls=$(bar_class)
-    jq -cn --arg t "$(icon "$code" "$day") ${temp}°C" --arg c "$cls" '{text:$t, class:$c}'
+    # Aviso vigente -> punto del color del nivel pegado al icono (mismo truco
+    # pango que la campana de notif.sh). El modulo NO se tiñe entero: solo el
+    # punto, para que la barra siga monocroma.
+    dot=""
+    case "$cls" in
+    yellow) dc="#ffd700" ;;
+    orange) dc="#ff9d3d" ;;
+    red) dc="#ff5c5c" ;;
+    *) dc="" ;;
+    esac
+    [ -n "$dc" ] && dot="<span letter_spacing='-10000'> </span><span foreground='${dc}' size='9000' rise='2000'>•</span>"
+    jq -cn --arg t "$(icon "$code" "$day")${dot} ${temp}°C" --arg c "$cls" '{text:$t, class:$c}'
     ;;
 
 json)

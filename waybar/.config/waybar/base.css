@@ -1,0 +1,287 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Waybar — BASE comun a todas las variantes.
+
+   Aqui va TODO menos la "carcasa": el fondo, el borde y el radio de la
+   barra los pone el archivo de variante (dentro de variants/), que se importa
+   despues que este y por tanto gana en la cascada.
+
+   Reglas del rice (valen para cualquier variante):
+   - Texto blanco a distintas opacidades. NO meter color por modulo: el
+     color es informacion (aviso, bateria critica), no adorno. Los estados
+     puntuales van como PUNTO pango dentro del texto (weather.sh, notif.sh,
+     timer.sh), no tiñendo el modulo.
+   - Un solo acento: magenta #d946ef, reservado al workspace activo.
+
+   Suelo duro para el fondo: el ignore_alpha de la layerrule de waybar
+   (hypr/conf.d/styles.conf, 0.01). Por debajo Hyprland apaga el blur
+   entero.
+   ───────────────────────────────────────────────────────────────────── */
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+    all: unset;
+}
+
+
+/* ── Modulos: planos ──────────────────────────────────────────────────
+   Un solo bloque para todos. Sin fondo ni borde: la capsula ya los pone.
+   Solo separacion horizontal y color. */
+#pulseaudio,
+#cpu,
+#memory,
+#network,
+#custom-net,
+#clock,
+#custom-clock,
+#custom-weather,
+#privacy,
+#custom-keyboard,
+#custom-power,
+#custom-battery,
+#tray,
+#custom-notification,
+#custom-timer,
+#custom-hwtoggle,
+#custom-launcher,
+#custom-spotify {
+    padding: 4px 10px;
+    margin: 3px 1px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent; /* reservado: el hover lo tiñe sin mover el layout */
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    transition: all 150ms ease;
+}
+
+#workspaces button {
+    padding: 4px 9px;
+    margin: 3px 1px;
+    min-width: 20px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.50);
+    transition: all 150ms ease;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+#workspaces button.special {
+    padding: 4px 11px;
+}
+
+/* Special "fullscreen" vacio: ocultar (GTK no soporta display:none, se colapsa) */
+#workspaces button.special.empty {
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    min-width: 0;
+    font-size: 0;
+    opacity: 0;
+}
+
+/* El unico acento de la barra. */
+#workspaces button.active {
+    color: #ffffff;
+    background: rgba(217, 70, 239, 0.80);
+    border-color: rgba(217, 70, 239, 0.9);
+    min-width: 28px;
+}
+
+#cpu {
+    letter-spacing: 2px;
+}
+
+/* Ojo con el tamaño: el modulo mas alto fija la altura minima de la barra.
+   A 20px waybar exigia 41px. Con 18px pide 40, que es la height del config. */
+#custom-launcher {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 4px 12px;
+}
+
+#custom-power {
+    font-size: 17px;
+    min-width: 20px;
+}
+
+/* ── Estados con color ────────────────────────────────────────────────
+   Aqui el color SI entra: es senal, no decoracion. Tiñe el texto; sobre
+   fondo plano no hace falta pastilla para que se lea. */
+
+#custom-battery.charging { color: #7ee787; }
+#custom-battery.critical { color: #ff5c5c; }
+
+/* Sin bateria (sobremesa): colapsar el hueco. */
+#custom-battery.none {
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+#custom-timer.running { color: #ffd700; }
+#custom-timer.done    { color: #f472b6; }
+/* paused: sin color aqui. El punto amarillo lo pinta timer.sh en pango, igual
+   que el aviso del clima y la campana de notif.sh. */
+
+/* idle = sin temporizador: oculto (texto vacio, sin hueco) */
+#custom-timer.idle {
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+/* Clima: el aviso AEMET va como PUNTO de color dentro del texto (lo pinta
+   weather.sh con markup pango, igual que la campana de notif.sh), no
+   tiñendo el modulo. Por eso .yellow/.orange/.red no llevan estilo aqui:
+   la barra sigue monocroma y el punto da el nivel. */
+
+/* Notificaciones: la campana con noti nueva ya lleva su punto rojo en
+   pango. Aqui solo se atenua cuando no hay nada. */
+#custom-notification.none {
+    color: rgba(255, 255, 255, 0.40);
+}
+
+/* Tray y privacidad son CONTENEDORES: su padding se SUMA al del item de
+   dentro y es lo que fija la altura minima que exige waybar (con 4px aqui +
+   6px en el item, waybar pedia 46px para una barra de 40 y bajaba todo 2px).
+   El aire lo pone ya la pastilla del item, asi que aqui va a cero. */
+#tray,
+#privacy {
+    padding: 0;
+}
+
+/* Privacidad: solo aparece cuando algo captura pantalla o micro.
+   Los items llevan SU propia pastilla (transparente en reposo): son widgets
+   con ventana GDK propia, asi que el puntero sobre el icono ilumina al hijo
+   y NUNCA al contenedor, y GTK3 no tiene selector de padre para compensarlo.
+   Sin esto, el hover solo respondia en el borde del contenedor. */
+#privacy-item {
+    padding: 6px 11px;
+    min-width: 20px;   /* el padding no ensancha la asignacion del icono: sin
+                          esto la pastilla sale ovalada en vertical */
+    margin: 0;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;   /* reservado: teñirlo no mueve el layout */
+    transition: all 150ms ease;
+}
+
+/* Rojo solo en el icono: GTK3 no tiene :has, el contenedor no puede saber
+   si dentro hay screenshare para tenirse entero. */
+#privacy-item.screenshare { color: #ff5c5c; }
+#privacy-item.audio-in    { color: rgba(255, 255, 255, 0.85); }
+
+/* Mismo caso que #privacy-item: cada icono del tray es su propia ventana GDK
+   y se come el hover antes de que llegue a #tray. La pastilla va en el item.
+   La separacion entre iconos NO va aqui: el padding de la pastilla dibuja
+   FUERA de la asignacion del icono (waybar fija el tamano del item al del
+   icono), asi que subir el margen no evita que la pastilla pise al vecino.
+   Eso se arregla con "spacing" del modulo tray en el config, que si mete
+   hueco real en la caja. Margen a 0 para no sumar dos veces.
+   Tampoco vale min-width: probado con 32px, la pastilla se queda igual. El
+   item NO puede ensancharse, asi que la pastilla del tray es un ovalo
+   vertical de ~20px y punto; lo unico ajustable es cuanto se separan. */
+#tray > .passive,
+#tray > .active,
+#tray > .needs-attention {
+    padding: 6px 11px;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 150ms ease;
+}
+
+#tray > .passive        { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; }
+
+/* El menu del tray es ventana aparte: si necesita fondo propio, opaco. */
+#tray menu {
+    background: rgba(16, 14, 20, 0.96);
+    color: rgba(255, 255, 255, 0.90);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Musica: texto atenuado, se realza en hover como los demas. */
+#custom-spotify {
+    color: rgba(255, 255, 255, 0.70);
+}
+
+/* el grupo no dibuja fondo propio */
+#hardware {
+    background: transparent;
+    border: none;
+}
+
+/* ── Hover ────────────────────────────────────────────────────────────
+   Sobre barra plana el feedback es una pastilla que APARECE, no un cambio
+   de tono. Va al final para pisar las reglas de arriba sin repetirlas
+   modulo a modulo.
+   Sin box-shadow: GTK recorta la sombra contra el borde de la capa y con
+   modulos de 26px dentro de una barra de 36 el halo saldria cortado. El
+   relleno ya es feedback de sobra. */
+#workspaces button:hover,
+#pulseaudio:hover,
+#cpu:hover,
+#memory:hover,
+#network:hover,
+#custom-net:hover,
+#clock:hover,
+#custom-clock:hover,
+#custom-weather:hover,
+#privacy:hover,
+#custom-keyboard:hover,
+#custom-power:hover,
+#custom-battery:hover,
+#tray:hover,
+#custom-notification:hover,
+#custom-timer:hover,
+#custom-hwtoggle:hover,
+#custom-launcher:hover,
+#custom-spotify:hover,
+#privacy-item:hover,
+#tray > .passive:hover,
+#tray > .active:hover,
+#tray > .needs-attention:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+/* Los dos contenedores NO se comportan igual, y por eso se tratan aparte:
+   - #tray: sus items tienen ventana GDK propia y reciben el prelight. Si el
+     contenedor tambien se pinta salen DOS pastillas superpuestas (la del
+     icono dentro de una que abarca todos los iconos). Aqui manda el item.
+   - #privacy: sus items NO reciben el prelight, lo recibe el padre; si se
+     apaga el contenedor, apuntar al microfono no marca nada. Aqui manda el
+     contenedor. */
+#tray:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* Los que se ocultan colapsando no deben pintarse en su hueco vacio. */
+#custom-battery.none:hover,
+#custom-timer.idle:hover,
+#workspaces button.special.empty:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* Los que llevan color propio se lo quedan en hover: la regla de arriba es
+   la ultima del archivo y si no se repiten aqui les pisaria el color. */
+#workspaces button.active:hover {
+    background: rgba(217, 70, 239, 0.92);
+    border-color: #d946ef;
+    color: #ffffff;
+}
+
+#custom-timer.running:hover  { color: #ffd700; }
+#custom-timer.done:hover     { color: #f472b6; }
+#custom-battery.charging:hover { color: #7ee787; }
+#custom-battery.critical:hover { color: #ff5c5c; }

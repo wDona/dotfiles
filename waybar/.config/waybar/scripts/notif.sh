@@ -32,7 +32,7 @@ new=$((count - seen))
 
 if [ "$new" -gt 0 ]; then
     # hay sin leer -> campana con punto rojo en esquina sup-dcha (pango) + numero, sin recuadro
-    dot="<span letter_spacing='-10000'> </span><span foreground='#ff3030' size='11000' rise='5500'>•</span>"
+    dot="<span letter_spacing='-10000'> </span><span foreground='#ff3030' size='9000' rise='2000'>•</span>"
     printf '{"text":"%s%s %s","class":"new","tooltip":"%s sin leer · %s en total"}\n' "$bell" "$dot" "$new" "$new" "$count"
 elif [ "$count" -eq 0 ]; then
     printf '{"text":"%s","class":"none","tooltip":"Sin notificaciones"}\n' "$bell"

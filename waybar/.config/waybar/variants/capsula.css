@@ -1,0 +1,16 @@
+/* Variante: CAPSULA UNICA.
+   Fondo, borde y radio en la barra entera. A 1900px de ancho el radio 999
+   apenas se lee como capsula (por eso existen las otras variantes), pero
+   es el fondo mas uniforme y el que mejor aguanta wallpapers claros. */
+
+window#waybar {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Aire dentro de los extremos redondos: con radio 999 en una barra de 40px
+   los 20px de curva se comen el primer y ultimo modulo si pegan al borde. */
+.modules-left  { margin-left: 14px; }
+.modules-right { margin-right: 14px; }

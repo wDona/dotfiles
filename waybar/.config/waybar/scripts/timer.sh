@@ -13,6 +13,10 @@ FIRED="$STATE_DIR/waybar_timer.fired"  # marca atomica: notificacion ya disparad
 SW="$STATE_DIR/waybar_stopwatch"       # epoch de inicio del cronometro (cuenta arriba)
 SWP="$STATE_DIR/waybar_stopwatch.paused" # segundos acumulados: cronometro en pausa
 ICON="󰔙"
+# Punto de estado pegado al icono (mismo truco pango que notif.sh y weather.sh):
+# el modulo NO se tiñe entero, solo el punto, para que la barra siga monocroma.
+# letter_spacing negativo pega el punto al icono sin que el espacio separe.
+DOT="<span letter_spacing='-10000'> </span><span foreground='#ffd700' size='9000' rise='2000'>•</span>"
 
 parse_secs() {
     local in="${1//[[:space:]]/}"
@@ -65,10 +69,10 @@ emit() {
             "$ICON" "$(fmt $((now - $(cat "$SW"))))"
         return
     fi
-    # cronometro en pausa: tiempo congelado, clase parpadeante
+    # cronometro en pausa: tiempo congelado + punto amarillo
     if [ -f "$SWP" ]; then
-        printf '{"text":"%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
-            "$ICON" "$(fmt "$(cat "$SWP")")"
+        printf '{"text":"%s%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
+            "$ICON" "$DOT" "$(fmt "$(cat "$SWP")")"
         return
     fi
     # temporizador: cuenta atras

@@ -6,7 +6,10 @@
     "exclusive": true,
     "passthrough": false,
     "gtk-layer-shell": true,
-    "height": 30,
+    "height": 40,
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
     "modules-left": [
         "custom/launcher",
         "hyprland/workspaces",
@@ -56,10 +59,20 @@
         "on-click": "~/.config/eww/scripts/toggle_cal.sh",
         "tooltip": false
     },
+    "tray": {
+        "icon-size": 16,
+        "spacing": 6
+    },
     "privacy": {
         "icon-spacing": 6,
         "icon-size": 14,
         "transition-duration": 200,
+        "ignore": [
+            {
+                "type": "audio-in",
+                "name": "gsr-default_output"
+            }
+        ],
         "modules": [
             {
                 "type": "screenshare",
@@ -74,7 +87,7 @@
         ]
     },
     "pulseaudio": {
-        "format": "{icon} {volume}%",
+        "format": "{icon}",
         "format-muted": "  ",
         "format-icons": {
             "default": [
@@ -86,8 +99,8 @@
         "on-click": "~/.config/eww/scripts/toggle_vol.sh",
         "on-click-right": "~/.config/eww/scripts/close_cal.sh; pavucontrol",
         "on-click-middle": "swayosd-client --output-volume mute-toggle",
-        "on-scroll-up": "swayosd-client --output-volume raise",
-        "on-scroll-down": "swayosd-client --output-volume lower"
+        "on-scroll-up": "~/.config/eww/scripts/vol_wheel.sh up",
+        "on-scroll-down": "~/.config/eww/scripts/vol_wheel.sh down"
     },
     "custom/power": {
         "format": "󰒓",

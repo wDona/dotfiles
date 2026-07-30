@@ -1,0 +1,44 @@
+/* Variante: HAIRLINE.
+   Cero cajas. La barra no dibuja fondo ni borde: la estructura la dan
+   lineas de 1px entre bloques, como la barra de macOS. Es la variante que
+   menos depende del wallpaper en forma, pero la que mas depende de el en
+   contraste: de ahi el text-shadow, que hace de sombra propia para que el
+   texto blanco no se pierda sobre fondos claros.
+
+   Sin fondo NO hay blur: la layerrule de Hyprland necesita alpha por encima
+   de ignore_alpha (0.01) para difuminar, y aqui es 0 a proposito. */
+
+window#waybar {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.modules-left  { margin-left: 14px; }
+.modules-right { margin-right: 14px; }
+
+/* Separadores: borde IZQUIERDO en el modulo que abre cada bloque. Se pone
+   en el borde ya reservado por base.css (1px transparent), asi encender la
+   linea no mueve el layout ni un pixel. */
+#window,
+#custom-clock,
+#custom-battery,
+#tray,
+#custom-power {
+    border-left-color: rgba(255, 255, 255, 0.14);
+    border-radius: 0;
+    margin-left: 8px;
+    padding-left: 14px;
+}
+
+/* El hover si vuelve a redondear: la pastilla es la unica caja que existe
+   en esta variante, y solo mientras el raton esta encima. */
+#window:hover,
+#custom-clock:hover,
+#custom-battery:hover,
+#tray:hover,
+#custom-power:hover {
+    border-radius: 999px;
+    border-left-color: transparent;
+}

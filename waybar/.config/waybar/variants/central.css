@@ -1,0 +1,28 @@
+/* Variante: ISLA CENTRAL.
+   Solo el bloque del centro (campana + reloj) lleva cristal; los extremos
+   van sobre el wallpaper a pelo. Es la mas limpia y la mas fragil: sin
+   lamina detras, el blanco al 85% se come vivo un fondo claro, asi que los
+   extremos llevan text-shadow como sustituto del fondo. */
+
+window#waybar {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.modules-center {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+}
+
+.modules-left,
+.modules-right {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.modules-left  { margin-left: 14px; }
+.modules-right { margin-right: 14px; }
+
+#custom-notification { margin-left: 6px; }
+#custom-clock        { margin-right: 6px; }
