@@ -11,6 +11,7 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"; mkdir -p "$STATE_DIR"
 S="$STATE_DIR/waybar_timer"            # epoch objetivo (persiste tras reinicio)
 FIRED="$STATE_DIR/waybar_timer.fired"  # marca atomica: notificacion ya disparada
 SW="$STATE_DIR/waybar_stopwatch"       # epoch de inicio del cronometro (cuenta arriba)
+SWP="$STATE_DIR/waybar_stopwatch.paused" # segundos acumulados: cronometro en pausa
 ICON="󰔙"
 
 parse_secs() {
@@ -60,8 +61,14 @@ emit() {
     local now; now=$(date +%s)
     # cronometro: cuenta arriba, no termina solo
     if [ -f "$SW" ]; then
-        printf '{"text":"%s %s","tooltip":"Cronometro · click der = parar","class":"running"}\n' \
+        printf '{"text":"%s %s","tooltip":"Cronometro · click der = pausar","class":"running"}\n' \
             "$ICON" "$(fmt $((now - $(cat "$SW"))))"
+        return
+    fi
+    # cronometro en pausa: tiempo congelado, clase parpadeante
+    if [ -f "$SWP" ]; then
+        printf '{"text":"%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
+            "$ICON" "$(fmt "$(cat "$SWP")")"
         return
     fi
     # temporizador: cuenta atras
@@ -87,10 +94,10 @@ confirm() { [ "$(printf 'No\nSi' | rofi -dmenu -kb-cancel 'Escape,MousePrimary' 
 case "$1" in
     set)
         # no pisar algo activo (timer o cronometro) sin confirmacion explicita
-        if [ -f "$S" ] || [ -f "$SW" ]; then
+        if [ -f "$S" ] || [ -f "$SW" ] || [ -f "$SWP" ]; then
             case "$(printf 'Cancelar actual\nCancelar y reemplazar\nVolver' | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "Ya hay algo activo")" in
-                "Cancelar y reemplazar") rm -rf "$S" "$FIRED" "$SW"; pkill -RTMIN+10 waybar ;;  # cancela ya y sigue al menu de tiempo
-                "Cancelar actual") rm -rf "$S" "$FIRED" "$SW"; pkill -RTMIN+10 waybar; exit 0 ;;
+                "Cancelar y reemplazar") rm -rf "$S" "$FIRED" "$SW" "$SWP"; pkill -RTMIN+10 waybar ;;  # cancela ya y sigue al menu de tiempo
+                "Cancelar actual") rm -rf "$S" "$FIRED" "$SW" "$SWP"; pkill -RTMIN+10 waybar; exit 0 ;;
                 *) exit 0 ;;                                                         # Volver / vacio: no tocar
             esac
         fi
@@ -122,7 +129,7 @@ case "$1" in
         esac
         inp="${inp//[[:space:]]/}"
         [ -z "$inp" ] && exit 0
-        rm -rf "$S" "$FIRED" "$SW"   # limpia estado previo
+        rm -rf "$S" "$FIRED" "$SW" "$SWP"   # limpia estado previo
         if [[ "${inp,,}" == cronometro || "${inp,,}" == crono ]]; then
             date +%s > "$SW"; pkill -RTMIN+10 waybar; exit 0
         fi
@@ -142,9 +149,19 @@ case "$1" in
         pkill -RTMIN+10 waybar
         ;;
     cancel)
-        { [ -f "$S" ] || [ -f "$SW" ]; } || exit 0
-        confirm "Cancelar?" || exit 0   # cancelacion siempre explicita
-        rm -rf "$S" "$FIRED" "$SW"
+        # cronometro activo: click der pausa/reanuda (no cancela)
+        if [ -f "$SW" ]; then
+            echo $(( $(date +%s) - $(cat "$SW") )) > "$SWP"; rm -f "$SW"
+            pkill -RTMIN+10 waybar; exit 0
+        fi
+        if [ -f "$SWP" ]; then
+            echo $(( $(date +%s) - $(cat "$SWP") )) > "$SW"; rm -f "$SWP"
+            pkill -RTMIN+10 waybar; exit 0
+        fi
+        # temporizador: cancelacion siempre explicita
+        [ -f "$S" ] || exit 0
+        confirm "Cancelar?" || exit 0
+        rm -rf "$S" "$FIRED"
         pkill -RTMIN+10 waybar
         ;;
     status|bar)

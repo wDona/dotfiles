@@ -134,6 +134,25 @@ else
     bad "gnome-keyring-daemon.socket parado"
 fi
 
+# -- 7. Login manual (bootstrap.sh no puede hacerlo por ti) ------------------
+step "Cuentas (login manual)"
+[[ -e "$HOME/.gcalcli_oauth" ]] \
+    && ok "gcalcli" \
+    || bad "gcalcli sin login - panel de calendario de eww se queda vacio" "gcalcli init"
+[[ -e "$HOME/.claude/.credentials.json" ]] \
+    && ok "claude" \
+    || bad "claude sin login" "claude"
+[[ -e "$HOME/.local/share/opencode/auth.json" ]] \
+    && ok "opencode" \
+    || bad "opencode sin login" "opencode auth login"
+# grep solo mira si hay password, nunca lo imprime: no hay que exponer el token.
+if GIT_TERMINAL_PROMPT=0 sh -c "printf 'protocol=https\nhost=github.com\n' | git credential fill" 2>/dev/null \
+        | grep -q '^password='; then
+    ok "credencial de GitHub guardada (push sin pedir token)"
+else
+    bad "sin credencial de GitHub - el primer 'git push' pedira usuario+token (ver README)"
+fi
+
 step "Bluetooth"
 systemctl is-active --quiet bluetooth.service \
     && ok "bluetooth.service" \
@@ -147,24 +166,34 @@ systemctl is-active --quiet ananicy-cpp.service \
 [[ -n "$(ls -A /etc/ananicy.d 2>/dev/null)" ]] \
     && ok "reglas de ananicy presentes" \
     || bad "sin reglas en /etc/ananicy.d - ananicy-cpp no hace nada" "yay -S --needed cachyos-ananicy-rules-git"
-# CPPC en la BIOS, no hay fix por software: solo se avisa (ver README).
-[[ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver ]] \
-    && ok "escalado de CPU: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver)" \
-    || bad "sin amd_pstate - activa CPPC en la BIOS (Advanced > AMD CBS > NBIO > CPPC, ver README)"
+# El escalado de frecuencia depende del fabricante: en la BIOS no hay fix por
+# software, solo se avisa (ver README).
+cpu_vendor=$(grep -m1 vendor_id /proc/cpuinfo | awk '{print $NF}')
+if [[ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver ]]; then
+    ok "escalado de CPU: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver)"
+elif [[ $cpu_vendor == AuthenticAMD ]]; then
+    bad "sin amd_pstate - activa CPPC en la BIOS (Advanced > AMD CBS > NBIO > CPPC, ver README)"
+elif [[ $cpu_vendor == GenuineIntel ]]; then
+    bad "sin intel_pstate/intel_cpufreq - revisa Speed Shift / SpeedStep en la BIOS"
+else
+    bad "sin escalado de frecuencia gestionado por el kernel"
+fi
 
-step "Snapshots (snapper + btrfs)"
-snapper list-configs 2>/dev/null | grep -q '^root ' \
-    && ok "config snapper 'root'" \
-    || bad "sin config snapper 'root' - / no es btrfs o falta crearlo" "sudo snapper -c root create-config /"
-systemctl is-active --quiet snapper-timeline.timer \
-    && ok "snapper-timeline.timer" \
-    || bad "snapper-timeline.timer parado" "sudo systemctl enable --now snapper-timeline.timer"
-systemctl is-active --quiet snapper-cleanup.timer \
-    && ok "snapper-cleanup.timer" \
-    || bad "snapper-cleanup.timer parado" "sudo systemctl enable --now snapper-cleanup.timer"
-systemctl is-active --quiet grub-btrfsd.service \
-    && ok "grub-btrfsd.service (snapshots en el menu de GRUB)" \
-    || bad "grub-btrfsd.service parado" "sudo systemctl enable --now grub-btrfsd"
+if [[ "$(findmnt -no FSTYPE /)" == "btrfs" ]]; then
+    step "Snapshots (snapper + btrfs)"
+    snapper list-configs 2>/dev/null | grep -q '^root ' \
+        && ok "config snapper 'root'" \
+        || bad "sin config snapper 'root' - falta crearlo" "sudo snapper -c root create-config /"
+    systemctl is-active --quiet snapper-timeline.timer \
+        && ok "snapper-timeline.timer" \
+        || bad "snapper-timeline.timer parado" "sudo systemctl enable --now snapper-timeline.timer"
+    systemctl is-active --quiet snapper-cleanup.timer \
+        && ok "snapper-cleanup.timer" \
+        || bad "snapper-cleanup.timer parado" "sudo systemctl enable --now snapper-cleanup.timer"
+    systemctl is-active --quiet grub-btrfsd.service \
+        && ok "grub-btrfsd.service (snapshots en el menu de GRUB)" \
+        || bad "grub-btrfsd.service parado" "sudo systemctl enable --now grub-btrfsd"
+fi
 
 # -- 6. Conflictos conocidos --------------------------------------------------
 step "Conflictos conocidos"

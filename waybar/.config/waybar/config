@@ -148,6 +148,7 @@
         "interval": 1,
         "signal": 10,
         "format": "{}",
-        "tooltip": true
+        "tooltip": true,
+        "on-click-right": "~/.config/waybar/scripts/timer.sh cancel"
     }
 }

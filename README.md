@@ -54,9 +54,11 @@ estorben a un symlink se apartan como `.bkup` en vez de borrarse.
 ```
 
 Sirve tras un `git pull` o cuando algo dejo de funcionar. Repasa paquetes
-(`deps.txt`/`aur.txt`), herramientas fuera de pacman, symlinks, servicios y
-conflictos conocidos (tlp/ppd). Lo que necesita contrasena o sesion grafica
-(keyring, audio, servicios de usuario) solo lo avisa, no lo arregla solo.
+(`deps.txt`/`aur.txt`), herramientas fuera de pacman, symlinks, servicios,
+conflictos conocidos (tlp/ppd) y los logins manuales de la tabla de arriba
+(gcalcli, claude, opencode, credencial de push a GitHub). Lo que necesita
+contrasena o sesion grafica (keyring, audio, servicios de usuario) solo lo
+avisa, no lo arregla solo.
 
 ## 🔐 Keyring (gnome-keyring + SDDM + PAM)
 
@@ -108,8 +110,9 @@ Hardware: Ryzen 7 5700X + RX 7800 XT (RADV), 32 GB RAM, `linux-lts`.
 
 ## 📸 Snapshots (snapper + btrfs)
 
-Da por hecho que `/` ya esta en un subvolumen btrfs (particionado hecho antes
-del bootstrap, ver seccion de instalacion). A partir de ahi:
+Detectado por `findmnt -no FSTYPE /` en tiempo de bootstrap: si `/` es btrfs
+se instala y activa todo lo de abajo; si no, ni se instalan los paquetes ni
+aparece esta seccion en `doctor.sh`.
 
 - `snapper` con config `root`, snapshot automatico antes/despues de cada
   transaccion de pacman (via `snap-pac`) mas timers `snapper-timeline` (cada

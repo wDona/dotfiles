@@ -9,7 +9,6 @@ bluez
 bluez-utils
 brightnessctl
 btop
-btrfs-progs
 discord
 dnsmasq
 docker
@@ -32,7 +31,6 @@ gpick
 gpu-screen-recorder
 grim
 grub
-grub-btrfs
 gsimplecal
 gtk3
 hypridle
@@ -84,8 +82,6 @@ scx-scheds
 sddm
 sddm-kcm
 slurp
-snap-pac
-snapper
 sshfs
 starship
 steam

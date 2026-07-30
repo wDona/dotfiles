@@ -332,6 +332,15 @@ window#waybar {
     border-color: rgba(255, 215, 0, 0.5);
     background: rgba(255, 215, 0, 0.12);
 }
+#custom-timer.paused {
+    color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.5);
+    background: rgba(255, 215, 0, 0.12);
+    animation: timer-paused-blink 1s step-start infinite;
+}
+@keyframes timer-paused-blink {
+    50% { opacity: 0.25; }
+}
 #custom-timer.done {
     color: #ec4899;
     border-color: rgba(236, 72, 153, 0.7);
