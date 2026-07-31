@@ -264,8 +264,8 @@
 ;; ══════════════════════════════════════════════════════════
 ;; ─── MENU TEMPORIZADOR ─────────────────────────────────────
 ;; ══════════════════════════════════════════════════════════
-;; timer.sh "trigger" decide si aplica ya o pide confirmar (via timer_confirm)
-;; segun haya o no algo activo; el widget solo dispara y refleja ese estado.
+;; cada boton decide en el propio onclick (mirando timerinfo.class) si aplica
+;; ya o pide confirmar; timer_confirm/timer_pending solo reflejan ese estado.
 (defwidget timermenu []
   (box :class "timermenu" :orientation "v" :space-evenly false :spacing 10
     (box :visible {!timer_confirm} :orientation "v" :space-evenly false :spacing 10
@@ -273,28 +273,34 @@
       (box :space-evenly false :spacing 6
         (input :class "tm-entry" :hexpand true :value timer_input
                :onchange "eww update timer_input {}"
-               :onaccept "~/.config/waybar/scripts/timer.sh trigger \"{}\"")
+               :onaccept `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply "{}"; eww close timermenu; } || eww update timer_pending="{}" timer_confirm=true`)
         (button :class "tm-add" :tooltip "Guardar como preset"
-                :onclick "sh -c '~/.config/waybar/scripts/timer.sh addpreset \"${timer_input}\"; eww update timer_presets_json=\"$(~/.config/waybar/scripts/timer.sh presets)\" timer_input=\"\"'"
+                :onclick `~/.config/waybar/scripts/timer.sh addpreset "${timer_input}"; eww update timer_presets_json="$(~/.config/waybar/scripts/timer.sh presets)" timer_input=""`
                 "󰐕"))
       (label :class "tm-hint" :halign "start" :text "5m · 1h30m · 2:30 · @18:30")
-      (button :class "tm-item" :onclick "~/.config/waybar/scripts/timer.sh trigger cronometro"
+      (button :class "tm-item tm-active-cancel" :visible {timerinfo.class != "idle"}
+              :onclick "~/.config/waybar/scripts/timer.sh forcecancel; eww close timermenu"
+        (box :space-evenly false :spacing 10
+          (label :class "tm-ico" :text "󰜺")
+          (label :class "tm-lbl" :hexpand true :halign "start" :text "Cancelar (${timerinfo.plain})")))
+      (button :class "tm-item"
+              :onclick `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply cronometro; eww close timermenu; } || eww update timer_pending="cronometro" timer_confirm=true`
         (box :space-evenly false :spacing 10
           (label :class "tm-ico" :text "󰈼")
           (label :class "tm-lbl" :hexpand true :halign "start" :text "Cronometro")))
       (box :class "tm-presets" :orientation "v" :space-evenly false :spacing 6
         (for p in {timer_presets_json}
           (button :class "tm-item" :tooltip "Click der = borrar"
-                  :onclick "~/.config/waybar/scripts/timer.sh trigger \"${p}\""
-                  :onrightclick "sh -c '~/.config/waybar/scripts/timer.sh delpreset \"${p}\"; eww update timer_presets_json=\"$(~/.config/waybar/scripts/timer.sh presets)\"'"
+                  :onclick `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply "${p}"; eww close timermenu; } || eww update timer_pending="${p}" timer_confirm=true`
+                  :onrightclick `~/.config/waybar/scripts/timer.sh delpreset "${p}"; eww update timer_presets_json="$(~/.config/waybar/scripts/timer.sh presets)"`
             (label :class "tm-lbl" :halign "start" :text {p})))))
     (box :visible timer_confirm :orientation "v" :space-evenly false :spacing 10
       (label :class "tm-title" :halign "start" :text "Ya hay algo activo")
       (label :class "tm-sub" :halign "start" :wrap true :text "Se cancela y se pone el nuevo.")
       (box :space-evenly true :spacing 8
-        (button :class "tm-cancel" :onclick "eww update timer_confirm=false timer_pending=\"\"" "Cancelar")
+        (button :class "tm-cancel" :onclick `eww update timer_confirm=false timer_pending=""` "Cancelar")
         (button :class "tm-replace"
-                :onclick "~/.config/waybar/scripts/timer.sh apply \"${timer_pending}\"; eww update timer_confirm=false timer_pending=\"\"; eww close timermenu"
+                :onclick `~/.config/waybar/scripts/timer.sh apply "${timer_pending}"; eww update timer_confirm=false timer_pending=""; eww close timermenu`
                 "Reemplazar")))))
 
 
@@ -623,8 +629,10 @@
   ;; x a ojo: timer va 1 modulo a la izq de battery (batmenu = 140px)
   ;; ajustar si no cae justo debajo del icono
   :geometry (geometry :x "195px" :y "5px" :width "260px" :anchor "top right")
-  (eventbox :onhoverlost "eww close timermenu"
-    (timermenu)))
+  ;; sin onhoverlost: la vista de confirmar reemplazo es mucho mas baja que
+  ;; la lista de presets, al encogerse el cursor queda fuera de la ventana
+  ;; y el hoverlost la cerraba antes de que se viera. Se cierra con el icono.
+  (timermenu))
 
 (defwindow personalizacion
   :monitor 0

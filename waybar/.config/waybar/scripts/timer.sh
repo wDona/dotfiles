@@ -1,6 +1,7 @@
 #!/bin/bash
 # Temporizador para waybar (tiempo libre). Menu lo pone el widget eww
-# (timermenu); este script solo aplica cambios de estado.
+# (timermenu); este script solo aplica cambios de estado, el widget decide
+# cuando confirmar reemplazo mirando timerinfo.class el mismo.
 #   timer.sh apply <texto>       -> arranca timer/cronometro, valida formato
 #   timer.sh presets             -> JSON con los presets (para el widget)
 #   timer.sh addpreset <texto>   -> anade preset (valida formato)
@@ -149,17 +150,6 @@ case "$1" in
     forcecancel)
         rm -rf "$S" "$FIRED" "$SW" "$SWP"
         pkill -RTMIN+10 waybar
-        ;;
-    trigger)
-        # click desde el widget eww: aplica ya si no hay nada activo,
-        # si no pide confirmar (el widget escucha timer_confirm/timer_pending)
-        if [ -f "$S" ] || [ -f "$SW" ] || [ -f "$SWP" ]; then
-            eww update timer_pending="$2" timer_confirm=true
-        else
-            "$0" apply "$2"
-            eww update timer_confirm=false timer_pending=""
-            eww close timermenu
-        fi
         ;;
     cancel)
         # cronometro activo: click der pausa/reanuda (no cancela)

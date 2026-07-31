@@ -531,6 +531,9 @@ $surface: rgba(255, 255, 255, 0.10);   // solo hover: aqui si hace falta luz
   font-size: 16px;
   margin-right: 4px;
 }
+.tm-active-cancel {
+  .tm-ico, .tm-lbl { color: #f472b6; }
+}
 .tm-lbl {
   color: $fg;
   font-size: 13px;
