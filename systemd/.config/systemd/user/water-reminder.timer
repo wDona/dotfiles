@@ -1,0 +1,10 @@
+[Unit]
+Description=Chequeo periodico recordatorio beber agua
+
+[Timer]
+OnStartupSec=1min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
