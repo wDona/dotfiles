@@ -28,7 +28,7 @@ close_stash() {
 }
 
 if [ -z "$addr" ] || [ "$addr" = "null" ]; then
-    setsid kitty --class "$CLASS" -e /home/wdona/.local/bin/claude >/dev/null 2>&1 &
+    setsid kitty --class "$CLASS" -e herdr >/dev/null 2>&1 &
     exit 0
 fi
 

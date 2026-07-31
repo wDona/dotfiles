@@ -70,6 +70,9 @@ LEANCTX_BIN="$HOME/.npm-global/lib/node_modules/lean-ctx-bin/bin/lean-ctx"
 [[ -x $LEANCTX_BIN ]] \
     && ok "binario de lean-ctx" \
     || bad "falta el binario de lean-ctx - hooks de Claude rotos" "env PATH=\"$HOME/.npm-global/bin:\$PATH\" npm install -g --allow-scripts lean-ctx-bin lean-ctx-bin"
+[[ -x "$HOME/.local/bin/herdr" ]] \
+    && ok "herdr" \
+    || bad "falta herdr - SUPER+C (toggle_claude.sh) se queda sin terminal" "curl -fsSL https://herdr.dev/install.sh | sh"
 
 # -- 3. Referencias rotas en los propios configs ------------------------------
 # Un exec-once o un on-click que apunta a un script borrado falla en silencio:

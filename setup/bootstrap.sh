@@ -149,6 +149,8 @@ command -v uv >/dev/null 2>&1 || \
     asuser sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 [[ -e "$USER_HOME/.local/bin/claude" ]] || \
     asuser bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
+[[ -e "$USER_HOME/.local/bin/herdr" ]] || \
+    asuser bash -c 'curl -fsSL https://herdr.dev/install.sh | sh'
 
 # -- 9. Energia --------------------------------------------------------------
 # tlp gestiona la energia (activado arriba). power-profiles-daemon lleva
