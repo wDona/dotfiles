@@ -479,6 +479,80 @@ $surface: rgba(255, 255, 255, 0.10);   // solo hover: aqui si hace falta luz
   font-weight: bold;
 }
 
+// ── Menu temporizador ──
+.timermenu {
+  @include glass;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding: 14px;
+}
+.tm-title {
+  color: $accent2;
+  font-size: 13px;
+  font-weight: bold;
+}
+.tm-sub {
+  color: $fg;
+  font-size: 12px;
+}
+.tm-hint {
+  color: $fg-dim;
+  font-size: 11px;
+  margin: -4px 0 2px 2px;
+}
+.tm-entry {
+  background-color: $bg-cell;
+  color: $fg;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.tm-add {
+  background-color: $bg-cell;
+  color: $accent;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  font-size: 16px;
+  padding: 6px 12px;
+  &:hover { background-color: $surface; }
+}
+.tm-item {
+  background-color: $bg-cell;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  padding: 9px 12px;
+  &:hover { background-color: $surface; }
+}
+.tm-ico {
+  color: $accent;
+  font-size: 16px;
+  margin-right: 4px;
+}
+.tm-lbl {
+  color: $fg;
+  font-size: 13px;
+  font-weight: bold;
+}
+.tm-cancel, .tm-replace {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  padding: 10px 0;
+  font-weight: bold;
+}
+.tm-cancel {
+  background-color: $bg-cell;
+  color: $fg;
+  &:hover { background-color: $surface; }
+}
+.tm-replace {
+  background-color: rgba(217, 70, 239, 0.22);
+  color: #ffffff;
+  &:hover { background-color: rgba(217, 70, 239, 0.4); }
+}
+
 // ══════════════════════════════════════════════════════════
 // ─── PERSONALIZACION (fondo de pantalla) ──────────────────
 // ══════════════════════════════════════════════════════════

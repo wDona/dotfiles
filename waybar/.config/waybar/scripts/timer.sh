@@ -1,8 +1,14 @@
 #!/bin/bash
-# Temporizador para waybar (tiempo libre).
-#   timer.sh set     -> rofi pide tiempo, cuenta atras + notifica al acabar
-#   timer.sh cancel  -> cancela
-#   timer.sh status  -> JSON para waybar
+# Temporizador para waybar (tiempo libre). Menu lo pone el widget eww
+# (timermenu); este script solo aplica cambios de estado.
+#   timer.sh apply <texto>       -> arranca timer/cronometro, valida formato
+#   timer.sh presets             -> JSON con los presets (para el widget)
+#   timer.sh addpreset <texto>   -> anade preset (valida formato)
+#   timer.sh delpreset <texto>   -> borra preset
+#   timer.sh forcecancel         -> cancela sin confirmar (ya confirma el widget)
+#   timer.sh cancel              -> click derecho en la barra: pausa/reanuda
+#                                    cronometro, o cancela timer con confirmacion rofi
+#   timer.sh status | bar        -> JSON para waybar
 # Formatos aceptados en el prompt:
 #   90s | 5m | 1h | 1h30m | 2m30s | 1m45s   (unidades h/m/s)
 #   MM:SS o HH:MM:SS        (ej 2:30 = 2min30s, 1:00:00 = 1h)
@@ -12,7 +18,9 @@ S="$STATE_DIR/waybar_timer"            # epoch objetivo (persiste tras reinicio)
 FIRED="$STATE_DIR/waybar_timer.fired"  # marca atomica: notificacion ya disparada
 SW="$STATE_DIR/waybar_stopwatch"       # epoch de inicio del cronometro (cuenta arriba)
 SWP="$STATE_DIR/waybar_stopwatch.paused" # segundos acumulados: cronometro en pausa
-ICON="󰔙"
+PRESETS="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/timer_presets"
+[ -f "$PRESETS" ] || printf '30s\n5m\n10m\n1h\n1h30m\n' > "$PRESETS"
+ICON="󰚭"
 # Punto de estado pegado al icono (mismo truco pango que notif.sh y weather.sh):
 # el modulo NO se tiñe entero, solo el punto, para que la barra siga monocroma.
 # letter_spacing negativo pega el punto al icono sin que el espacio separe.
@@ -65,22 +73,25 @@ emit() {
     local now; now=$(date +%s)
     # cronometro: cuenta arriba, no termina solo
     if [ -f "$SW" ]; then
-        printf '{"text":"%s %s","tooltip":"Cronometro · click der = pausar","class":"running"}\n' \
-            "$ICON" "$(fmt $((now - $(cat "$SW"))))"
+        local t; t=$(fmt $((now - $(cat "$SW"))))
+        printf '{"text":"%s %s","plain":"%s %s","tooltip":"Cronometro · click der = pausar","class":"running"}\n' \
+            "$ICON" "$t" "$ICON" "$t"
         return
     fi
-    # cronometro en pausa: tiempo congelado + punto amarillo
+    # cronometro en pausa: tiempo congelado + punto amarillo (el punto es markup pango, solo para waybar)
     if [ -f "$SWP" ]; then
-        printf '{"text":"%s%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
-            "$ICON" "$DOT" "$(fmt "$(cat "$SWP")")"
+        local t; t=$(fmt "$(cat "$SWP")")
+        printf '{"text":"%s%s %s","plain":"%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
+            "$ICON" "$DOT" "$t" "$ICON" "$t"
         return
     fi
     # temporizador: cuenta atras
     if [ -f "$S" ]; then
         local end rem; end=$(cat "$S"); rem=$((end-now))
         if [ "$rem" -gt 0 ]; then
-            printf '{"text":"%s %s","tooltip":"Suena a las %s · click der = cancelar","class":"running"}\n' \
-                "$ICON" "$(fmt "$rem")" "$(date -d "@$end" '+%H:%M')"
+            local t; t=$(fmt "$rem")
+            printf '{"text":"%s %s","plain":"%s %s","tooltip":"Suena a las %s · click der = cancelar","class":"running"}\n' \
+                "$ICON" "$t" "$ICON" "$t" "$(date -d "@$end" '+%H:%M')"
             return
         fi
         # cumplido: notificar 1 sola vez (lock atomico) y volver al icono normal
@@ -89,51 +100,34 @@ emit() {
             rm -rf "$S" "$FIRED"
         fi
     fi
-    printf '{"text":"","tooltip":"","class":"idle"}\n'
+    printf '{"text":"%s","plain":"%s","tooltip":"Click = poner temporizador","class":"idle"}\n' "$ICON" "$ICON"
 }
 
 # Pregunta Si/No por rofi. Devuelve 0 solo si el usuario elige "Si".
 confirm() { [ "$(printf 'No\nSi' | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "$1")" = "Si" ]; }
 
 case "$1" in
-    set)
-        # no pisar algo activo (timer o cronometro) sin confirmacion explicita
-        if [ -f "$S" ] || [ -f "$SW" ] || [ -f "$SWP" ]; then
-            case "$(printf 'Cancelar actual\nCancelar y reemplazar\nVolver' | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "Ya hay algo activo")" in
-                "Cancelar y reemplazar") rm -rf "$S" "$FIRED" "$SW" "$SWP"; pkill -RTMIN+10 waybar ;;  # cancela ya y sigue al menu de tiempo
-                "Cancelar actual") rm -rf "$S" "$FIRED" "$SW" "$SWP"; pkill -RTMIN+10 waybar; exit 0 ;;
-                *) exit 0 ;;                                                         # Volver / vacio: no tocar
-            esac
+    presets)
+        sort_presets | jq -R . | jq -s .
+        ;;
+    addpreset)
+        nuevo="${2//[[:space:]]/}"; [ -z "$nuevo" ] && exit 0
+        if [[ "$nuevo" == @* ]]; then
+            date -d "${nuevo#@}" +%s >/dev/null 2>&1 || { notify-send "Temporizador" "Hora no valida: $nuevo"; exit 1; }
+        else
+            s=$(parse_secs "$nuevo"); { [ -z "$s" ] || [ "$s" -le 0 ]; } && { notify-send "Temporizador" "Formato no valido: $nuevo"; exit 1; }
         fi
-        # presets editables por el usuario (1 por linea)
-        PRESETS="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/timer_presets"
-        [ -f "$PRESETS" ] || printf '30s\n5m\n10m\n1h\n1h30m\n' > "$PRESETS"
-        menu=$( { echo "Cronometro"; sort_presets; echo "[+] Nuevo preset"; echo "[-] Borrar preset"; } )
-        inp=$(printf '%s\n' "$menu" | rofi -dmenu -kb-cancel 'Escape,MousePrimary' \
-                -p "Temporizador" -mesg "Elige un preset o escribe: 5m · 1h30m · 2:30 · @18:30")
+        grep -qxF "$nuevo" "$PRESETS" || echo "$nuevo" >> "$PRESETS"
+        ;;
+    delpreset)
+        del="$2"; [ -z "$del" ] && exit 0
+        # escribir A TRAVES del symlink (no mv, que lo reemplazaria por fichero real)
+        resto=$(grep -vxF "$del" "$PRESETS"); printf '%s\n' "$resto" > "$PRESETS"
+        ;;
+    apply)
+        inp="${2//[[:space:]]/}"
         [ -z "$inp" ] && exit 0
-        case "$inp" in
-            "[+] Nuevo preset")
-                nuevo=$(rofi -dmenu -kb-cancel 'Escape,MousePrimary' \
-                          -p "Nuevo preset" -mesg "Formato: 5m · 1h30m · 2:30 · @18:30")
-                nuevo="${nuevo//[[:space:]]/}"; [ -z "$nuevo" ] && exit 0
-                if [[ "$nuevo" == @* ]]; then
-                    date -d "${nuevo#@}" +%s >/dev/null 2>&1 || { notify-send "Temporizador" "Hora no valida: $nuevo"; exit 0; }
-                else
-                    s=$(parse_secs "$nuevo"); { [ -z "$s" ] || [ "$s" -le 0 ]; } && { notify-send "Temporizador" "Formato no valido: $nuevo"; exit 0; }
-                fi
-                grep -qxF "$nuevo" "$PRESETS" || echo "$nuevo" >> "$PRESETS"
-                notify-send "Temporizador" "Preset anadido: $nuevo"; exit 0 ;;
-            "[-] Borrar preset")
-                del=$(sort_presets | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "Borrar que preset?")
-                [ -z "$del" ] && exit 0
-                # escribir A TRAVES del symlink (no mv, que lo reemplazaria por fichero real)
-                resto=$(grep -vxF "$del" "$PRESETS"); printf '%s\n' "$resto" > "$PRESETS"
-                notify-send "Temporizador" "Preset borrado: $del"; exit 0 ;;
-        esac
-        inp="${inp//[[:space:]]/}"
-        [ -z "$inp" ] && exit 0
-        rm -rf "$S" "$FIRED" "$SW" "$SWP"   # limpia estado previo
+        rm -rf "$S" "$FIRED" "$SW" "$SWP"   # limpia estado previo (el widget ya confirmo el reemplazo)
         if [[ "${inp,,}" == cronometro || "${inp,,}" == crono ]]; then
             date +%s > "$SW"; pkill -RTMIN+10 waybar; exit 0
         fi
@@ -142,15 +136,30 @@ case "$1" in
             # hora concreta del dia; si ya paso -> manana
             clk="${inp#@}"
             end=$(date -d "$clk" +%s 2>/dev/null)
-            [ -z "$end" ] && { notify-send "Temporizador" "Hora no valida: $inp"; exit 0; }
+            [ -z "$end" ] && { notify-send "Temporizador" "Hora no valida: $inp"; exit 1; }
             [ "$end" -le "$now" ] && end=$(date -d "tomorrow $clk" +%s)
         else
             secs=$(parse_secs "$inp")
-            { [ -z "$secs" ] || [ "$secs" -le 0 ]; } && { notify-send "Temporizador" "Formato no valido: $inp"; exit 0; }
+            { [ -z "$secs" ] || [ "$secs" -le 0 ]; } && { notify-send "Temporizador" "Formato no valido: $inp"; exit 1; }
             end=$((now+secs))
         fi
         echo "$end" > "$S"
         pkill -RTMIN+10 waybar
+        ;;
+    forcecancel)
+        rm -rf "$S" "$FIRED" "$SW" "$SWP"
+        pkill -RTMIN+10 waybar
+        ;;
+    trigger)
+        # click desde el widget eww: aplica ya si no hay nada activo,
+        # si no pide confirmar (el widget escucha timer_confirm/timer_pending)
+        if [ -f "$S" ] || [ -f "$SW" ] || [ -f "$SWP" ]; then
+            eww update timer_pending="$2" timer_confirm=true
+        else
+            "$0" apply "$2"
+            eww update timer_confirm=false timer_pending=""
+            eww close timermenu
+        fi
         ;;
     cancel)
         # cronometro activo: click der pausa/reanuda (no cancela)

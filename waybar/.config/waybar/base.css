@@ -124,17 +124,12 @@
     min-width: 0;
 }
 
-#custom-timer.running { color: #ffd700; }
+#custom-timer.running { color: #ffffff; }
+#custom-timer.paused  { color: #ffd700; }
 #custom-timer.done    { color: #f472b6; }
-/* paused: sin color aqui. El punto amarillo lo pinta timer.sh en pango, igual
-   que el aviso del clima y la campana de notif.sh. */
 
-/* idle = sin temporizador: oculto (texto vacio, sin hueco) */
-#custom-timer.idle {
-    padding: 0;
-    margin: 0;
-    min-width: 0;
-}
+/* idle = sin temporizador: solo icono, blanco */
+#custom-timer.idle { color: #ffffff; }
 
 /* Clima: el aviso AEMET va como PUNTO de color dentro del texto (lo pinta
    weather.sh con markup pango, igual que la campana de notif.sh), no
@@ -294,7 +289,6 @@
 
 /* Los que se ocultan colapsando no deben pintarse en su hueco vacio. */
 #custom-battery.none:hover,
-#custom-timer.idle:hover,
 #workspaces button.special.empty:hover {
     background: transparent;
     border-color: transparent;
@@ -308,7 +302,8 @@
     color: #ffffff;
 }
 
-#custom-timer.running:hover  { color: #ffd700; }
+#custom-timer.running:hover  { color: #ffffff; }
+#custom-timer.paused:hover   { color: #ffd700; }
 #custom-timer.done:hover     { color: #f472b6; }
 #custom-battery.charging:hover { color: #7ee787; }
 #custom-battery.critical:hover { color: #ff5c5c; }
