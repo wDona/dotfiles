@@ -12,6 +12,7 @@ sddm-sugar-candy-git
 spotify
 teamspeak
 tela-circle-icon-theme-git
+ttf-twemoji
 visual-studio-code-bin
 yay-bin
 yay-bin-debug
