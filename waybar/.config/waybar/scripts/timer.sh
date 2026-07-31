@@ -95,11 +95,19 @@ emit() {
                 "$ICON" "$t" "$ICON" "$t" "$(date -d "@$end" '+%H:%M')"
             return
         fi
-        # cumplido: notificar 1 sola vez (lock atomico) y volver al icono normal
-        if mkdir "$FIRED" 2>/dev/null; then
-            notify-send -u critical -a "Temporizador" "Temporizador" "Tiempo cumplido"
-            rm -rf "$S" "$FIRED"
+        # cumplido: notificar 1 sola vez (lock atomico) y mostrar 1min en rojo
+        # contando en negativo antes de volver al icono normal
+        local over=$((-rem))
+        if [ "$over" -lt 60 ]; then
+            if mkdir "$FIRED" 2>/dev/null; then
+                notify-send -a "Temporizador" "Temporizador" "Tiempo cumplido"
+            fi
+            local t; t=$(fmt "$over")
+            printf '{"text":"%s -%s","plain":"%s -%s","tooltip":"Tiempo cumplido","class":"done"}\n' \
+                "$ICON" "$t" "$ICON" "$t"
+            return
         fi
+        rm -rf "$S" "$FIRED"
     fi
     printf '{"text":"%s","plain":"%s","tooltip":"Click = poner temporizador","class":"idle"}\n' "$ICON" "$ICON"
 }
