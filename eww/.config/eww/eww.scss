@@ -487,11 +487,20 @@ $surface: rgba(255, 255, 255, 0.10);   // solo hover: aqui si hace falta luz
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
   padding: 14px;
+  // suelo comun entre la vista normal y la de confirmar: si al cambiar de
+  // vista la ventana encoge, el cursor puede quedar fuera y el hoverlost
+  // la cierra antes de que se vea el aviso.
+  min-height: 260px;
 }
 .tm-title {
   color: $accent2;
   font-size: 13px;
   font-weight: bold;
+}
+.tm-close {
+  color: $fg-dim;
+  font-size: 13px;
+  &:hover { color: $fg; }
 }
 .tm-sub {
   color: $fg;

@@ -269,7 +269,9 @@
 (defwidget timermenu []
   (box :class "timermenu" :orientation "v" :space-evenly false :spacing 10
     (box :visible {!timer_confirm} :orientation "v" :space-evenly false :spacing 10
-      (label :class "tm-title" :halign "start" :text "Temporizador")
+      (box :space-evenly false
+        (label :class "tm-title" :hexpand true :halign "start" :text "Temporizador")
+        (button :class "tm-close" :onclick "eww close timermenu" "󰅖"))
       (box :space-evenly false :spacing 6
         (input :class "tm-entry" :hexpand true :value timer_input
                :onchange "eww update timer_input {}"
@@ -629,10 +631,11 @@
   ;; x a ojo: timer va 1 modulo a la izq de battery (batmenu = 140px)
   ;; ajustar si no cae justo debajo del icono
   :geometry (geometry :x "195px" :y "5px" :width "260px" :anchor "top right")
-  ;; sin onhoverlost: la vista de confirmar reemplazo es mucho mas baja que
-  ;; la lista de presets, al encogerse el cursor queda fuera de la ventana
-  ;; y el hoverlost la cerraba antes de que se viera. Se cierra con el icono.
-  (timermenu))
+  ;; min-height fija en .timermenu (eww.scss): la vista de confirmar es mas
+  ;; baja que la lista de presets, sin un suelo comun el cursor quedaba
+  ;; fuera de la ventana al encoger y el hoverlost la cerraba al instante.
+  (eventbox :onhoverlost "eww close timermenu"
+    (timermenu)))
 
 (defwindow personalizacion
   :monitor 0
