@@ -74,17 +74,35 @@ wait_pane_ready() {
     return 1
 }
 
+# Primer pane sin agente, priorizando el workspace que ya llevaba ese label.
+# Sin esto, tras un reset los workspaces restaurados (shells vacios, session.json
+# guarda cwd/layout pero no procesos) se quedaban colgando y cada ALT+F4 añadia
+# dos mas encima. Reutilizarlos ademas arranca el agente en el cwd de antes.
+free_pane() {
+    ws=$(herdr workspace list 2>/dev/null \
+        | jq -r --arg a "$1" 'first(.result.workspaces[] | select(.label == $a) | .workspace_id) // empty')
+    p=""
+    [ -n "$ws" ] && p=$(echo "$panes" | jq -r --arg w "$ws" \
+        'first(.result.panes[] | select(.agent == null and .workspace_id == $w) | .pane_id) // empty')
+    [ -z "$p" ] && p=$(echo "$panes" \
+        | jq -r 'first(.result.panes[] | select(.agent == null) | .pane_id) // empty')
+    echo "$p"
+}
+
 # $1 = agente, $2 = binario, $3 = extra args de workspace create
 ensure_agent() {
     has_agent "$1" && return
 
-    # Arranque limpio: herdr abre un unico pane vacio, se reutiliza en vez de
-    # dejarlo huerfano. Con estado restaurado siempre va a workspace nuevo.
-    pane=""
-    [ "$(echo "$panes" | jq '.result.panes | length')" = "1" ] \
-        && pane=$(echo "$panes" | jq -r 'first(.result.panes[] | select(.agent == null) | .pane_id) // empty')
-    [ -z "$pane" ] && pane=$(herdr workspace create --label "$1" $3 2>/dev/null \
-        | jq -r '.result.root_pane.pane_id // empty')
+    pane=$(free_pane "$1")
+    if [ -n "$pane" ]; then
+        # El workspace reutilizado conserva el label viejo ("~", el del otro
+        # agente...); renombrar para que la lista siga siendo legible.
+        herdr workspace rename "${pane%%:*}" "$1" >/dev/null 2>&1
+        [ "$3" = "--no-focus" ] || herdr workspace focus "${pane%%:*}" >/dev/null 2>&1
+    else
+        pane=$(herdr workspace create --label "$1" $3 2>/dev/null \
+            | jq -r '.result.root_pane.pane_id // empty')
+    fi
     [ -z "$pane" ] && return
 
     # Dos intentos: la deteccion de agente tarda unos segundos, asi que se espera
