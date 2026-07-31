@@ -50,6 +50,7 @@
 (defvar eww_presets "[\"morado\",\"dracula\",\"nord\",\"catppuccin\",\"gruvbox\"]")
 (defvar hypr_t "{\"gaps_in\":0,\"gaps_out\":0,\"border_size\":0,\"rounding\":0}")
 (defvar bt_state "{\"powered\":false,\"connected\":[],\"available\":[]}")
+(defpoll water_on :interval "1s" :initial 0 "~/.config/eww/scripts/water_toggle.sh status")
 
 ;; ─── Fila de evento (texto + boton borrar) ───────────────
 (defwidget evrow [show text off date]
@@ -363,11 +364,12 @@
 (defwidget aj-home []
   (scroll :vscroll true :hscroll false :height 560
     (box :orientation "v" :space-evenly false :spacing 10
+      (aj-toggle :label "Recordatorio de agua" :on water_on
+        :onclick `eww update water_on=${water_on == 1 ? 0 : 1} & ~/.config/eww/scripts/water_toggle.sh ${water_on == 1 ? "off" : "on"} &`)
       (cat-card :icon "󰸉" :title "Fondo de pantalla" :sub "Imagen o video animado" :target "wallpaper")
       (cat-card :icon "󰏘" :title "Tema GTK" :sub {gtk_cur != "" ? gtk_cur : "Apariencia de las apps"} :target "gtk")
       (cat-card :icon "󰋩" :title "Iconos" :sub {icon_cur != "" ? icon_cur : "Set de iconos"} :target "icon")
       (cat-card :icon "󰳽" :title "Cursor" :sub {cursor_cur != "" ? cursor_cur : "Puntero del raton"} :target "cursor")
-      (cat-card :icon "󰂯" :title "Bluetooth" :sub {bt_state.powered ? "${arraylength(bt_state.connected)} conectado(s)" : "Desactivado"} :target "bt")
       (cat-card :icon "󰛖" :title "Fuentes" :sub "Sistema y terminal" :target "fonts")
       (cat-card :icon "" :title "Hyprland" :sub "Gaps, blur, opacidad, bordes" :target "hypr")
       (cat-card :icon "󰕷" :title "eww" :sub "Paleta de colores y ventanas" :target "eww")
