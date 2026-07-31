@@ -193,6 +193,58 @@ registra rutas nuevas en `~/.config/custom_confs`. Los dos viven en
 - **Cursor**: Catppuccin Mocha Mauve
 - **Fuente**: JetBrainsMono Nerd Font
 
+## ⌨️ Shortcuts (Hyprland)
+
+Definidos en `hypr/.config/hypr/conf.d/keybinds.conf`. Teclado dvorak.
+
+| Tecla | Accion |
+|---|---|
+| `SUPER T` | Terminal (kitty) |
+| `ALT F4` | Cerrar ventana activa |
+| `SUPER F12` | Cerrar sesion |
+| `SUPER E` | Explorador de archivos (nautilus) |
+| `SUPER SUPER_L` (soltar) | Abridor de apps (rofi) |
+| `SUPER B` | Zen browser |
+| `SUPER V` | Discord |
+| `SUPER S` | Spotify |
+| `SUPER G` | Teamspeak / togglegroup (agrupar ventanas) |
+| `SUPER SHIFT G` | Sacar ventana del grupo |
+| `SUPER CTRL Tab` / `SUPER CTRL SHIFT Tab` | Siguiente / anterior pestaña del grupo |
+| `SUPER F1` / `SUPER F2` | Cambiar idioma teclado / disposicion (EN-ES, QWERTY-DVORAK) |
+| `SUPER W` | Launcher URL Zen con historial |
+| `SUPER H` | Marcar notificaciones como leidas |
+| `SUPER F11` | Pantalla completa |
+| `CTRL ALT` + flechas | Mover ventana dentro del monitor |
+| `CTRL ALT SHIFT` + flechas | Mover ventana a otro monitor |
+| `SUPER ALT` izq/der | Mover workspace entero a otro monitor |
+| `SUPER Space` | Toggle flotante |
+| `SUPER Up` / `SUPER Down` | Maximizar (special fullscreen) / salir de maximizado |
+| `SUPER 1-6` | Ir a workspace 1-6 |
+| `` SUPER ` `` | Ir a workspace special |
+| `SUPER 0` | Ir a workspace fijo (4788887) |
+| `SUPER izq/der` | Recorrer workspaces dinamicos del monitor |
+| `SUPER SHIFT` izq/der | Mandar ventana a siguiente/anterior workspace dinamico (sin seguir) |
+| `SUPER CTRL` izq/der | Mandar ventana a siguiente/anterior workspace dinamico (siguiendola) |
+| `SUPER A` | Crear/ir al siguiente workspace libre (>=7) |
+| `SUPER CTRL A` | Nuevo workspace y seguir la ventana |
+| `SUPER SHIFT A` | Mandar ventana a nuevo workspace, quedarte donde estas |
+| `SUPER C` | Toggle Claude Code (terminal desplegable) |
+| `SUPER SHIFT 1-6` | Mandar ventana a workspace 1-6 (sin seguir) |
+| `CTRL SUPER 1-6` | Mandar ventana a workspace 1-6 (siguiendola) |
+| `XF86AudioPlay/Next/Prev` | Control reproductor (playerctl) |
+| `XF86AudioRaiseVolume/LowerVolume/Mute` | Volumen (SwayOSD) |
+| `ALT Tab` | Switcher de ventanas |
+| `SUPER O` | OCR de region seleccionada -> portapapeles |
+| `SUPER D` | Toggle dashboard eww |
+| `Print` | Captura de area -> editor swappy |
+| `SHIFT Print` | Captura de pantalla completa -> portapapeles |
+| `CTRL SHIFT S` | Guardar clip con notificacion |
+| `SUPER L` | Bloquear pantalla |
+| `SUPER + arrastrar / SUPER + click der arrastrar` | Mover / redimensionar ventana con raton |
+| `SUPER N` | Overlay "BRB" (pantalla vuelvo en X) |
+| `SUPER SHIFT N` | BRB rapido, 5 min |
+| `XF86MonBrightnessUp/Down` | Brillo |
+
 ## 📝 Notas
 
 - El teclado esta en **dvorak** (`/etc/vconsole.conf`, `sddm.conf.d` y
