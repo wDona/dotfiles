@@ -64,7 +64,7 @@
         "spacing": 6
     },
     "privacy": {
-        "icon-spacing": 6,
+        "icon-spacing": 0,
         "icon-size": 14,
         "transition-duration": 200,
         "ignore": [
@@ -88,12 +88,12 @@
     },
     "pulseaudio": {
         "format": "{icon}",
-        "format-muted": "  ",
+        "format-muted": "",
         "format-icons": {
             "default": [
-                " ",
-                " ",
-                "  "
+                "",
+                "",
+                ""
             ]
         },
         "on-click": "~/.config/eww/scripts/toggle_vol.sh",

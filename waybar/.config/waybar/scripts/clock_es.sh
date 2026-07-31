@@ -6,4 +6,4 @@ dow=$(date +%w)            # 0=domingo
 d=$(date +%-d)
 m=$(date +%-m)
 hm=$(date +%H:%M)
-echo "󰥔 ${dias[$dow]} $d ${meses[$((m - 1))]}, $hm"
+echo "${dias[$dow]} $d ${meses[$((m - 1))]}, $hm"

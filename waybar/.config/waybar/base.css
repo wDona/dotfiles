@@ -46,7 +46,10 @@
 #custom-launcher,
 #custom-spotify {
     padding: 4px 10px;
-    margin: 3px 1px;
+    /* Margen vertical 0 a proposito: con margen, la pastilla del hover quedaba
+       mas baja que la isla y dejaba hueco arriba y abajo. Sin el, GTK estira el
+       modulo a toda la altura del contenedor y la pastilla la llena. */
+    margin: 0 1px;
     border-radius: 999px;
     background: transparent;
     border: 1px solid transparent; /* reservado: el hover lo tiñe sin mover el layout */
@@ -57,7 +60,7 @@
 
 #workspaces button {
     padding: 4px 9px;
-    margin: 3px 1px;
+    margin: 0 1px;
     min-width: 20px;
     border-radius: 999px;
     background: transparent;
@@ -153,13 +156,37 @@
     padding: 0;
 }
 
+/* El aire de los EXTREMOS del widget va aqui (horizontal, no suma altura);
+   entre los items de dentro no hay ninguno, para que se lean como un grupo.
+   El tray necesita lo mismo: sus items estan capados al tamano del icono, asi
+   que su padding no separa nada y sin esto el grupo se pega a los vecinos. */
+#tray {
+    padding: 0 8px;
+}
+
+/* Asimetrico: el glifo del engranaje tiene mucho aire propio a su izquierda,
+   asi que por ese lado hace falta menos padding para que el hueco se VEA
+   igual que los demas. */
+#privacy {
+    padding: 0 4px 0 8px;
+}
+
 /* Privacidad: solo aparece cuando algo captura pantalla o micro.
    Los items llevan SU propia pastilla (transparente en reposo): son widgets
    con ventana GDK propia, asi que el puntero sobre el icono ilumina al hijo
    y NUNCA al contenedor, y GTK3 no tiene selector de padre para compensarlo.
-   Sin esto, el hover solo respondia en el borde del contenedor. */
+   Sin esto, el hover solo respondia en el borde del contenedor.
+   PENDIENTE: el hover sobre el icono en si sigue sin encender la pastilla
+   (solo responde en las esquinas del contenedor). Intentado con
+   "#privacy *:hover" y moviendo el padding al hijo: lo primero funciona
+   suelto pero no dentro de la lista de hover, y lo segundo descuadra la
+   altura. Sin resolver. */
+/* Padding horizontal corto a proposito: es separacion INTERNA del widget (hay
+   un item por captura: pantalla y micro) y tiene que leerse mas junta que el
+   hueco entre widgets. Con 11px + icon-spacing 6 quedaban a 35px de tinta a
+   tinta, mas separados que dos widgets distintos. */
 #privacy-item {
-    padding: 6px 11px;
+    padding: 6px 0;
     min-width: 20px;   /* el padding no ensancha la asignacion del icono: sin
                           esto la pastilla sale ovalada en vertical */
     margin: 0;
@@ -248,8 +275,8 @@
 #tray > .passive:hover,
 #tray > .active:hover,
 #tray > .needs-attention:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(168, 85, 247, 0.22);
+    border-color: rgba(217, 70, 239, 0.35);
     color: #ffffff;
 }
 

@@ -8,4 +8,7 @@ case "${1:-}" in
   up)   swayosd-client $m --output-volume raise --max-volume 100 || wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ ;;
   down) swayosd-client $m --output-volume lower || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
   mute) swayosd-client $m --output-volume mute-toggle || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+  # Solo pinta la barra, sin tocar el volumen: lo usa osd-vol-watch para los
+  # cambios que llegan de fuera (botones del casco por AVRCP en Bluetooth).
+  show) swayosd-client $m --output-volume +0 ;;
 esac

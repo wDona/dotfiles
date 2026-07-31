@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Muestra el OSD cuando el volumen cambia SIN pasar por los binds del teclado.
+#
+# Por Bluetooth los botones del casco no generan tecla: van por AVRCP
+# absolute-volume, bluez cambia el volumen del sink por su cuenta y el
+# compositor nunca ve un evento, asi que no hay nada que dispare swayosd.
+# Esto vigila el volumen y pinta la barra cuando cambia.
+#
+# Que tambien salte con el teclado no molesta: swayosd solo reinicia el
+# temporizador de la barra que ya estaba pintando.
+
+last=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
+
+pactl subscribe | while read -r ev; do
+  case "$ev" in
+    *"change on sink"*|*"change on server"*) ;;
+    *) continue ;;
+  esac
+  cur=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
+  [ "$cur" = "$last" ] && continue
+  last=$cur
+  osd-vol show
+done

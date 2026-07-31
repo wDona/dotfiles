@@ -13,11 +13,14 @@ window#waybar {
     color: rgba(255, 255, 255, 0.85);
 }
 
+/* Isla NEGRA, no cristal blanco: el tinte claro sobre el blur subia todo a
+   gris. Aqui el fondo es casi negro con una gota de morado (mismo tono que
+   el acento #d946ef, muy diluido) y el borde es morado tenue. */
 .modules-left,
 .modules-center,
 .modules-right {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(13, 10, 18, 0.42);
+    border: 1px solid rgba(168, 85, 247, 0.22);
     border-radius: 999px;
     margin: 0 6px;
 }
@@ -26,7 +29,7 @@ window#waybar {
 .modules-left  { margin-left: 10px; }
 .modules-right { margin-right: 10px; }
 
-#custom-launcher { margin-left: 8px; }
+#custom-launcher { margin-left: 0; }
 /* El titulo cierra la isla izquierda: sin margen derecho el texto muere en la
    curva del extremo, y sin el izquierdo se pega a los workspaces. */
 #window { margin-left: 12px; margin-right: 20px; }
@@ -41,6 +44,6 @@ window#waybar.empty #window {
     min-width: 0;
     border-width: 0;
 }
-#custom-power    { margin-right: 8px; }
-#custom-notification { margin-left: 6px; }
-#custom-clock        { margin-right: 6px; }
+#custom-power    { margin-right: 0; }
+#custom-notification { margin-left: 0; }
+#custom-clock        { margin-right: 0; }
