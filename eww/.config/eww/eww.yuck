@@ -216,14 +216,14 @@
 (defwidget sysmenu []
   (box :class "sysmenu" :orientation "v" :space-evenly false :spacing 10
     (box :class "sm-tools" :orientation "v" :space-evenly false :spacing 8
-      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_dash.sh"
-        (box :space-evenly false :spacing 10
-          (label :class "sm-ico" :text "󰘚")
-          (label :class "sm-lbl" :hexpand true :halign "start" :text "Hardware")))
       (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_perso.sh"
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰸉")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Personalizacion")))
+      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_dash.sh"
+        (box :space-evenly false :spacing 10
+          (label :class "sm-ico" :text "󰘚")
+          (label :class "sm-lbl" :hexpand true :halign "start" :text "Hardware")))
       (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/hypr/scripts/toggle_claude.sh"
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰚩")

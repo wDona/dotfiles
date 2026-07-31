@@ -11,7 +11,7 @@ STAMP="${XDG_RUNTIME_DIR:-/tmp}/eww_vol_autoclose"
 
 "$DIR/vol.sh" "$1" "${2:-5}"
 
-eww ping >/dev/null 2>&1 || { eww daemon >/dev/null 2>&1; sleep 0.4; }
+"$DIR/eww_ensure.sh"
 eww active-windows 2>/dev/null | grep -q volumen \
     || eww open volumen --screen "$("$DIR/eww_screen.sh")"
 

@@ -5,10 +5,7 @@
 CONFIG_DIR="$HOME/.config/eww"
 
 # Asegurar daemon
-if ! eww ping >/dev/null 2>&1; then
-    eww daemon >/dev/null 2>&1
-    sleep 0.4
-fi
+"$CONFIG_DIR/scripts/eww_ensure.sh"
 
 if eww active-windows 2>/dev/null | grep -q "calendario"; then
     eww close calendario

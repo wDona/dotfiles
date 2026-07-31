@@ -12,10 +12,7 @@ APP="$HOME/.config/hypr/scripts/appearance.sh"
 HT="$HOME/.config/hypr/scripts/hypr_tweak.sh"
 KITTY="$HOME/.config/kitty/kitty.conf"
 
-if ! eww ping >/dev/null 2>&1; then
-    eww daemon >/dev/null 2>&1
-    sleep 0.4
-fi
+"$(dirname "$0")/eww_ensure.sh"
 
 if eww active-windows 2>/dev/null | grep -q "personalizacion"; then
     eww close personalizacion
@@ -61,4 +58,5 @@ eww update \
     bt_state="$("$HOME/.config/eww/scripts/bluetooth.sh" list)"
 
 mon=$("$(dirname "$0")/eww_screen.sh")
+exec 9>&-
 eww open --toggle personalizacion --screen "$mon"
