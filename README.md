@@ -20,7 +20,7 @@ Reinicia. Lo unico que queda a mano:
 |---|---|
 | Google Calendar (panel eww) | `gcalcli init` |
 | Agentes IA | `claude`, `opencode` |
-| Brave / VS Code | login de cuenta |
+| Zen / VS Code | login de cuenta (uBlock + Bitwarden ya vienen instalados) |
 | Keyring | se crea en el primer login grafico: **misma contrasena que el usuario** |
 
 ### Que hace `setup/bootstrap.sh`
@@ -65,7 +65,7 @@ avisa, no lo arregla solo.
 `setup/etc/pam.d/sddm` trae los ganchos `pam_gnome_keyring.so` en `auth`,
 `password` y `session`, y el bootstrap activa `gnome-keyring-daemon.socket`.
 Con eso, si el keyring de login lleva **la misma contrasena que el usuario**,
-SDDM lo desbloquea al iniciar sesion y ni Brave ni VS Code ni los agentes
+SDDM lo desbloquea al iniciar sesion y ni Zen ni VS Code ni los agentes
 vuelven a pedir la clave.
 
 Si alguna vez se desincroniza (cambiaste la contrasena del usuario), abre
@@ -229,6 +229,7 @@ Definidos en `hypr/.config/hypr/conf.d/keybinds.conf`. Teclado dvorak.
 | `SUPER CTRL A` | Nuevo workspace y seguir la ventana |
 | `SUPER SHIFT A` | Mandar ventana a nuevo workspace, quedarte donde estas |
 | `SUPER C` | Toggle Claude Code (terminal desplegable) |
+| `ALT F5` | Reset de esa sesion: cierra todo y el proximo `SUPER C` abre claude y opencode desde cero |
 | `SUPER SHIFT 1-6` | Mandar ventana a workspace 1-6 (sin seguir) |
 | `CTRL SUPER 1-6` | Mandar ventana a workspace 1-6 (siguiendola) |
 | `XF86AudioPlay/Next/Prev` | Control reproductor (playerctl) |
