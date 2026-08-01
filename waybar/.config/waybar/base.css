@@ -110,6 +110,26 @@
     min-width: 20px;
 }
 
+/* Los glifos PUA del Nerd Font llevan la tinta desplazada a la derecha dentro
+   de su avance, asi que en un modulo de SOLO icono el glifo queda descentrado
+   dentro de la pastilla del hover (~3px). GTK no deja tocar la metrica: se
+   compensa robando padding por la derecha. Los modulos con texto (reloj,
+   clima, bateria) no lo necesitan: ahi el desfase se diluye. */
+#pulseaudio {
+    padding-left: 7px;
+    padding-right: 13px;
+}
+
+#custom-power {
+    padding-left: 8px;
+    padding-right: 12px;
+}
+
+#custom-launcher {
+    padding-left: 9px;
+    padding-right: 15px;
+}
+
 /* ── Estados con color ────────────────────────────────────────────────
    Aqui el color SI entra: es senal, no decoracion. Tiñe el texto; sobre
    fondo plano no hace falta pastilla para que se lea. */
@@ -159,11 +179,11 @@
     padding: 0 8px;
 }
 
-/* Asimetrico: el glifo del engranaje tiene mucho aire propio a su izquierda,
-   asi que por ese lado hace falta menos padding para que el hueco se VEA
-   igual que los demas. */
+/* Simetrico: el hover pinta la pastilla sobre el CONTENEDOR (los items de
+   privacy no reciben el prelight), asi que un padding asimetrico deja los
+   iconos descentrados dentro de ella. */
 #privacy {
-    padding: 0 4px 0 8px;
+    padding: 0 6px;
 }
 
 /* Privacidad: solo aparece cuando algo captura pantalla o micro.

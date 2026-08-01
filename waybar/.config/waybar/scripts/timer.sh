@@ -24,8 +24,9 @@ PRESETS="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/timer_presets"
 ICON="󰚭"
 # Punto de estado pegado al icono (mismo truco pango que notif.sh y weather.sh):
 # el modulo NO se tiñe entero, solo el punto, para que la barra siga monocroma.
-# letter_spacing negativo pega el punto al icono sin que el espacio separe.
-DOT="<span letter_spacing='-10000'> </span><span foreground='#ffd700' size='9000' rise='2000'>•</span>"
+# El hueco lo hace un espacio a 9pt (~3px). Con letter_spacing negativo el
+# punto se montaba encima del icono al cambiar la metrica de la fuente.
+DOT="<span foreground='#ffd700' size='9000' rise='5000'> •</span>"
 
 parse_secs() {
     local in="${1//[[:space:]]/}"

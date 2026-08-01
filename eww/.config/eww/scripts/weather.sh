@@ -219,8 +219,8 @@ bar)
     red) dc="#ff5c5c" ;;
     *) dc="" ;;
     esac
-    [ -n "$dc" ] && dot="<span letter_spacing='-10000'> </span><span foreground='${dc}' size='9000' rise='2000'>•</span>"
-    jq -cn --arg t "$(icon "$code" "$day")${dot} ${temp}°C" --arg c "$cls" '{text:$t, class:$c}'
+    [ -n "$dc" ] && dot="<span foreground='${dc}' size='9000' rise='5000'> •</span>"
+    jq -cn --arg t "$(icon "$code" "$day")${dot}  ${temp}°C" --arg c "$cls" '{text:$t, class:$c}'
     ;;
 
 json)

@@ -23,6 +23,10 @@ window#waybar {
     border: 1px solid rgba(168, 85, 247, 0.22);
     border-radius: 999px;
     margin: 0 6px;
+    /* Sin padding: la pastilla del hover ocupa todo el alto de la isla, asi que
+       su curva (radio 999) es la MISMA que la del extremo y encaja clavada. Con
+       aire a los lados quedaba una franja muerta sin hover en los extremos. */
+    padding: 0;
 }
 
 /* Curva de los extremos: 20px de radio se comerian el modulo del borde. */
