@@ -17,7 +17,7 @@ HIDE_NAME=claudehide
 INTEL_CLASS="jetbrains-idea"
 INTEL_TITLE="Terminal"
 
-# ALT+F4 tumba el server en background (hasta ~10s entre matar kitty y parar el
+# ALT+F5 tumba el server en background (hasta ~10s entre matar kitty y parar el
 # server). Sin esto, un SUPER+C a 1s arranca un server que el teardown en curso
 # mata acto seguido. El lock se retiene hasta que la ventana de kitty existe: si
 # se soltara antes de lanzarla, un segundo SUPER+C entraria, veria `addr` vacio
@@ -34,6 +34,12 @@ get_intel_terminals() {
     echo "$data" | jq -r ".[] | select(.class==\"$INTEL_CLASS\" and .title==\"$INTEL_TITLE\") | .address"
 }
 
+# Ajusta la terminal al monitor donde esta (57% de ancho, alto util completo).
+# Lo mismo que hace CTRL+ALT+SHIFT+flecha, de ahi que viva en su propio script.
+resize_to_monitor() {
+    "$(dirname "$0")/fit_claude.sh"
+}
+
 # El stash tiene que estar SIEMPRE oculto: mientras un special esta desplegado en
 # el monitor, Hyprland abre dentro de el cualquier ventana nueva. En claudehide
 # solo deben vivir Claude y las terminales de IntelliJ, asi que se cierra tras
@@ -47,9 +53,8 @@ close_stash() {
 # duplicar: herdr reporta el agente vivo de cada pane en `.agent` ("claude" /
 # "opencode"), asi que basta con relanzar el que falte. Corre en cada toggle
 # (idempotente) y en background, porque el socket tarda en levantar tras
-# lanzar herdr. El estado restaurado de session.json solo trae shells (guarda
-# cwd/layout, no procesos), asi que tras un reset los agentes se recrean y el
-# claude nuevo queda enfocado: la sesion vieja sigue ahi, pero detras.
+# lanzar herdr. Tras un ALT+F5 no queda estado que restaurar (session.json se
+# borra), asi que ambos agentes se crean de cero con claude enfocado.
 # Rutas absolutas: ~/.npm-global/bin no esta en el PATH fuera de zsh interactiva.
 CLAUDE_BIN="$HOME/.local/bin/claude"
 OPENCODE_BIN="$HOME/.npm-global/bin/opencode"
@@ -75,9 +80,10 @@ wait_pane_ready() {
 }
 
 # Primer pane sin agente, priorizando el workspace que ya llevaba ese label.
-# Sin esto, tras un reset los workspaces restaurados (shells vacios, session.json
-# guarda cwd/layout pero no procesos) se quedaban colgando y cada ALT+F4 añadia
-# dos mas encima. Reutilizarlos ademas arranca el agente en el cwd de antes.
+# Tras un ALT+F5 no hay ninguno (se borra session.json y no se restaura nada),
+# pero si el server sigue vivo de antes: sin esto los shells vacios se quedaban
+# colgando y cada reset añadia dos mas encima. Reutilizarlos ademas arranca el
+# agente en el cwd de antes.
 free_pane() {
     ws=$(herdr workspace list 2>/dev/null \
         | jq -r --arg a "$1" 'first(.result.workspaces[] | select(.label == $a) | .workspace_id) // empty')
@@ -144,10 +150,15 @@ if [ -z "$addr" ] || [ "$addr" = "null" ]; then
     # SUPER+C veria addr vacio y clonaria la terminal.
     i=0
     while [ "$i" -lt 40 ]; do
-        hyprctl clients -j | jq -e ".[] | select(.class==\"$CLASS\")" >/dev/null 2>&1 && break
+        addr=$(hyprctl clients -j \
+            | jq -r ".[] | select(.class==\"$CLASS\") | .address" | head -n1)
+        [ -n "$addr" ] && [ "$addr" != "null" ] && break
         sleep 0.25
         i=$((i + 1))
     done
+    # La windowrule da un tamaño fijo pensado para 1920x1080: ajustarlo al
+    # monitor real en cuanto la ventana existe.
+    [ -n "$addr" ] && [ "$addr" != "null" ] && resize_to_monitor
     exec 9>&-
     exit 0
 fi
@@ -159,6 +170,9 @@ ws=$(echo "$data" | jq -r ".[] | select(.class==\"$CLASS\") | .workspace.name" |
 if [ "$ws" = "$HIDE" ]; then
     cur=$(hyprctl activeworkspace -j | jq -r '.id')
     hyprctl dispatch movetoworkspace "$cur,address:$addr"
+    # Ya esta en el monitor destino: reajustar antes de mostrarla, si no aparece
+    # con el tamaño del monitor anterior (y en uno mas pequeño, saliendose).
+    resize_to_monitor
     hyprctl dispatch alterzorder "top,address:$addr"
     hyprctl dispatch focuswindow "address:$addr"
 
