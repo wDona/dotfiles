@@ -84,11 +84,11 @@
       "exec": "~/.config/swaync/focus_app.sh spotify"
     },
     {
-      "id": "brave-focus",
+      "id": "zen-focus",
       "action-name": "Focus",
-      "app-name": "brave",
+      "app-name": "zen",
       "urgency": "low",
-      "exec": "~/.config/swaync/focus_app.sh brave"
+      "exec": "~/.config/swaync/focus_app.sh zen"
     },
     {
       "id": "steam-focus",

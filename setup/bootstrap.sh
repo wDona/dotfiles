@@ -4,7 +4,7 @@
 #
 # Da por hecho que ya existen: particiones, base/base-devel, kernel, drivers y
 # red funcionando. A partir de ahi deja el PC listo: solo queda iniciar sesion
-# en las cuentas (Google/gcalcli, Brave, VS Code, Claude, etc.).
+# en las cuentas (Google/gcalcli, Zen, VS Code, Claude, etc.).
 #
 # Uso:  sudo ~/dotfiles/setup/bootstrap.sh
 # =============================================================================
@@ -64,6 +64,33 @@ fi
 
 step "Paquetes AUR"
 asuser yay -S --needed --noconfirm - < "$SETUP/aur.txt"
+
+# uBlock Origin y Bitwarden force-installed en Zen via policy de empresa
+# (mismo mecanismo de Firefox: distribution/policies.json). Merge con jq para
+# no perder DisableAppUpdate y demas claves que trae el paquete de por si.
+step "Zen: uBlock Origin + Bitwarden force-installed"
+ZEN_POLICIES=/opt/zen-browser-bin/distribution/policies.json
+ZEN_EXT_POLICY='{
+  "policies": {
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "installation_mode": "force_installed"
+      },
+      "{446900e4-71c2-419f-a6a7-df9c091e268b}": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi",
+        "installation_mode": "force_installed"
+      }
+    }
+  }
+}'
+if [[ -f "$ZEN_POLICIES" ]]; then
+    jq -s '.[0] * .[1]' "$ZEN_POLICIES" <(printf '%s' "$ZEN_EXT_POLICY") > "$ZEN_POLICIES.tmp" \
+        && mv "$ZEN_POLICIES.tmp" "$ZEN_POLICIES"
+else
+    mkdir -p "$(dirname "$ZEN_POLICIES")"
+    printf '%s' "$ZEN_EXT_POLICY" > "$ZEN_POLICIES"
+fi
 
 # -- 4. Usuario: grupos y shell ----------------------------------------------
 step "Grupos y shell del usuario"
@@ -184,7 +211,7 @@ printf '\n\033[1;32m✓ Bootstrap completo.\033[0m Reinicia y luego solo queda i
 cat <<'EOF'
   - gcalcli init            (Google Calendar del panel de eww)
   - claude / opencode       (login de los agentes)
-  - Brave, VS Code          (sync de cuenta)
+  - Zen, VS Code            (sync de cuenta; uBlock+Bitwarden ya vienen force-installed)
   - El keyring se crea al primer login grafico: pon la MISMA contrasena que la
     del usuario y SDDM lo desbloquea solo via PAM.
 EOF

@@ -34,7 +34,7 @@ tesseract-data-spa     # ocr-screen usa -l spa+eng: sin los datos no reconoce na
 tesseract-data-eng     # idem
 
 # --- Lanzador de rofi --------------------------------------------------------
-sqlite                 # sqlite3: rofi-brave-url y launch_rofi.sh leen el historial de Brave
+sqlite                 # sqlite3: rofi-zen-url y launch_rofi.sh leen el historial de Zen (places.sqlite)
 gtk3                   # gtk-launch: launch_rofi.sh arranca los .desktop
 fontconfig             # fc-list: hypr/scripts/appearance.sh lista las fuentes
 

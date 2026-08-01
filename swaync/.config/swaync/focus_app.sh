@@ -9,7 +9,7 @@ declare -A APP_CLASSES=(
     ["claude"]="Claude"
     ["kitty"]="kitty"
     ["spotify"]="spotify"
-    ["brave"]="brave"
+    ["zen"]="zen"
     ["steam"]="steam"
     ["teamspeak"]="TeamSpeak 3"
     ["lutris"]="lutris"
@@ -30,7 +30,7 @@ else
         claude) claude &;;
         kitty) kitty &;;
         spotify) spotify &;;
-        brave) brave &;;
+        zen) zen-browser &;;
         steam) steam &;;
         teamspeak) teamspeak &;;
         lutris) lutris &;;

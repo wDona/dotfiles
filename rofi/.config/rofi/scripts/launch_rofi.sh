@@ -2,10 +2,10 @@
 # Launcher de apps + busqueda web integrada (rofi -dmenu).
 #  - Apps ordenadas por FRECUENCIA de uso (mas usadas arriba).
 #  - Matching por PREFIJO (se prioriza que empiece por lo tecleado).
-#  - Historial de Brave anexado SIEMPRE al final (sin -sort -> orden preservado).
+#  - Historial de Zen anexado SIEMPRE al final (sin -sort -> orden preservado).
 #  - Enter sobre app -> la abre (+1 al contador de uso).
-#  - Enter sobre entrada de historial (titulo ┃ url) -> abre esa url en Brave.
-#  - Enter en texto libre sin coincidencia -> Brave (URL o busqueda Google).
+#  - Enter sobre entrada de historial (titulo ┃ url) -> abre esa url en Zen.
+#  - Enter en texto libre sin coincidencia -> Zen (URL o busqueda Google).
 
 # Toggle: si rofi ya esta abierto, cerrar
 if pgrep -x rofi >/dev/null; then
@@ -111,13 +111,26 @@ if [ ${#apps[@]} -gt 0 ]; then
   done < <(printf '%s\n' "${apps[@]}" | sort -t$'\t' -k1,1nr -k2,2)
 fi
 
-# Historial de Brave anexado al final (titulo ┃ url, por frecuencia de visita).
-# Lectura immutable=1 -> sin copiar la BD (instantaneo, no bloquea Brave).
-HIST="$HOME/.config/BraveSoftware/Brave-Browser/Default/History"
-if [ -f "$HIST" ]; then
+# Historial de Zen anexado al final (titulo ┃ url, por frecuencia de visita).
+# Lectura immutable=1 -> sin copiar la BD (instantaneo, no bloquea Zen).
+# Perfil real: ver comentario largo en rofi-zen-url sobre profiles.ini (el
+# Default=1 de [ProfileN] no es el que Zen abre, el de [InstallXXXX] si).
+ZEN_DIR="$HOME/.config/zen"
+zen_rel=$(awk -F= '
+    /^\[Install/  { in_install = 1; next }
+    /^\[/         { in_install = 0 }
+    in_install && $1 == "Default" { print $2; exit }
+' "$ZEN_DIR/profiles.ini" 2>/dev/null || true)
+ZEN_PROFILE=""
+[ -n "$zen_rel" ] && [ -d "$ZEN_DIR/$zen_rel" ] && ZEN_PROFILE="$ZEN_DIR/$zen_rel"
+[ -z "$ZEN_PROFILE" ] && ZEN_PROFILE=$(find "$ZEN_DIR" -maxdepth 2 -name places.sqlite -printf '%T@ %h\n' 2>/dev/null \
+    | sort -rn | head -1 | cut -d' ' -f2-)
+HIST="$ZEN_PROFILE/places.sqlite"
+if [ -n "$ZEN_PROFILE" ] && [ -f "$HIST" ]; then
   sqlite3 -separator " ┃ " "file:$HIST?immutable=1" \
-    "SELECT COALESCE(NULLIF(title,''), url), url FROM urls
-     WHERE url NOT LIKE 'chrome%' ORDER BY visit_count DESC, last_visit_time DESC LIMIT 300;" \
+    "SELECT COALESCE(NULLIF(title,''), url), url FROM moz_places
+     WHERE url NOT LIKE 'about:%' AND url NOT LIKE 'chrome%' AND hidden = 0
+     ORDER BY visit_count DESC, last_visit_date DESC LIMIT 300;" \
     2>/dev/null >> "$tmp"
 fi
 
@@ -133,7 +146,7 @@ if [ -n "${APP_ID[$sel]+x}" ]; then
   { for n in "${!USE[@]}"; do printf '%s\t%s\n' "${USE[$n]}" "$n"; done; } > "$USES"
   setsid gtk-launch "${APP_ID[$sel]}" >/dev/null 2>&1 &
 elif printf '%s' "$sel" | grep -qF " ┃ "; then
-  setsid brave "${sel##* ┃ }" >/dev/null 2>&1 &
+  setsid zen-browser "${sel##* ┃ }" >/dev/null 2>&1 &
 else
   case "$sel" in
     http://*|https://*) url="$sel" ;;
@@ -144,5 +157,5 @@ else
         url="https://www.google.com/search?q=$(printf '%s' "$sel" | sed 's/ /+/g')"
       fi ;;
   esac
-  setsid brave "$url" >/dev/null 2>&1 &
+  setsid zen-browser "$url" >/dev/null 2>&1 &
 fi

@@ -9,7 +9,7 @@ INSTALAR EN UN PC NUEVO
 DESPUES, SOLO INICIAR SESION
   gcalcli init        Google Calendar (panel eww)
   claude / opencode   agentes IA
-  Brave, VS Code      cuenta
+  Zen, VS Code        cuenta (uBlock+Bitwarden force-installed por policy)
   keyring             se crea en el 1er login grafico:
                       MISMA contrasena que el usuario
 

@@ -1,4 +1,3 @@
-brave-bin
 cachyos-ananicy-rules-git
 carapace-bin
 catppuccin-cursors-mocha

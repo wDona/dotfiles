@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Launcher de URLs con autocompletado del historial de Zen.
-# Gemelo de rofi-brave-url, pero Zen es base Firefox, no Chromium:
-#   - el historial vive en places.sqlite (tabla moz_places), no en History (urls)
-#   - el perfil esta en ~/.config/zen/, no en ~/.config/BraveSoftware/
+# Zen es base Firefox, no Chromium: el historial vive en places.sqlite
+# (tabla moz_places), no en History (urls) como en un navegador Chromium.
 #
 #  - Escribe y autocompleta segun historial (matchea url Y titulo).
 #  - Enter en una entrada -> abre en Zen.
