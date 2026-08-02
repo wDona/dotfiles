@@ -3,11 +3,10 @@
 
 - Boton PS: lanza launch_rofi.sh (que ya hace toggle: abre / cierra). Siempre activo.
 - Contexto activo = rofi abierto, o ventana enfocada listada en CONTEXTS. En cualquiera:
-    dpad y stick izq -> flechas       X -> Enter          O -> Esc
-    triangulo -> Tab                  cuadrado -> Backspace
-    L1/R1 -> PageUp/PageDown          R2/L2 -> click izq/der
-- Stick derecho segun contexto: puntero en Lutris, scroll en claude-term,
-  nada en rofi (no le hace falta).
+    dpad -> flechas                   stick izq -> scroll
+    stick der -> puntero              R2/L2 -> click izq/der
+    X -> Enter        O -> Esc        triangulo -> Tab    cuadrado -> Backspace
+    L1/R1 -> PageUp/PageDown          Share -> toggle de claude-term
 - Fuera de contexto no emite nada, asi que los juegos no se enteran
   (no se hace grab del mando).
 """
@@ -20,15 +19,12 @@ from evdev import InputDevice, UInput, ecodes as e, list_devices
 
 DEV_NAME = "Wireless Controller"
 LAUNCH = "/home/wdona/.config/rofi/scripts/launch_rofi.sh"
-# class de ventana enfocada -> que hace el stick derecho ahi
-CONTEXTS = {
-    "net.lutris.Lutris": "pointer",
-    "claude-term": "scroll",
-}
+CONTEXTS = {"net.lutris.Lutris", "claude-term"}  # class de ventana enfocada
+TOGGLE_CLAUDE = "/home/wdona/.config/hypr/scripts/toggle_claude.sh"
 POLL_CACHE = 0.4    # s que dura el resultado de pgrep/hyprctl
 TICK_HZ = 60
-MOUSE_SPEED = 900   # px/s a tope de stick
-SCROLL_SPEED = 12   # clicks de rueda/s a tope de stick
+MOUSE_SPEED = 900   # px/s a tope de stick derecho
+SCROLL_SPEED = 32   # clicks de rueda/s a tope de stick izquierdo
 
 BTN_KEYS = {
     e.BTN_SOUTH: e.KEY_ENTER,      # X
@@ -38,12 +34,10 @@ BTN_KEYS = {
     e.BTN_TL: e.KEY_PAGEUP,        # L1
     e.BTN_TR: e.KEY_PAGEDOWN,      # R1
 }
-# eje -> (tecla valor negativo, tecla valor positivo)
+# dpad -> (tecla valor negativo, tecla valor positivo)
 AXIS_KEYS = {
     e.ABS_HAT0X: (e.KEY_LEFT, e.KEY_RIGHT),
     e.ABS_HAT0Y: (e.KEY_UP, e.KEY_DOWN),
-    e.ABS_X: (e.KEY_LEFT, e.KEY_RIGHT),
-    e.ABS_Y: (e.KEY_UP, e.KEY_DOWN),
 }
 MOUSE_BTNS = {e.BTN_TR2: e.BTN_LEFT, e.BTN_TL2: e.BTN_RIGHT}
 ALL_KEYS = sorted(set(BTN_KEYS.values()) | {k for p in AXIS_KEYS.values() for k in p})
@@ -76,26 +70,35 @@ class Emitter:
     def __init__(self, kbd, mouse):
         self.kbd, self.mouse = kbd, mouse
         self.pressed = {}          # code -> dispositivo que lo emitio
-        self._ctx = None
+        self._active = False
+        self._cls = ""
         self._checked = 0.0
         self.lock = threading.Lock()
 
-    def context(self):
-        """None, 'rofi', o el modo de stick derecho de CONTEXTS ('pointer'/'scroll').
-
-        Cacheado: si no, seria un pgrep + hyprctl por evento del mando.
-        """
+    def _poll(self):
+        """Refresca contexto. Cacheado: si no, seria un pgrep + hyprctl por evento."""
         now = time.monotonic()
         if now - self._checked > POLL_CACHE:
             self._checked = now
-            was = self._ctx
-            if subprocess.run(["pgrep", "-x", "rofi"], stdout=subprocess.DEVNULL).returncode == 0:
-                self._ctx = "rofi"
-            else:
-                self._ctx = CONTEXTS.get(focused_class())
-            if was and was != self._ctx:  # cambio de contexto con algo pulsado
+            was = self._active
+            rofi = subprocess.run(
+                ["pgrep", "-x", "rofi"], stdout=subprocess.DEVNULL
+            ).returncode == 0
+            # rofi es layer-shell: activewindow devuelve la ventana de debajo, no rofi
+            self._cls = "" if rofi else focused_class()
+            self._active = rofi or self._cls in CONTEXTS
+            if was and not self._active:  # se cerro/desenfoco con algo pulsado
                 self.release_all()
-        return self._ctx
+
+    def active(self):
+        """True si rofi esta abierto o la ventana enfocada esta en CONTEXTS."""
+        self._poll()
+        return self._active
+
+    def focused(self):
+        """Class de la ventana enfocada ('' si rofi esta abierto por encima)."""
+        self._poll()
+        return self._cls
 
     def set(self, code, down, mouse=False):
         with self.lock:
@@ -121,22 +124,13 @@ class Emitter:
             self.set(code, False)
 
 
-def axis_dir(dev, code, value):
-    """-1 / 0 / +1 para hats (rango 1) y sticks (rango grande, con zona muerta)."""
-    info = dev.absinfo(code)
-    span = info.max - info.min
-    if span <= 2:  # dpad
-        return (value > 0) - (value < 0)
-    center = (info.max + info.min) / 2
-    if value < center - span * 0.3:
-        return -1
-    if value > center + span * 0.3:
-        return 1
-    return 0
+def axis_dir(value):
+    """-1 / 0 / +1 para el dpad (rango -1..1)."""
+    return (value > 0) - (value < 0)
 
 
 def axis_norm(dev, code, value):
-    """-1.0..1.0 con zona muerta, para el stick derecho."""
+    """-1.0..1.0 con zona muerta, para los sticks."""
     info = dev.absinfo(code)
     center = (info.max + info.min) / 2
     frac = (value - center) / ((info.max - info.min) / 2)
@@ -147,10 +141,10 @@ def axis_norm(dev, code, value):
     return frac * abs(frac)  # respuesta cuadratica: preciso cerca del centro
 
 
-class Stick(threading.Thread):
-    """El stick da posicion, no desplazamiento: hace falta un tick propio.
+class Sticks(threading.Thread):
+    """Los sticks dan posicion, no desplazamiento: hace falta un tick propio.
 
-    Modo 'pointer' -> movimiento de raton. Modo 'scroll' -> rueda vertical.
+    Izquierdo -> rueda (vertical y horizontal). Derecho -> puntero.
     """
 
     daemon = True
@@ -158,34 +152,35 @@ class Stick(threading.Thread):
     def __init__(self, out):
         super().__init__()
         self.out = out
-        self.vec = [0.0, 0.0]
-        self.wheel_acc = 0.0
+        self.left = [0.0, 0.0]
+        self.right = [0.0, 0.0]
+        self.wheel = [0.0, 0.0]  # acumuladores: la rueda va en clicks enteros
 
     def run(self):
         step = 1.0 / TICK_HZ
         while True:
-            x, y = self.vec
-            mode = self.out.context() if (x or y) else None
-            if mode == "pointer":
-                dx, dy = round(x * MOUSE_SPEED * step), round(y * MOUSE_SPEED * step)
-                if dx:
-                    self.out.emit_rel(e.REL_X, dx)
-                if dy:
-                    self.out.emit_rel(e.REL_Y, dy)
-            elif mode == "scroll":
-                self.wheel_acc -= y * SCROLL_SPEED * step  # stick arriba = scroll arriba
-                clicks = int(self.wheel_acc)
-                if clicks:
-                    self.wheel_acc -= clicks
-                    self.out.emit_rel(e.REL_WHEEL, clicks)
-            else:
-                self.wheel_acc = 0.0
+            lx, ly = self.left
+            rx, ry = self.right
+            if not (lx or ly or rx or ry) or not self.out.active():
+                self.wheel = [0.0, 0.0]
                 time.sleep(step * 4)
                 continue
+            dx, dy = round(rx * MOUSE_SPEED * step), round(ry * MOUSE_SPEED * step)
+            if dx:
+                self.out.emit_rel(e.REL_X, dx)
+            if dy:
+                self.out.emit_rel(e.REL_Y, dy)
+            self.wheel[0] += lx * SCROLL_SPEED * step
+            self.wheel[1] -= ly * SCROLL_SPEED * step  # stick arriba = scroll arriba
+            for i, axis in ((0, e.REL_HWHEEL), (1, e.REL_WHEEL)):
+                clicks = int(self.wheel[i])
+                if clicks:
+                    self.wheel[i] -= clicks
+                    self.out.emit_rel(axis, clicks)
             time.sleep(step)
 
 
-def run(dev, out, stick):
+def run(dev, out, sticks):
     axis_state = {code: 0 for code in AXIS_KEYS}
     for ev in dev.read_loop():
         if ev.type == e.EV_KEY:
@@ -193,21 +188,29 @@ def run(dev, out, stick):
                 if ev.value == 1:
                     out.release_all()
                     subprocess.Popen([LAUNCH])
+            # Share: esconde claude-term si esta enfocada, la saca desde Lutris.
+            # Solo dentro de CONTEXTS, para no pisarselo a ningun juego.
+            elif ev.code == e.BTN_SELECT:
+                if ev.value == 1 and out.focused() in CONTEXTS:
+                    out.release_all()
+                    subprocess.Popen([TOGGLE_CLAUDE])
             elif ev.code in MOUSE_BTNS:
-                if ev.value == 1 and not out.context():
+                if ev.value == 1 and not out.active():
                     continue
                 out.set(MOUSE_BTNS[ev.code], ev.value == 1, mouse=True)
             elif ev.code in BTN_KEYS:
                 if ev.value == 2:  # autorepeat: ya lo hace el compositor
                     continue
-                if ev.value == 1 and not out.context():
+                if ev.value == 1 and not out.active():
                     continue
                 out.set(BTN_KEYS[ev.code], ev.value == 1)
         elif ev.type == e.EV_ABS:
-            if ev.code in (e.ABS_RX, e.ABS_RY):
-                stick.vec[ev.code == e.ABS_RY] = axis_norm(dev, ev.code, ev.value)
+            if ev.code in (e.ABS_X, e.ABS_Y):
+                sticks.left[ev.code == e.ABS_Y] = axis_norm(dev, ev.code, ev.value)
+            elif ev.code in (e.ABS_RX, e.ABS_RY):
+                sticks.right[ev.code == e.ABS_RY] = axis_norm(dev, ev.code, ev.value)
             elif ev.code in AXIS_KEYS:
-                new = axis_dir(dev, ev.code, ev.value)
+                new = axis_dir(ev.value)
                 old = axis_state[ev.code]
                 if new == old:
                     continue
@@ -215,31 +218,35 @@ def run(dev, out, stick):
                 neg, pos = AXIS_KEYS[ev.code]
                 if old:
                     out.set(neg if old < 0 else pos, False)
-                if new and out.context():
+                if new and out.active():
                     out.set(neg if new < 0 else pos, True)
 
 
 def main():
     kbd = UInput({e.EV_KEY: ALL_KEYS}, name="ds4-rofi-kbd")
     mouse = UInput(
-        {e.EV_KEY: list(MOUSE_BTNS.values()), e.EV_REL: [e.REL_X, e.REL_Y, e.REL_WHEEL]},
+        {
+            e.EV_KEY: list(MOUSE_BTNS.values()),
+            e.EV_REL: [e.REL_X, e.REL_Y, e.REL_WHEEL, e.REL_HWHEEL],
+        },
         name="ds4-rofi-mouse",
     )
     out = Emitter(kbd, mouse)
-    stick = Stick(out)
-    stick.start()
+    sticks = Sticks(out)
+    sticks.start()
     while True:  # el mando se conecta/desconecta cuando le da la gana
         dev = find_pad()
         if dev is None:
             time.sleep(2)
             continue
         try:
-            run(dev, out, stick)
+            run(dev, out, sticks)
         except OSError:
             pass
         finally:
             out.release_all()
-            stick.vec = [0.0, 0.0]
+            sticks.left = [0.0, 0.0]
+            sticks.right = [0.0, 0.0]
             dev.close()
         time.sleep(2)
 
