@@ -24,3 +24,7 @@
 # Generado por hypr_tweak.sh (panel Ajustes de eww): es estado local, no config.
 # setup/link.sh lo crea vacio para que el source de hyprland.conf no falle.
 hypr/.config/hypr/conf.d/overrides.conf
+
+# Bytecode de los scripts en Python (brb.py, ds4_rofi.py...): lo regenera
+# Python solo, y doctor.sh lo contaba como fichero del repo sin enlazar.
+**/__pycache__/

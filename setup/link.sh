@@ -54,4 +54,9 @@ EOF
     echo "✓ overrides.conf (placeholder)"
 fi
 
+# Los symlinks de timers.target.wants/ viven en ~/.config y no se versionan: sin
+# esto las units quedan "linked" pero muertas tras un clon.
+systemctl --user enable water-reminder.timer water-reminder-boot.service >/dev/null 2>&1 \
+    && echo "✓ water-reminder habilitado"
+
 echo "✓ Enlaces completos."

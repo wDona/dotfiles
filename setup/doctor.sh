@@ -146,6 +146,13 @@ systemctl --user is-active --quiet graphical-session.target \
     && ok "graphical-session.target" \
     || bad "graphical-session.target caido - sin el no arranca wireplumber (no hay sonido)"
 
+# El timer del recordatorio de agua se habilita en link.sh: los symlinks de
+# timers.target.wants/ no se versionan, asi que tras un clon la unit existe
+# pero nadie la dispara.
+systemctl --user is-active --quiet water-reminder.timer \
+    && ok "water-reminder.timer" \
+    || bad "water-reminder.timer parado - sin recordatorio de agua" "systemctl --user enable --now water-reminder.timer"
+
 # Sin sink real solo existe "Dummy Output": el volumen se mueve pero no suena.
 if command -v wpctl >/dev/null 2>&1; then
     wpctl status 2>/dev/null | grep -qE '^\s*│?\s*\*?\s*[0-9]+\..*(Analog|HDMI|USB|Digital)' \
@@ -192,6 +199,18 @@ systemctl is-active --quiet bluetooth.service \
     || bad "bluetooth.service parado - panel eww/scripts/bluetooth.sh sin datos" "sudo systemctl enable --now bluetooth"
 
 step "Gaming"
+# ds4_rofi.py (exec.conf) emite teclas y raton por /dev/uinput. Sin permiso de
+# escritura arranca igual y muere al crear el UInput: el mando deja de mover
+# rofi sin decir nada. El acceso lo da systemd-logind por ACL en la sesion
+# local; si falla, el arreglo es el grupo input.
+if [[ -e /dev/uinput ]]; then
+    [[ -w /dev/uinput ]] \
+        && ok "/dev/uinput escribible (mando DS4 -> rofi)" \
+        || bad "/dev/uinput sin permiso de escritura - ds4_rofi.py no controla nada" "sudo usermod -aG input $USER  # y volver a iniciar sesion"
+else
+    bad "sin /dev/uinput - falta el modulo uinput, ds4_rofi.py no arranca" "sudo modprobe uinput"
+fi
+
 systemctl is-active --quiet ananicy-cpp.service \
     && ok "ananicy-cpp.service" \
     || bad "ananicy-cpp.service parado" "sudo systemctl enable --now ananicy-cpp"

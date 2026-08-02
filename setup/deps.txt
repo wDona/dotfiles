@@ -33,13 +33,29 @@ tesseract              # local-bin/ocr-screen
 tesseract-data-spa     # ocr-screen usa -l spa+eng: sin los datos no reconoce nada
 tesseract-data-eng     # idem
 
+# --- Base del escritorio -----------------------------------------------------
+hyprland               # hyprctl: lo llaman ~80 sitios (keybinds, scripts, eww)
+waybar                 # barra; hypr/conf.d/exec.conf la arranca
+swaync                 # swaync-client: centro de notificaciones (keybinds.conf)
+jq                     # parsea el JSON de hyprctl/waybar/eww en casi todos los scripts
+networkmanager         # nmcli: eww/scripts/wifi.sh, waybar/scripts/net_status.sh
+wireplumber            # wpctl: volumen en keybinds.conf y eww/scripts/audio.sh
+brightnessctl          # brillo: keybinds.conf y el slider de eww
+
 # --- Lanzador de rofi --------------------------------------------------------
+rofi                   # launch_rofi.sh, rofi-zen-url, hypr/scripts/brb.py
 sqlite                 # sqlite3: rofi-zen-url y launch_rofi.sh leen el historial de Zen (places.sqlite)
 gtk3                   # gtk-launch: launch_rofi.sh arranca los .desktop
 fontconfig             # fc-list: hypr/scripts/appearance.sh lista las fuentes
 
+# --- Scripts en Python -------------------------------------------------------
+python-gobject         # gi: hypr/scripts/brb.py (GTK4), eww/scripts/note_dialog.py
+gtk4                   # brb.py monta el overlay con Gtk 4.0
+python-evdev           # rofi/scripts/ds4_rofi.py: lee el mando y emite por uinput
+
 # --- Dotfiles ----------------------------------------------------------------
-stow                   # gestiona los symlinks de $HOME (ver README)
+stow                   # ya no se usa (lo sustituye setup/link.sh), queda por si
+                       # queda algun enlace viejo hecho con el
 
 # --- Sesion ------------------------------------------------------------------
 hyprpolkitagent        # hypr/conf.d/exec.conf:8. Sin el, ningun dialogo grafico

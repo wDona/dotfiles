@@ -242,7 +242,7 @@ Definidos en `hypr/.config/hypr/conf.d/keybinds.conf`. Teclado dvorak.
 | `CTRL SHIFT S` | Guardar clip con notificacion |
 | `SUPER L` | Bloquear pantalla |
 | `SUPER + arrastrar / SUPER + click der arrastrar` | Mover / redimensionar ventana con raton |
-| `SUPER N` | Overlay "BRB" (pantalla vuelvo en X) |
+| `SUPER N` | Overlay "BRB" (pantalla vuelvo en X). En el menu: `Enter` encola un temporizador (`10 café`), `Shift+Enter` arranca la cola, `Alt+Supr` borra del historial. Se encadenan en orden: pasados arriba, el que corre en grande, pendientes debajo |
 | `SUPER SHIFT N` | BRB rapido, 5 min |
 | `XF86MonBrightnessUp/Down` | Brillo |
 
