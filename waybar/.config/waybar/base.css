@@ -10,16 +10,24 @@
      color es informacion (aviso, bateria critica), no adorno. Los estados
      puntuales van como PUNTO pango dentro del texto (weather.sh, notif.sh,
      timer.sh), no tiñendo el modulo.
-   - Un solo acento: magenta #d946ef, reservado al workspace activo.
+   - Un solo acento: magenta (@accent), reservado al workspace activo.
+   - Ningun color literal en este archivo: todos salen de theme/colors.css,
+     que comparten eww y swaync. Si hace falta un tono nuevo, se define ALLI.
+   - Escala compartida con eww: 13px cuerpo, 16px icono; radio 999 (pastilla)
+     o 12 (caja). Nada intermedio.
 
    Suelo duro para el fondo: el ignore_alpha de la layerrule de waybar
    (hypr/conf.d/styles.conf, 0.01). Por debajo Hyprland apaga el blur
    entero.
    ───────────────────────────────────────────────────────────────────── */
 
+/* Paleta comun. Ruta relativa a ESTE archivo: GTK lo carga desde disco, asi
+   que la resuelve sola (eww no puede, ver el @import de eww.scss). */
+@import url("../theme/colors.css");
+
 * {
     font-family: "JetBrainsMono Nerd Font";
-    font-size: 14px;
+    font-size: 13px;
     all: unset;
 }
 
@@ -53,7 +61,7 @@
     border-radius: 999px;
     background: transparent;
     border: 1px solid transparent; /* reservado: el hover lo tiñe sin mover el layout */
-    color: rgba(255, 255, 255, 0.85);
+    color: @text;
     font-weight: 500;
     transition: all 150ms ease;
 }
@@ -65,10 +73,10 @@
     border-radius: 999px;
     background: transparent;
     border: 1px solid transparent;
-    color: rgba(255, 255, 255, 0.50);
+    color: @text-off;
     transition: all 150ms ease;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 13px;
 }
 
 #workspaces button.special {
@@ -88,8 +96,8 @@
 /* El unico acento de la barra. */
 #workspaces button.active {
     color: #ffffff;
-    background: rgba(217, 70, 239, 0.80);
-    border-color: rgba(217, 70, 239, 0.9);
+    background: @accent-fill;
+    border-color: @accent-line;
     min-width: 28px;
 }
 
@@ -97,16 +105,18 @@
     letter-spacing: 2px;
 }
 
-/* Ojo con el tamaño: el modulo mas alto fija la altura minima de la barra.
-   A 20px waybar exigia 41px. Con 18px pide 40, que es la height del config. */
+/* Iconos al tier 16 de la escala comun (el mismo que los iconos de eww).
+   Ojo con el tamaño: el modulo mas alto fija la altura minima de la barra.
+   A 20px waybar exigia 41px; 16 pide menos que la height 40 del config, asi
+   que por arriba hay sitio de sobra. */
 #custom-launcher {
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.85);
+    font-size: 16px;
+    color: @text;
     padding: 4px 12px;
 }
 
 #custom-power {
-    font-size: 17px;
+    font-size: 16px;
     min-width: 20px;
 }
 
@@ -134,8 +144,8 @@
    Aqui el color SI entra: es senal, no decoracion. Tiñe el texto; sobre
    fondo plano no hace falta pastilla para que se lea. */
 
-#custom-battery.charging { color: #7ee787; }
-#custom-battery.critical { color: #ff5c5c; }
+#custom-battery.charging { color: @ok; }
+#custom-battery.critical { color: @crit; }
 
 /* Sin bateria (sobremesa): colapsar el hueco. */
 #custom-battery.none {
@@ -145,11 +155,23 @@
 }
 
 #custom-timer.running { color: #ffffff; }
-#custom-timer.paused  { color: #ffd700; }
-#custom-timer.done    { color: #ff5c5c; }
+#custom-timer.paused  { color: @warn; }
+#custom-timer.done    { color: @crit; }
 
-/* idle = sin temporizador: solo icono, blanco */
-#custom-timer.idle { color: #ffffff; }
+/* idle = sin nada puesto. El modulo enseña SOLO el numero, asi que sin numero
+   no hay modulo: timer.sh manda texto vacio y aqui se colapsa el hueco, igual
+   que la bateria en sobremesa. Poner un temporizador es SUPER+R, no un click
+   en la barra, asi que un icono fijo no llevaria a ninguna parte. */
+#custom-timer.idle {
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+#custom-timer.idle:hover {
+    background: transparent;
+    border-color: transparent;
+}
 
 /* Clima: el aviso AEMET va como PUNTO de color dentro del texto (lo pinta
    weather.sh con markup pango, igual que la campana de notif.sh), no
@@ -159,7 +181,7 @@
 /* Notificaciones: la campana con noti nueva ya lleva su punto rojo en
    pango. Aqui solo se atenua cuando no hay nada. */
 #custom-notification.none {
-    color: rgba(255, 255, 255, 0.40);
+    color: @text-dead;
 }
 
 /* Tray y privacidad son CONTENEDORES: su padding se SUMA al del item de
@@ -213,8 +235,8 @@
 
 /* Rojo solo en el icono: GTK3 no tiene :has, el contenedor no puede saber
    si dentro hay screenshare para tenirse entero. */
-#privacy-item.screenshare { color: #ff5c5c; }
-#privacy-item.audio-in    { color: rgba(255, 255, 255, 0.85); }
+#privacy-item.screenshare { color: @crit; }
+#privacy-item.audio-in    { color: @text; }
 
 /* Mismo caso que #privacy-item: cada icono del tray es su propia ventana GDK
    y se come el hover antes de que llegue a #tray. La pastilla va en el item.
@@ -244,14 +266,14 @@
 /* El menu del tray es ventana aparte: si necesita fondo propio, opaco. */
 #tray menu {
     background: rgba(16, 14, 20, 0.96);
-    color: rgba(255, 255, 255, 0.90);
+    color: @text;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid @edge-light;
 }
 
 /* Musica: texto atenuado, se realza en hover como los demas. */
 #custom-spotify {
-    color: rgba(255, 255, 255, 0.70);
+    color: @text-mute;
 }
 
 /* el grupo no dibuja fondo propio */
@@ -290,8 +312,8 @@
 #tray > .passive:hover,
 #tray > .active:hover,
 #tray > .needs-attention:hover {
-    background: rgba(168, 85, 247, 0.22);
-    border-color: rgba(217, 70, 239, 0.35);
+    background: @accent-hover;
+    border-color: @accent-edge;
     color: #ffffff;
 }
 
@@ -317,13 +339,13 @@
 /* Los que llevan color propio se lo quedan en hover: la regla de arriba es
    la ultima del archivo y si no se repiten aqui les pisaria el color. */
 #workspaces button.active:hover {
-    background: rgba(217, 70, 239, 0.92);
-    border-color: #d946ef;
+    background: @accent-strong;
+    border-color: @accent;
     color: #ffffff;
 }
 
 #custom-timer.running:hover  { color: #ffffff; }
-#custom-timer.paused:hover   { color: #ffd700; }
-#custom-timer.done:hover     { color: #ff5c5c; }
-#custom-battery.charging:hover { color: #7ee787; }
-#custom-battery.critical:hover { color: #ff5c5c; }
+#custom-timer.paused:hover   { color: @warn; }
+#custom-timer.done:hover     { color: @crit; }
+#custom-battery.charging:hover { color: @ok; }
+#custom-battery.critical:hover { color: @crit; }

@@ -1,0 +1,61 @@
+/* ─────────────────────────────────────────────────────────────────────
+   PALETA UNICA DEL RICE — fuente de verdad de los colores.
+
+   La leen: waybar (base.css + variants/), eww (eww.scss) y swaync.
+   Formato @define-color de GTK3, asi que vale tal cual en los tres.
+
+   Como se importa:
+   - waybar/swaync: @import url("../theme/colors.css");  (ruta relativa al
+     fichero que importa, GTK la resuelve porque carga desde disco).
+   - eww: @import url("file:///home/wdona/.config/theme/colors.css");
+     RUTA ABSOLUTA A PROPOSITO: eww compila el scss en memoria y le pasa el
+     resultado a GtkCssProvider como DATOS, sin ruta base, asi que una ruta
+     relativa no resolveria contra nada.
+
+   Regla del rice: un solo acento (magenta). El color por modulo es
+   INFORMACION (aviso, bateria critica), nunca adorno.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ── Base ── */
+@define-color bg      #140f1a;   /* opaco: tambien se usa como TEXTO sobre accent */
+@define-color accent  #d946ef;   /* el unico acento */
+@define-color accent2 #ec4899;
+@define-color fg      #f0f0ff;
+@define-color fg-dim  #5a4a6a;
+@define-color lila    #c9a0ff;
+
+/* ── Cristal ──
+   El desenfoque lo pone Hyprland (layerrule blur, hypr/conf.d/styles.conf),
+   aqui solo va la lamina translucida: PLANA y NEGRA NEUTRA. El color lo pone
+   el wallpaper atravesando el cristal.
+   Suelo duro: el alpha tiene que quedar POR ENCIMA del ignore_alpha de la
+   layerrule (0.15 en eww, 0.01 en waybar) o Hyprland apaga el blur entero. */
+@define-color glass   rgba(10, 10, 10, 0.24);   /* lamina de ventana (eww) */
+@define-color bg-cell rgba(0, 0, 0, 0.08);      /* superficie interna */
+@define-color surface rgba(255, 255, 255, 0.10);/* hover / separadores */
+
+/* ── Acento con alpha ──
+   Mismo magenta, ya mezclado: GTK no sabe hacer rgba() sobre un @color. */
+@define-color accent-soft   rgba(217, 70, 239, 0.12);  /* fondo de seleccion */
+@define-color accent-hover  rgba(168, 85, 247, 0.22);  /* pastilla de hover */
+@define-color accent-edge   rgba(217, 70, 239, 0.35);  /* borde de hover */
+@define-color accent-fill   rgba(217, 70, 239, 0.80);  /* workspace activo */
+@define-color accent-strong rgba(217, 70, 239, 0.92);  /* + hover */
+@define-color accent-line   rgba(217, 70, 239, 0.90);  /* borde del activo */
+
+/* ── Texto sobre barra plana ── */
+@define-color text      rgba(255, 255, 255, 0.85);
+@define-color text-mute rgba(255, 255, 255, 0.70);
+@define-color text-off  rgba(255, 255, 255, 0.50);
+@define-color text-dead rgba(255, 255, 255, 0.40);
+
+/* ── Estados (esto SI es color-informacion) ── */
+@define-color ok    #7ee787;   /* cargando */
+@define-color warn  #ffd700;   /* pausado / aviso amarillo */
+@define-color alarm #ff9d3d;   /* aviso naranja */
+@define-color crit  #ff5c5c;   /* critico / aviso rojo */
+@define-color danger #7a1f3a;  /* hover de acciones destructivas */
+
+/* ── Bordes ── */
+@define-color edge-dark  rgba(0, 0, 0, 0.35);      /* filo hundido de celdas */
+@define-color edge-light rgba(255, 255, 255, 0.15);/* filo de muestras */

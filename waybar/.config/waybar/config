@@ -162,7 +162,7 @@
         "signal": 10,
         "format": "{}",
         "tooltip": true,
-        "on-click": "~/.config/eww/scripts/toggle_timer.sh",
-        "on-click-right": "~/.config/waybar/scripts/timer.sh cancel"
+        "on-click": "~/.config/waybar/scripts/timer.sh pause",
+        "on-click-right": "~/.config/waybar/scripts/timer.sh forcecancel"
     }
 }

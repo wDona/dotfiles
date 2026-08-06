@@ -14,7 +14,7 @@ flock -n 9 || exit 0
 cur=""
 
 # Cerrar el calendario y soltar el submap mientras se edita
-eww close calendario 2>/dev/null
+~/.config/eww/scripts/popup.sh close
 hyprctl dispatch submap reset >/dev/null 2>&1
 
 txt=$(printf '%s' "$cur" | python3 "$HOME/.config/eww/scripts/note_dialog.py" "$date")

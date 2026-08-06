@@ -19,6 +19,7 @@ S="$STATE_DIR/waybar_timer"            # epoch objetivo (persiste tras reinicio)
 FIRED="$STATE_DIR/waybar_timer.fired"  # marca atomica: notificacion ya disparada
 SW="$STATE_DIR/waybar_stopwatch"       # epoch de inicio del cronometro (cuenta arriba)
 SWP="$STATE_DIR/waybar_stopwatch.paused" # segundos acumulados: cronometro en pausa
+SP="$STATE_DIR/waybar_timer.paused"    # segundos que quedaban: cuenta atras en pausa
 PRESETS="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/timer_presets"
 [ -f "$PRESETS" ] || printf '30s\n5m\n10m\n1h\n1h30m\n' > "$PRESETS"
 ICON="󰚭"
@@ -29,7 +30,9 @@ ICON="󰚭"
 DOT="<span foreground='#ffd700' size='9000' rise='5000'> •</span>"
 
 parse_secs() {
-    local in="${1//[[:space:]]/}"
+    # A minusculas: "3H" es lo mismo que "3h". Se escribe con prisa y con Shift
+    # puesto de la frase anterior; rechazarlo por eso es gratuito y molesto.
+    local in="${1//[[:space:]]/}"; in="${in,,}"
     [ -z "$in" ] && { echo 0; return; }
     # HH:MM:SS o MM:SS
     if [[ "$in" =~ ^[0-9]+(:[0-9]+){1,2}$ ]]; then
@@ -73,18 +76,28 @@ sort_presets() {
 # waybar la lanza en cuanto detecta que la hora objetivo ya paso.
 emit() {
     local now; now=$(date +%s)
+    # El modulo enseña SOLO el numero: se pone con SUPER+R (rofi), asi que un
+    # icono fijo en la barra no lleva a ninguna parte. Sin nada puesto el texto
+    # va vacio y el modulo se colapsa (#custom-timer.idle en base.css).
     # cronometro: cuenta arriba, no termina solo
     if [ -f "$SW" ]; then
         local t; t=$(fmt $((now - $(cat "$SW"))))
-        printf '{"text":"%s %s","plain":"%s %s","tooltip":"Cronometro · click der = pausar","class":"running"}\n' \
-            "$ICON" "$t" "$ICON" "$t"
+        printf '{"text":"%s","plain":"%s","tooltip":"Cronometro · izq = pausar · der = terminar","class":"running"}\n' \
+            "$t" "$t"
         return
     fi
     # cronometro en pausa: tiempo congelado + punto amarillo (el punto es markup pango, solo para waybar)
     if [ -f "$SWP" ]; then
         local t; t=$(fmt "$(cat "$SWP")")
-        printf '{"text":"%s%s %s","plain":"%s %s","tooltip":"Cronometro en pausa · click der = reanudar","class":"paused"}\n' \
-            "$ICON" "$DOT" "$t" "$ICON" "$t"
+        printf '{"text":"%s%s","plain":"%s","tooltip":"Cronometro en pausa · izq = reanudar · der = terminar","class":"paused"}\n' \
+            "$t" "$DOT" "$t"
+        return
+    fi
+    # temporizador en pausa: el fichero guarda los segundos que quedaban
+    if [ -f "$SP" ]; then
+        local t; t=$(fmt "$(cat "$SP")")
+        printf '{"text":"%s%s","plain":"%s","tooltip":"En pausa · izq = reanudar · der = terminar","class":"paused"}\n' \
+            "$t" "$DOT" "$t"
         return
     fi
     # temporizador: cuenta atras
@@ -92,8 +105,8 @@ emit() {
         local end rem; end=$(cat "$S"); rem=$((end-now))
         if [ "$rem" -gt 0 ]; then
             local t; t=$(fmt "$rem")
-            printf '{"text":"%s %s","plain":"%s %s","tooltip":"Suena a las %s · click der = cancelar","class":"running"}\n' \
-                "$ICON" "$t" "$ICON" "$t" "$(date -d "@$end" '+%H:%M')"
+            printf '{"text":"%s","plain":"%s","tooltip":"Suena a las %s · izq = pausar · der = terminar","class":"running"}\n' \
+                "$t" "$t" "$(date -d "@$end" '+%H:%M')"
             return
         fi
         # cumplido: notificar 1 sola vez (lock atomico) y mostrar 1min en rojo
@@ -104,17 +117,33 @@ emit() {
                 notify-send -a "Temporizador" "Temporizador" "Tiempo cumplido"
             fi
             local t; t=$(fmt "$over")
-            printf '{"text":"%s -%s","plain":"%s -%s","tooltip":"Tiempo cumplido","class":"done"}\n' \
-                "$ICON" "$t" "$ICON" "$t"
+            printf '{"text":"-%s","plain":"-%s","tooltip":"Tiempo cumplido · der = quitar","class":"done"}\n' \
+                "$t" "$t"
             return
         fi
         rm -rf "$S" "$FIRED"
     fi
-    printf '{"text":"%s","plain":"%s","tooltip":"Click = poner temporizador","class":"idle"}\n' "$ICON" "$ICON"
+    printf '{"text":"","plain":"","tooltip":"SUPER+R para poner un temporizador","class":"idle"}\n'
 }
 
 # Pregunta Si/No por rofi. Devuelve 0 solo si el usuario elige "Si".
 confirm() { [ "$(printf 'No\nSi' | rofi -dmenu -kb-cancel 'Escape,MousePrimary' -p "$1")" = "Si" ]; }
+
+# ── Historial ──
+# Lo que se ha puesto de verdad, lo ultimo primero. Distinto de los presets:
+# los presets los eliges tu y duran; esto se llena solo y se olvida por abajo.
+# El cronometro no entra: ya tiene su fila fija y no es una duracion.
+HIST="$STATE_DIR/waybar_timer_history"
+MAX_HIST=10
+
+hist_add() {
+    local v="${1//[[:space:]]/}" resto
+    [ -z "$v" ] && return
+    case "${v,,}" in cronometro|crono) return ;; esac
+    resto=$(grep -vxF "$v" "$HIST" 2>/dev/null | grep -v '^$')
+    { printf '%s\n' "$v"; [ -n "$resto" ] && printf '%s\n' "$resto"; } \
+        | head -n "$MAX_HIST" > "$HIST.tmp" && mv "$HIST.tmp" "$HIST"
+}
 
 case "$1" in
     presets)
@@ -136,11 +165,17 @@ case "$1" in
         ;;
     apply)
         inp="${2//[[:space:]]/}"
-        [ -z "$inp" ] && exit 0
-        rm -rf "$S" "$FIRED" "$SW" "$SWP"   # limpia estado previo (el widget ya confirmo el reemplazo)
+        # Avisar en vez de salir callando: un apply vacio (campo sin texto, o
+        # una variable de eww que no llego) se veia como "el boton no hace
+        # nada", que es el peor sintoma posible para depurar.
+        [ -z "$inp" ] && { notify-send "Temporizador" "No hay ninguna duracion escrita"; exit 0; }
         if [[ "${inp,,}" == cronometro || "${inp,,}" == crono ]]; then
+            rm -rf "$S" "$FIRED" "$SW" "$SWP"
             date +%s > "$SW"; pkill -RTMIN+10 waybar; exit 0
         fi
+        # VALIDAR ANTES DE BORRAR NADA. Antes el rm iba arriba del todo, asi
+        # que escribir mal la duracion ("pepino") cancelaba el temporizador que
+        # estuviera corriendo y no ponia nada: perdias la cuenta por una errata.
         now=$(date +%s)
         if [[ "$inp" == @* ]]; then
             # hora concreta del dia; si ya paso -> manana
@@ -153,28 +188,52 @@ case "$1" in
             { [ -z "$secs" ] || [ "$secs" -le 0 ]; } && { notify-send "Temporizador" "Formato no valido: $inp"; exit 1; }
             end=$((now+secs))
         fi
+        rm -rf "$S" "$FIRED" "$SW" "$SWP"   # ya validado: ahora si, reemplaza
         echo "$end" > "$S"
+        # Al historial solo lo que ha llegado hasta aqui: es decir, formato ya
+        # validado. Guardar antes seria guardar tambien las erratas.
+        hist_add "$inp"
         pkill -RTMIN+10 waybar
         ;;
+    history)
+        [ -s "$HIST" ] && grep -v '^$' "$HIST"
+        exit 0
+        ;;
+    delhist)
+        del="$2"; [ -z "$del" ] && exit 0
+        resto=$(grep -vxF "$del" "$HIST" 2>/dev/null | grep -v '^$')
+        printf '%s\n' "$resto" > "$HIST"
+        ;;
     forcecancel)
-        rm -rf "$S" "$FIRED" "$SW" "$SWP"
+        rm -rf "$S" "$FIRED" "$SW" "$SWP" "$SP"
+        pkill -RTMIN+10 waybar
+        ;;
+    pause)
+        # Click IZQUIERDO en la barra: pausa o reanuda lo que haya, sea
+        # cronometro o cuenta atras. Nunca cancela: para eso esta el click
+        # derecho, y asi una pulsacion despistada no te tira el tiempo.
+        now=$(date +%s)
+        if [ -f "$SW" ]; then                       # cronometro -> pausa
+            echo $(( now - $(cat "$SW") )) > "$SWP"; rm -f "$SW"
+        elif [ -f "$SWP" ]; then                    # cronometro -> reanuda
+            echo $(( now - $(cat "$SWP") )) > "$SW"; rm -f "$SWP"
+        elif [ -f "$S" ]; then                      # cuenta atras -> pausa
+            # Guarda lo que QUEDA, no la hora objetivo: al reanudar se recalcula
+            # sobre la hora de entonces, que es lo que hace que la pausa cuente.
+            rem=$(( $(cat "$S") - now ))
+            [ "$rem" -lt 0 ] && rem=0
+            echo "$rem" > "$SP"; rm -rf "$S" "$FIRED"
+        elif [ -f "$SP" ]; then                     # cuenta atras -> reanuda
+            echo $(( now + $(cat "$SP") )) > "$S"; rm -f "$SP"
+        else
+            exit 0
+        fi
         pkill -RTMIN+10 waybar
         ;;
     cancel)
-        # cronometro activo: click der pausa/reanuda (no cancela)
-        if [ -f "$SW" ]; then
-            echo $(( $(date +%s) - $(cat "$SW") )) > "$SWP"; rm -f "$SW"
-            pkill -RTMIN+10 waybar; exit 0
-        fi
-        if [ -f "$SWP" ]; then
-            echo $(( $(date +%s) - $(cat "$SWP") )) > "$SW"; rm -f "$SWP"
-            pkill -RTMIN+10 waybar; exit 0
-        fi
-        # temporizador: cancelacion siempre explicita
-        [ -f "$S" ] || exit 0
-        confirm "Cancelar?" || exit 0
-        rm -rf "$S" "$FIRED"
-        pkill -RTMIN+10 waybar
+        # Alias historico: antes el click derecho pausaba el cronometro. Se
+        # queda por si algun bind viejo lo llama.
+        exec "$0" pause
         ;;
     status|bar)
         emit

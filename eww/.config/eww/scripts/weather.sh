@@ -25,8 +25,11 @@ ACACHE="${XDG_CACHE_HOME:-$HOME/.cache}/eww-weather-alerts.json"
 
 API="https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}\
 &current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day\
-&daily=weather_code,temperature_2m_max,temperature_2m_min\
-&timezone=Europe/Madrid&forecast_days=4"
+&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max\
+&timezone=Europe/Madrid&forecast_days=8"
+# 8 dias = hoy + 7. El panel del clima solo pinta 4 (rejilla 2x2), los otros
+# son para el calendario (`weather.sh cal`). Mas alla de una semana la
+# prediccion diaria ya no dice nada util, asi que no se pide mas.
 
 # Icono Nerd Font a partir del codigo WMO.
 # https://open-meteo.com/en/docs -> "Weather variable documentation"
@@ -221,6 +224,39 @@ bar)
     esac
     [ -n "$dc" ] && dot="<span foreground='${dc}' size='9000' rise='5000'> •</span>"
     jq -cn --arg t "$(icon "$code" "$day")${dot}  ${temp}°C" --arg c "$cls" '{text:$t, class:$c}'
+    ;;
+
+cal)
+    # Mapa fecha -> tiempo, para pintar un icono en las celdas del calendario.
+    # Objeto y no lista: el widget lo indexa por la fecha de la celda
+    # (cal_weather[d.date]), que es lo unico que sabe de si misma.
+    # Si no hay red, objeto vacio: el calendario simplemente no pinta iconos.
+    if ! fetch; then echo '{}'; exit 0; fi
+    # El icono y la descripcion dependen del codigo WMO y eso vive en bash
+    # (icon() / desc()), asi que se precalculan aqui como mapas codigo -> texto
+    # con solo los codigos que aparecen en la respuesta.
+    mapa=$(jq -r '.daily.weather_code[]' "$CACHE" | sort -un | while read -r c; do
+        jq -cn --arg c "$c" --arg i "$(icon "$c")" --arg d "$(desc "$c")" \
+            '{($c): {icon:$i, desc:$d}}'
+    done | jq -sc 'add // {}')
+    jq -c --argjson m "$mapa" '
+        [ .daily.time
+        , .daily.weather_code
+        , .daily.temperature_2m_max
+        , .daily.temperature_2m_min
+        , .daily.precipitation_probability_max
+        , .daily.wind_speed_10m_max
+        ] | transpose
+          # Un dato que la API no da sale como cadena VACIA, nunca como 0 ni
+          # como "null": el widget esconde lo que venga vacio. Un 0 inventado
+          # (0% de lluvia, 0 km/h de viento) se lee como dato real y miente.
+          | map({key: .[0], value: {icon: ($m[(.[1]|tostring)].icon // "󰼯"),
+                                    desc: ($m[(.[1]|tostring)].desc // ""),
+                                    max:  (if .[2] == null then "" else (.[2]|round|tostring) end),
+                                    min:  (if .[3] == null then "" else (.[3]|round|tostring) end),
+                                    pop:  (if .[4] == null then "" else (.[4]|round|tostring) end),
+                                    wind: (if .[5] == null then "" else (.[5]|round|tostring) end)}})
+          | from_entries' "$CACHE"
     ;;
 
 json)

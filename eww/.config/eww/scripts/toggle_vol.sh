@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-# Toggle del popup de volumen eww (mismo patron que toggle_batmenu.sh).
-"$(dirname "$0")/eww_ensure.sh"
-
-if eww active-windows 2>/dev/null | grep -q "volumen"; then
-    eww close volumen
-else
-    mon=$("$(dirname "$0")/eww_screen.sh")
-    eww open volumen --screen "$mon"
-fi
+# Toggle del popup de volumen. La logica (cierre por ESC, click fuera, un solo
+# popup a la vez) vive en popup.sh y es la misma para todos.
+exec "$(dirname "$0")/popup.sh" toggle volumen

@@ -14,9 +14,8 @@ KITTY="$HOME/.config/kitty/kitty.conf"
 
 "$(dirname "$0")/eww_ensure.sh"
 
-if eww active-windows 2>/dev/null | grep -q "personalizacion"; then
-    eww close personalizacion
-    exit 0
+if "$(dirname "$0")/popup.sh" is-open personalizacion; then
+    exec "$(dirname "$0")/popup.sh" close
 fi
 
 EC="$HOME/.config/eww/scripts/eww_color.sh"
@@ -57,6 +56,5 @@ eww update \
     eww_presets="$("$EC" list-presets)" \
     bt_state="$("$HOME/.config/eww/scripts/bluetooth.sh" list)"
 
-mon=$("$(dirname "$0")/eww_screen.sh")
 exec 9>&-
-eww open --toggle personalizacion --screen "$mon"
+exec "$(dirname "$0")/popup.sh" open personalizacion

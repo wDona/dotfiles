@@ -27,11 +27,32 @@ today=$(date +%Y-%m-%d)
 mapfile -t evdates < <(jq -r 'to_entries[] | select((.value|type=="array" and length>0) or (.value|type=="string" and .!="")) | .key' "$EVENTS" 2>/dev/null)
 has_event() { local d="$1" e; for e in "${evdates[@]}"; do [[ "$e" == "$d" ]] && return 0; done; return 1; }
 
+# ── Tiempo por dia ──
+# El icono se mete DENTRO de cada celda en vez de dejar que el widget busque la
+# fecha en un mapa aparte: eww 0.5 no resuelve el indexado por clave dinamica
+# (`mapa[d.date]` sale vacio; con clave literal si funciona, comprobado), asi
+# que la celda tiene que traer su dato ya puesto.
+# Solo se LEE la cache; el que se pelea con la red es toggle_cal.sh. Sin cache,
+# sin iconos: el calendario funciona igual.
+WCACHE="${XDG_CACHE_HOME:-$HOME/.cache}/eww-weather-cal.json"
+declare -A WT
+if [ -s "$WCACHE" ]; then
+    while IFS=$'\t' read -r d ic mx mn; do
+        WT["$d"]="$ic"$'\t'"$mx"$'\t'"$mn"
+    done < <(jq -r 'to_entries[] | "\(.key)\t\(.value.icon)\t\(.value.max)\t\(.value.min)"' "$WCACHE" 2>/dev/null)
+fi
+
 cell() { # date day dim
     local date="$1" day="$2" dim="$3" tdy="false" ev="false"
     [[ "$date" == "$today" ]] && tdy="true"
     has_event "$date" && ev="true"
-    printf '{"date":"%s","day":"%s","dim":%s,"today":%s,"event":%s}' "$date" "$day" "$dim" "$tdy" "$ev"
+    local wt="${WT[$date]:-}" ic="" tip=""
+    if [ -n "$wt" ]; then
+        IFS=$'\t' read -r ic mx mn <<< "$wt"
+        tip="Max ${mx}° · Min ${mn}°"
+    fi
+    printf '{"date":"%s","day":"%s","dim":%s,"today":%s,"event":%s,"wt":"%s","wtip":"%s"}' \
+        "$date" "$day" "$dim" "$tdy" "$ev" "$ic" "$tip"
 }
 
 cells=()

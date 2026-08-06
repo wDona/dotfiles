@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
-# Toggle del calendario eww. Arranca el daemon si hace falta, lo abre en el
-# monitor con foco y activa un submap de Hyprland para cerrar con ESC.
+# Toggle del calendario eww.
+DIR="$(dirname "$0")"
+"$DIR/eww_ensure.sh"
 
-CONFIG_DIR="$HOME/.config/eww"
+"$DIR/popup.sh" is-open calendario && exec "$DIR/popup.sh" close
 
-# Asegurar daemon
-"$CONFIG_DIR/scripts/eww_ensure.sh"
+# Volver al mes actual y rellenar el grid (cache) antes de abrir.
+"$DIR/nav.sh" 0 >/dev/null 2>&1
 
-if eww active-windows 2>/dev/null | grep -q "calendario"; then
-    eww close calendario
-    eww update cal_picker="none" cal_selected="" event_input="" 2>/dev/null
-    hyprctl dispatch submap reset >/dev/null 2>&1
-else
-    # monitor con foco (Hyprland) -> pantalla de eww
-    mon=$("$CONFIG_DIR/scripts/eww_screen.sh")
-    # volver al mes actual y rellenar el grid (cache) antes de abrir
-    "$CONFIG_DIR/scripts/nav.sh" 0 >/dev/null 2>&1
-    eww open calendario --screen "$mon"
-    # submap: ESC cierra el calendario (resto de teclas pasan normal)
-    hyprctl dispatch submap calendar >/dev/null 2>&1
-    # pull de Google en segundo plano (refresca el grid al terminar).
-    # nice+ionice: que no le robe CPU/red a la UI cuando navegas con las
-    # flechitas justo despues de abrir.
-    setsid nice -n 19 ionice -c3 "$CONFIG_DIR/scripts/cal_sync.sh" 0 >/dev/null 2>&1 &
-fi
+"$DIR/popup.sh" open calendario
+
+# Tiempo de hoy + 7 dias por detras: si la cache del clima esta caducada,
+# weather.sh se va a la red y bloquear el open aqui se notaria al abrir.
+# Deja el mapa en disco y vuelve a generar el grid: cal.sh lo lee y mete el
+# icono dentro de cada celda (el widget no puede buscar por fecha, ver cal.sh).
+# La primera vez del dia los iconos aparecen un segundo despues; el resto de
+# aperturas ya salen con la cache caliente.
+(
+    WC="${XDG_CACHE_HOME:-$HOME/.cache}/eww-weather-cal.json"
+    "$DIR/weather.sh" cal > "$WC.tmp" && mv "$WC.tmp" "$WC" && "$DIR/nav.sh" 0
+) >/dev/null 2>&1 &
+
+# Pull de Google en segundo plano (refresca el grid al terminar).
+# nice+ionice: que no le robe CPU/red a la UI cuando navegas con las flechitas
+# justo despues de abrir.
+setsid nice -n 19 ionice -c3 "$DIR/cal_sync.sh" 0 >/dev/null 2>&1 &

@@ -6,6 +6,11 @@
 
 ;; Eventos del dia seleccionado (hasta 8 slots; select.sh los rellena)
 (defvar nev 0)
+
+;; Clima del dia seleccionado, ya resuelto por select.sh (ver alli el porque).
+;; {} = ese dia cae fuera de la prediccion.
+(defvar cal_selwt "{}")
+(defvar cal_haswt false)      ;; ese dia cae dentro de la prediccion
 (defvar sev0_text "") (defvar sev0_show false)
 (defvar sev1_text "") (defvar sev1_show false)
 (defvar sev2_text "") (defvar sev2_show false)
@@ -18,6 +23,7 @@
 ;; JSON del mes. eww no permite variables en defpoll -> defvar que
 ;; nav.sh / goto.sh / addevent.sh regeneran.
 (defvar cal_json "{ \"label\": \"\", \"year\": 0, \"month\": 0, \"weeks\": [] }")
+
 
 ;; Lista para el selector rapido de mes
 (defvar months_list "[{\"n\":1,\"t\":\"Ene\"},{\"n\":2,\"t\":\"Feb\"},{\"n\":3,\"t\":\"Mar\"},{\"n\":4,\"t\":\"Abr\"},{\"n\":5,\"t\":\"May\"},{\"n\":6,\"t\":\"Jun\"},{\"n\":7,\"t\":\"Jul\"},{\"n\":8,\"t\":\"Ago\"},{\"n\":9,\"t\":\"Sep\"},{\"n\":10,\"t\":\"Oct\"},{\"n\":11,\"t\":\"Nov\"},{\"n\":12,\"t\":\"Dic\"}]")
@@ -60,15 +66,23 @@
             :onclick "~/.config/eww/scripts/note_del.sh ${off} ${date} ${text}" "✕")))
 
 ;; ─── Dia ──────────────────────────────────────────────────
+;; El icono del tiempo sale solo en los dias que trae la cache del clima: hoy y
+;; los 7 siguientes. Mas alla la prediccion diaria ya no dice nada, asi que el
+;; resto del mes queda limpio a proposito. El dato viaja DENTRO de la celda
+;; (d.wt / d.wtip, los pone cal.sh) y no en un mapa aparte: eww 0.5 no resuelve
+;; el indexado por clave dinamica, mapa[d.date] sale siempre vacio (probado).
 (defwidget cal_day [d]
   (button :class "cal-cell ${d.today ? "today" : ""} ${d.dim ? "dim" : ""} ${d.date == cal_selected ? "selected" : ""} ${d.event ? "has-event" : ""}"
+          :tooltip {d.wtip}
           :onclick "~/.config/eww/scripts/select.sh ${d.date}"
           :onrightclick "setsid -f ~/.config/eww/scripts/note_edit.sh ${cal_offset} ${d.date} >/dev/null 2>&1"
     (overlay
       (label :class "cal-num" :halign "center" :valign "center"
              :hexpand true :vexpand true :text {d.day})
       (label :class "ev-dot" :halign "end" :valign "start"
-             :text {d.event ? "●" : ""}))))
+             :text {d.event ? "●" : ""})
+      (label :class "cal-wt" :halign "start" :valign "end"
+             :text {d.wt}))))
 
 ;; ─── Calendario ───────────────────────────────────────────
 (defwidget cal_widget []
@@ -118,7 +132,25 @@
     (revealer :transition "slidedown" :reveal {cal_selected != ""} :duration "150ms"
       (box :class "cal-note" :orientation "v" :space-evenly false :spacing 6
         (label :class "note-date" :halign "start" :text {cal_selected})
-        (label :class "note-empty" :halign "start" :visible {nev == 0} :text "(sin eventos)")
+
+        ;; Clima del dia elegido, en grande. Solo dentro del horizonte de
+        ;; prediccion (hoy + 7): fuera, select.sh pone cal_haswt en false y el
+        ;; bloque entero desaparece en vez de enseñar huecos.
+        ;; Cada dato se esconde ademas por separado si viene vacio: weather.sh
+        ;; manda "" cuando la API no da ese valor, y media ficha con datos
+        ;; reales es mejor que una ficha entera con ceros inventados.
+        (box :class "sw-box" :visible cal_haswt
+             :space-evenly false :spacing 12
+          (label :class "sw-ico" :visible {cal_selwt.icon != ""} :text {cal_selwt.icon})
+          (box :orientation "v" :space-evenly false :hexpand true :spacing 2
+            (box :space-evenly false :spacing 6
+              (label :class "sw-max" :visible {cal_selwt.max != ""} :text "${cal_selwt.max}°")
+              (label :class "sw-min" :visible {cal_selwt.min != ""} :valign "end" :text "${cal_selwt.min}°"))
+            (label :class "sw-desc" :halign "start" :visible {cal_selwt.desc != ""} :text {cal_selwt.desc}))
+          (box :orientation "v" :space-evenly false :valign "center" :spacing 4
+            (label :class "sw-stat" :halign "end" :visible {cal_selwt.pop != ""}  :text "󰖗 ${cal_selwt.pop}%")
+            (label :class "sw-stat" :halign "end" :visible {cal_selwt.wind != ""} :text "󰖝 ${cal_selwt.wind}km/h")))
+
         (box :orientation "v" :space-evenly false :spacing 4 :visible {nev > 0}
           (evrow :show sev0_show :text sev0_text :off cal_offset :date cal_selected)
           (evrow :show sev1_show :text sev1_text :off cal_offset :date cal_selected)
@@ -145,10 +177,6 @@
 (defpoll ddate :interval "300s" "date +'%A, %d %B'")
 (defpoll kbinfo    :interval "1s" :initial "{\"text\":\"\"}" "~/.config/waybar/scripts/kb_switch.sh status")
 (defpoll timerinfo :interval "1s" :initial "{\"text\":\"\",\"plain\":\"\",\"class\":\"idle\"}" "/home/wdona/.config/waybar/scripts/timer.sh status")
-(defvar timer_presets_json "[]")   ;; lo rellena toggle_timer.sh al abrir
-(defvar timer_input "")            ;; texto del entry (5m, 1h30m, 2:30, @18:30)
-(defvar timer_pending "")          ;; texto pendiente si hay que confirmar reemplazo
-(defvar timer_confirm false)       ;; true = mostrando aviso "ya hay algo activo"
 (defpoll power_profile :interval "3s" :initial "balanced" "~/.config/eww/scripts/get_profile.sh")
 (defpoll brightness_pct :interval "2s" :initial 50 "~/.config/eww/scripts/get_brightness.sh")
 ;; set_brightness.sh necesita brightnessctl: sin el, el slider no haria nada,
@@ -216,15 +244,15 @@
 (defwidget sysmenu []
   (box :class "sysmenu" :orientation "v" :space-evenly false :spacing 10
     (box :class "sm-tools" :orientation "v" :space-evenly false :spacing 8
-      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_perso.sh"
+      (button :class "sm-item" :onclick "~/.config/eww/scripts/popup.sh close; ~/.config/eww/scripts/toggle_perso.sh"
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰸉")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Personalizacion")))
-      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/eww/scripts/toggle_dash.sh"
+      (button :class "sm-item" :onclick "~/.config/eww/scripts/popup.sh close; ~/.config/eww/scripts/toggle_dash.sh"
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰘚")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Hardware")))
-      (button :class "sm-item" :onclick "eww close sysmenu & ~/.config/hypr/scripts/toggle_claude.sh"
+      (button :class "sm-item" :onclick "~/.config/eww/scripts/popup.sh close; ~/.config/hypr/scripts/toggle_claude.sh"
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰚩")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Claude Code")))
@@ -238,9 +266,9 @@
                :onchange "~/.config/eww/scripts/set_brightness.sh {}")))
     (box :class "sm-sep")
     (box :class "sm-power" :space-evenly true :spacing 8
-      (button :class "sm-pwr poweroff" :tooltip "Apagar"        :onclick "eww close sysmenu & systemctl poweroff"   "󰐥")
-      (button :class "sm-pwr reboot"   :tooltip "Reiniciar"     :onclick "eww close sysmenu & systemctl reboot"     "󰜉")
-      (button :class "sm-pwr logout"   :tooltip "Cerrar sesion" :onclick "eww close sysmenu & hyprctl dispatch exit" "󰍃"))))
+      (button :class "sm-pwr poweroff" :tooltip "Apagar"        :onclick "~/.config/eww/scripts/popup.sh close; systemctl poweroff"   "󰐥")
+      (button :class "sm-pwr reboot"   :tooltip "Reiniciar"     :onclick "~/.config/eww/scripts/popup.sh close; systemctl reboot"     "󰜉")
+      (button :class "sm-pwr logout"   :tooltip "Cerrar sesion" :onclick "~/.config/eww/scripts/popup.sh close; hyprctl dispatch exit" "󰍃"))))
 
 
 ;; ══════════════════════════════════════════════════════════
@@ -263,48 +291,17 @@
     (bat-item :icon "󰾆" :label "Ahorro de bateria" :profile "power-saver")))
 
 ;; ══════════════════════════════════════════════════════════
-;; ─── MENU TEMPORIZADOR ─────────────────────────────────────
+;; ─── TEMPORIZADOR: ya no vive en eww ───────────────────────
 ;; ══════════════════════════════════════════════════════════
-;; cada boton decide en el propio onclick (mirando timerinfo.class) si aplica
-;; ya o pide confirmar; timer_confirm/timer_pending solo reflejan ese estado.
-(defwidget timermenu []
-  (box :class "timermenu" :orientation "v" :space-evenly false :spacing 10
-    (box :visible {!timer_confirm} :orientation "v" :space-evenly false :spacing 10
-      (box :space-evenly false
-        (label :class "tm-title" :hexpand true :halign "start" :text "Temporizador")
-        (button :class "tm-close" :onclick "eww close timermenu" "󰅖"))
-      (box :space-evenly false :spacing 6
-        (input :class "tm-entry" :hexpand true :value timer_input
-               :onchange "eww update timer_input {}"
-               :onaccept `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply "{}"; eww close timermenu; } || eww update timer_pending="{}" timer_confirm=true`)
-        (button :class "tm-add" :tooltip "Guardar como preset"
-                :onclick `~/.config/waybar/scripts/timer.sh addpreset "${timer_input}"; eww update timer_presets_json="$(~/.config/waybar/scripts/timer.sh presets)" timer_input=""`
-                "󰐕"))
-      (label :class "tm-hint" :halign "start" :text "5m · 1h30m · 2:30 · @18:30")
-      (button :class "tm-item tm-active-cancel" :visible {timerinfo.class != "idle"}
-              :onclick "~/.config/waybar/scripts/timer.sh forcecancel; eww close timermenu"
-        (box :space-evenly false :spacing 10
-          (label :class "tm-ico" :text "󰜺")
-          (label :class "tm-lbl" :hexpand true :halign "start" :text "Cancelar (${timerinfo.plain})")))
-      (button :class "tm-item"
-              :onclick `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply cronometro; eww close timermenu; } || eww update timer_pending="cronometro" timer_confirm=true`
-        (box :space-evenly false :spacing 10
-          (label :class "tm-ico" :text "󰈼")
-          (label :class "tm-lbl" :hexpand true :halign "start" :text "Cronometro")))
-      (box :class "tm-presets" :orientation "v" :space-evenly false :spacing 6
-        (for p in {timer_presets_json}
-          (button :class "tm-item" :tooltip "Click der = borrar"
-                  :onclick `[ "${timerinfo.class}" = "idle" ] && { ~/.config/waybar/scripts/timer.sh apply "${p}"; eww close timermenu; } || eww update timer_pending="${p}" timer_confirm=true`
-                  :onrightclick `~/.config/waybar/scripts/timer.sh delpreset "${p}"; eww update timer_presets_json="$(~/.config/waybar/scripts/timer.sh presets)"`
-            (label :class "tm-lbl" :halign "start" :text {p})))))
-    (box :visible timer_confirm :orientation "v" :space-evenly false :spacing 10
-      (label :class "tm-title" :halign "start" :text "Ya hay algo activo")
-      (label :class "tm-sub" :halign "start" :wrap true :text "Se cancela y se pone el nuevo.")
-      (box :space-evenly true :spacing 8
-        (button :class "tm-cancel" :onclick `eww update timer_confirm=false timer_pending=""` "Cancelar")
-        (button :class "tm-replace"
-                :onclick `~/.config/waybar/scripts/timer.sh apply "${timer_pending}"; eww update timer_confirm=false timer_pending=""; eww close timermenu`
-                "Reemplazar")))))
+;; Aqui habia dos ventanas: `timermenu` (presets) y `timerinput` (escribir la
+;; duracion). Las dos fuera.
+;;   - poner uno         -> SUPER+R, waybar/scripts/timer_rofi.sh
+;;   - pausar / reanudar -> click izquierdo en el modulo de la barra
+;;   - terminar          -> click derecho
+;; El modulo enseña solo el numero y desaparece cuando no hay nada: un menu
+;; para algo que se resuelve con una tecla y dos clicks era el menu de mas.
+;; `timerinput` ademas era la unica ventana :focusable del rice, y con eso
+;; Hyprland le entregaba todo el input: la barra dejaba de responder al raton.
 
 
 ;; ══════════════════════════════════════════════════════════
@@ -579,7 +576,9 @@
                     view == "eww"       ? "󰕷  eww" :
                     view == "confs"     ? "  Configuraciones" :
                                           "  conf · ${conf_sel}"})
-      (button :class "perso-close" :onclick "eww close personalizacion" "󰅖"))
+      )   ;; sin X: cerrar es click fuera / ESC / otro click en el modulo,
+          ;; igual que en el resto. Apuntar a una X de 16px es la forma mas
+          ;; cara de cerrar algo.
     (box :visible {view == "home"}      (aj-home))
     (box :visible {view == "wallpaper"} (aj-wallpaper))
     (box :visible {view == "gtk"}       (aj-gtk))
@@ -609,35 +608,47 @@
   :geometry (geometry :x "0px" :y "0px" :width "346px" :anchor "top center")
   (cal_widget))
 
+;; Capa transparente a pantalla completa que va DEBAJO del popup abierto: un
+;; click en cualquier sitio lo cierra, sin tener que apuntar a ninguna X.
+;; No tapa la barra porque waybar reserva su franja con exclusive zone y los
+;; layer-shell empiezan por debajo; asi saltar de un popup a otro sigue siendo
+;; un solo click sobre el modulo.
+;; La abre y la cierra popup.sh, nunca a mano.
+(defwindow backdrop
+  :monitor 0
+  :stacking "overlay"
+  :focusable false
+  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "100%" :anchor "top center")
+  ;; button y no eventbox: el click es la razon de ser de esta ventana y el
+  ;; boton es el widget que lo tiene garantizado en todas las versiones de eww.
+  (button :class "backdrop" :onclick "~/.config/eww/scripts/popup.sh close"))
+
+;; ── Popups de la barra ──
+;; Todos con la misma UX de cierre (click fuera / ESC / otro click en el
+;; modulo), gestionada por scripts/popup.sh. NINGUNO lleva onhoverlost.
+;;
+;; La x se mide, no se estima: es la distancia del BORDE DERECHO de la ventana
+;; al borde derecho del monitor, asi que para centrar el popup bajo su modulo
+;;     x = (ancho_monitor - centro_del_modulo) - ancho_popup / 2
+;; Centros medidos en DP-1 (borde derecho 3280): clima 3062, timer 3124,
+;; pulseaudio 3160, power 3237. Cuando el resultado sale negativo, el popup es
+;; mas ancho que el hueco y se queda pegado al borde con 5px de aire.
 (defwindow sysmenu
   :monitor 0
   :stacking "overlay"
   :geometry (geometry :x "5px" :y "5px" :width "300px" :anchor "top right")
-  ;; al sacar el raton del menu se cierra solo (sin tapar la pantalla)
-  (eventbox :onhoverlost "eww close sysmenu"
-    (sysmenu)))
+  (sysmenu))
 
 (defwindow batmenu
   :monitor 0
   :stacking "overlay"
-  ;; desplazado a la derecha para caer bajo el icono de bateria (a la
-  ;; izquierda de pulseaudio/tray/custom-power en modules-right)
+  ;; En sobremesa el modulo de bateria se colapsa (#custom-battery.none), asi
+  ;; que esta x solo importa en portatil: queda a la izquierda de pulseaudio.
   :geometry (geometry :x "140px" :y "5px" :width "230px" :anchor "top right")
-  (eventbox :onhoverlost "eww close batmenu"
-    (batmenu)))
+  (batmenu))
 
-(defwindow timermenu
-  :monitor 0
-  :stacking "overlay"
-  :focusable true
-  ;; x a ojo: timer va 1 modulo a la izq de battery (batmenu = 140px)
-  ;; ajustar si no cae justo debajo del icono
-  :geometry (geometry :x "195px" :y "5px" :width "260px" :anchor "top right")
-  ;; min-height fija en .timermenu (eww.scss): la vista de confirmar es mas
-  ;; baja que la lista de presets, sin un suelo comun el cursor quedaba
-  ;; fuera de la ventana al encoger y el hoverlost la cerraba al instante.
-  (eventbox :onhoverlost "eww close timermenu"
-    (timermenu)))
+;; Ya no queda ninguna ventana focusable: ninguna se apropia del teclado, y por
+;; eso la barra y el click-fuera responden igual con cualquier popup abierto.
 
 (defwindow personalizacion
   :monitor 0
@@ -715,9 +726,13 @@
 (defwindow clima
   :monitor 0
   :stacking "overlay"
-  :geometry (geometry :x "5px" :y "5px" :width "330px" :anchor "top right")
-  ;; sin onhoverlost: al abrirlo desde la barra el cursor no esta encima
-  ;; todavia y se cerraria solo. Se cierra con otro click en el modulo.
+  ;; 183 - 165 = 18. El centro del modulo de clima se movio de 3062 a 3097 al
+  ;; colapsar el temporizador en reposo (clima esta a su izquierda, asi que se
+  ;; corre a la derecha). Ojo: con un temporizador corriendo el modulo vuelve a
+  ;; aparecer y esto se va ~35px; se calibra para el estado normal, que es sin
+  ;; nada puesto. Los de la derecha del temporizador (volumen, sysmenu) no se
+  ;; enteran.
+  :geometry (geometry :x "18px" :y "5px" :width "330px" :anchor "top right")
   (weather))
 
 ;; ══════════════════════════════════════════════════════════
@@ -754,9 +769,8 @@
 (defwindow volumen
   :monitor 0
   :stacking "overlay"
-  ;; x calibrado para caer bajo el modulo pulseaudio, que en modules-right va
-  ;; entre custom/battery y tray.
-  :geometry (geometry :x "95px" :y "5px" :width "240px" :anchor "top right")
-  ;; se cierra solo al sacar el raton, igual que batmenu/sysmenu
-  (eventbox :onhoverlost "eww close volumen"
-    (volmenu)))
+  ;; 120 - 120 = 0, subido a 5 para no pegarlo al filo de la pantalla
+  ;; (centro del modulo pulseaudio medido en 3160; antes x=95 lo dejaba 95px
+  ;; a la izquierda del icono)
+  :geometry (geometry :x "5px" :y "5px" :width "240px" :anchor "top right")
+  (volmenu))

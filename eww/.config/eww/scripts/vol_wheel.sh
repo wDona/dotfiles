@@ -25,5 +25,5 @@ eww update vol_pct="$("$DIR/vol.sh" get)" vol_muted="$("$DIR/vol.sh" muted)"
 # reinicia la cuenta en vez de acumular cierres a destiempo.
 mark=$(date +%s%N)
 echo "$mark" > "$STAMP"
-setsid bash -c "sleep 2; [ \"\$(cat '$STAMP' 2>/dev/null)\" = '$mark' ] && eww close volumen" \
+setsid bash -c "sleep 2; [ \"\$(cat '$STAMP' 2>/dev/null)\" = '$mark' ] && ~/.config/eww/scripts/popup.sh close" \
     >/dev/null 2>&1 &
