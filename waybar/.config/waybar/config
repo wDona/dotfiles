@@ -72,6 +72,10 @@
             {
                 "type": "audio-in",
                 "name": "gsr-default_output"
+            },
+            {
+                "type": "audio-in",
+                "name": "cava"
             }
         ],
         "modules": [

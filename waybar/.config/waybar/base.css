@@ -209,23 +209,18 @@
     padding: 0 8px;
 }
 
-/* Simetrico: el hover pinta la pastilla sobre el CONTENEDOR (los items de
-   privacy no reciben el prelight), asi que un padding asimetrico deja los
-   iconos descentrados dentro de ella. */
 #privacy {
     padding: 0 6px;
 }
 
 /* Privacidad: solo aparece cuando algo captura pantalla o micro.
-   Los items llevan SU propia pastilla (transparente en reposo): son widgets
-   con ventana GDK propia, asi que el puntero sobre el icono ilumina al hijo
-   y NUNCA al contenedor, y GTK3 no tiene selector de padre para compensarlo.
-   Sin esto, el hover solo respondia en el borde del contenedor.
-   PENDIENTE: el hover sobre el icono en si sigue sin encender la pastilla
-   (solo responde en las esquinas del contenedor). Intentado con
-   "#privacy *:hover" y moviendo el padding al hijo: lo primero funciona
-   suelto pero no dentro de la lista de hover, y lo segundo descuadra la
-   altura. Sin resolver. */
+   SIN HOVER a proposito. En waybar #privacy-item ES un GtkRevealer, y en GTK3
+   el revealer realiza su propia GdkWindow SIN mascara de crossing events: esa
+   ventana tapa la del EventBox del modulo, asi que ni el item ni el contenedor
+   reciben :prelight sobre el icono. Solo se encendia en los 6px de padding
+   lateral del contenedor, o sea "hover alrededor pero no encima". No hay
+   arreglo por CSS (las mascaras de eventos no son estilo), asi que en vez de
+   una pastilla que responde solo por los bordes, ninguna. */
 /* Padding horizontal corto a proposito: es separacion INTERNA del widget (hay
    un item por captura: pantalla y micro) y tiene que leerse mas junta que el
    hueco entre widgets. Con 11px + icon-spacing 6 quedaban a 35px de tinta a
@@ -345,7 +340,6 @@
 #clock:hover,
 #custom-clock:hover,
 #custom-weather:hover,
-#privacy:hover,
 #custom-keyboard:hover,
 #custom-power:hover,
 #custom-battery:hover,
@@ -356,7 +350,6 @@
 #custom-launcher:hover,
 #custom-spotify:hover,
 #mpris:hover,
-#privacy-item:hover,
 #tray > .passive:hover,
 #tray > .active:hover,
 #tray > .needs-attention:hover {
@@ -365,13 +358,10 @@
     color: #ffffff;
 }
 
-/* Los dos contenedores NO se comportan igual, y por eso se tratan aparte:
-   - #tray: sus items tienen ventana GDK propia y reciben el prelight. Si el
-     contenedor tambien se pinta salen DOS pastillas superpuestas (la del
-     icono dentro de una que abarca todos los iconos). Aqui manda el item.
-   - #privacy: sus items NO reciben el prelight, lo recibe el padre; si se
-     apaga el contenedor, apuntar al microfono no marca nada. Aqui manda el
-     contenedor. */
+/* #tray: sus items tienen ventana GDK propia y reciben el prelight. Si el
+   contenedor tambien se pinta salen DOS pastillas superpuestas (la del icono
+   dentro de una que abarca todos los iconos). Aqui manda el item.
+   (#privacy no esta en la lista de hover: ver el bloque de #privacy-item.) */
 #tray:hover {
     background: transparent;
     border-color: transparent;
