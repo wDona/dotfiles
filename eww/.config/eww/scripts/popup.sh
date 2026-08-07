@@ -28,7 +28,7 @@ DIR="$(dirname "$0")"
 
 # Ventanas gestionadas. `dashboard` NO esta y no debe estarlo: es un panel que
 # se deja fijo mientras se trabaja, no un menu efimero.
-POPUPS=(calendario clima volumen sysmenu batmenu personalizacion)
+POPUPS=(calendario clima volumen sysmenu batmenu personalizacion spotify)
 
 # Hablar con eww cuesta ~1s de timeout si el daemon no vive, y `close` lo
 # llaman botones de waybar que deben responder al instante.
@@ -54,15 +54,21 @@ close_all() {
     hyprctl dispatch submap reset >/dev/null 2>&1
 }
 
+# open_win <ventana> [pos] [anchor]
+#   pos/anchor opcionales: pisan la geometria del yuck. Los usa
+#   toggle_weather.sh para colocar el popup bajo su modulo en cualquier
+#   resolucion. Sin ellos manda lo que diga el defwindow.
 open_win() {
-    local win="$1" mon
+    local win="$1" pos="${2:-}" anchor="${3:-}" mon geo=()
+    [ -n "$pos" ] && geo+=(--pos "$pos")
+    [ -n "$anchor" ] && geo+=(--anchor "$anchor")
     "$DIR/eww_ensure.sh"
     close_all
     mon=$("$DIR/eww_screen.sh")
     # El backdrop va PRIMERO: dentro de la misma capa (overlay) manda el orden
     # de creacion, asi que lo que se abre despues queda por encima.
     eww open backdrop --screen "$mon"
-    eww open "$win" --screen "$mon"
+    eww open "$win" --screen "$mon" ${geo[@]+"${geo[@]}"}
     hyprctl dispatch submap popup >/dev/null 2>&1
 }
 
@@ -71,7 +77,7 @@ case "${1:-}" in
         close_all
         ;;
     open)
-        open_win "${2:?falta la ventana}"
+        open_win "${2:?falta la ventana}" "${3:-}" "${4:-}"
         ;;
     toggle)
         win="${2:?falta la ventana}"

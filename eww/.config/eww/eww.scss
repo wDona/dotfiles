@@ -914,3 +914,62 @@ $aviso-red:    #ff5c5c;   // = @crit
   margin: 2px 2px 0 2px;
   padding: 13px 0;
 }
+
+// ─── SPOTIFY ────────────────────────────────────────────────────────────────
+
+.spmenu {
+  @include glass;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.sp-title {
+  color: $fg;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.sp-artist {
+  color: $fg-dim;
+  font-size: 11px;
+}
+
+.sp-btn {
+  // Todos los secundarios (anterior, siguiente, aleatorio, repetir) al MISMO
+  // color y la misma opacidad: la jerarquia la marca la pastilla del play
+  // (.big) y el relleno de los activados (.on), no un gris mas flojo en unos
+  // que en otros.
+  color: $fg;
+  font-size: 15px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background-color: transparent;
+
+  &:hover { background-color: $surface; color: #ffffff; }
+
+  // Shuffle / repeat encendidos: pastilla rellena, el mismo lenguaje que
+  // .tg-on y .conf-item.sel en el resto del rice. Solo teñir el glifo no valia:
+  // a 15px, lila sobre gris se lee como "un icono mas", no como "esto esta
+  // activado", y los tres estados de repeticion se distinguian unicamente por
+  // un punto dentro del glifo.
+  &.on {
+    color: $accent;
+    background-color: $accent-soft;
+  }
+
+  // Play/pause: el unico que lleva pastilla fija, para que el ojo lo encuentre
+  // sin leer los iconos.
+  &.big {
+    color: $lila;
+    font-size: 19px;
+    padding: 7px 13px;
+    background-color: $bg-cell;
+
+    &:hover { background-color: $surface; color: #ffffff; }
+  }
+}
+
+.sp-vol-ico {
+  color: $lila;
+  font-size: 14px;
+}

@@ -81,10 +81,14 @@ def parse(argv):
     # Shift+Enter arranca (Enter a secas no vale: con el campo vacio rofi
     # elige la primera entrada del historial). Alt+Supr borra del historial
     # y vuelve al menu en vez de salir, asi se limpian varias de una sentada.
+    # Ctrl+Enter arranca DIRECTO con lo que haya delante -lo escrito, o la fila
+    # resaltada si el campo esta vacio- y tira la cola: es el atajo para "quiero
+    # ESTE y ya", sin tener que vaciar antes lo que llevases encolado.
     while True:
         hist = load_history()
         mesg = ("minutos + mensaje (ej: 10 café) · Enter encola · "
-                "Shift+Enter arranca · Alt+Supr borra del historial")
+                "Shift+Enter arranca · Ctrl+Enter arranca solo esto · "
+                "Alt+Supr borra del historial")
         if queue:
             cola = " → ".join(f"{m}m {t}" for m, t in queue)
             mesg = f"<b>{html.escape(cola)}</b>\n{mesg}"
@@ -95,9 +99,12 @@ def parse(argv):
              "-l", str(min(len(hist), 8)),
              "-kb-custom-1", "Alt+Delete",
              # Shift+Return viene ocupado por kb-accept-alt: hay que soltarlo
-             # antes o rofi aborta por binding duplicado.
+             # antes o rofi aborta por binding duplicado. Con Ctrl+Return pasa
+             # lo mismo: por defecto es kb-accept-custom.
              "-kb-accept-alt", "",
+             "-kb-accept-custom", "",
              "-kb-custom-2", "Shift+Return",
+             "-kb-custom-3", "Control+Return",
              "-mesg", mesg],
             capture_output=True, text=True, input="\n".join(hist),
         )
@@ -111,6 +118,11 @@ def parse(argv):
             if queue:
                 return queue
             sys.exit(0)
+        if proc.returncode == 12:          # Ctrl+Enter: solo esto, sin la cola
+            if not raw:
+                sys.exit(0)
+            remember(raw)
+            return [split(raw)]
         if proc.returncode != 0 or not raw:  # Escape / vacio: cancela todo
             sys.exit(0)
 

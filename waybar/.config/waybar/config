@@ -20,6 +20,7 @@
         "custom/clock"
     ],
     "modules-right": [
+        "custom/spotify",
         "custom/weather",
         "custom/timer",
         "custom/battery",
@@ -117,13 +118,17 @@
         "on-click": "~/.config/eww/scripts/toggle_batmenu.sh"
     },
     "custom/spotify": {
-        "exec": "~/.config/waybar/scripts/mediaplayer.sh",
+        "exec": "~/.config/waybar/scripts/spotify_bar.sh",
+        "exec-if": "which cava",
+        "return-type": "json",
         "format": "{}",
         "escape": true,
-        "on-click": "~/.config/eww/scripts/close_cal.sh; playerctl -p spotify play-pause",
+        "max-length": 60,
+        "on-click": "~/.config/eww/scripts/toggle_spotify.sh",
+        "on-click-right": "playerctl -p spotify play-pause",
+        "on-click-middle": "playerctl -p spotify next",
         "on-scroll-up": "playerctl -p spotify next",
-        "on-scroll-down": "playerctl -p spotify previous",
-        "max-length": 40
+        "on-scroll-down": "playerctl -p spotify previous"
     },
     "custom/notification": {
         "exec": "~/.config/waybar/scripts/notif.sh",
@@ -164,5 +169,15 @@
         "tooltip": true,
         "on-click": "~/.config/waybar/scripts/timer.sh pause",
         "on-click-right": "~/.config/waybar/scripts/timer.sh forcecancel"
+    },
+    "mpris": {
+        "player": "spotify",
+        "format": "󰓇  {dynamic}",
+        "dynamic-order": ["title"],
+        "dynamic-len": 200,
+        "on-click": "~/.config/eww/scripts/toggle_spotify.sh",
+        "on-click-right": "playerctl -p spotify play-pause",
+        "on-click-middle": "playerctl -p spotify next",
+        "tooltip-format": "{artist}\n{album}"
     }
 }

@@ -52,7 +52,8 @@
 #custom-timer,
 #custom-hwtoggle,
 #custom-launcher,
-#custom-spotify {
+#custom-spotify,
+#mpris {
     padding: 4px 10px;
     /* Margen vertical 0 a proposito: con margen, la pastilla del hover quedaba
        mas baja que la isla y dejaba hueco arriba y abajo. Sin el, GTK estira el
@@ -64,6 +65,13 @@
     color: @text;
     font-weight: 500;
     transition: all 150ms ease;
+}
+
+/* El titulo de Spotify es el unico modulo del reproductor en la barra: los
+   controles viven en el popup de eww (clic izquierdo). */
+
+#mpris.paused {
+    color: @text-mute;
 }
 
 #workspaces button {
@@ -271,8 +279,47 @@
     border: 1px solid @edge-light;
 }
 
-/* Musica: texto atenuado, se realza en hover como los demas. */
+/* Musica: icono + titulo laten con cada golpe de la cancion (clase .beat, la
+   pone spotify_bar.sh a partir de los graves).
+   El pulso es de LUZ, no de tamaño: probado con font-size y GTK no lo repinta
+   a 25 cambios de clase por segundo (y cuando entraba, movia el ancho del
+   modulo). Color + halo si transicionan, asi que el golpe entra seco y se
+   apaga suave, que es lo que se lee como latido. */
 #custom-spotify {
+    color: @text-mute;
+    transition: color 140ms ease, text-shadow 140ms ease;
+}
+
+/* Escalones de nivel: mas sonido, mas blanco. El recorrido va de casi apagado
+   (0.20) a blanco puro con un halo de 22px: con la rampa estrecha de antes
+   -0.45 a 1.0, halo solo arriba- los pasos intermedios se comian casi todo el
+   movimiento y el efecto no se leia. Ahora el halo entra ya en l1 y crece en
+   cada escalon, que es lo que hace que el golpe se vea a rabillo de ojo sin
+   mirar la barra.
+   El halo NO agranda el modulo: text-shadow pinta fuera del texto sin ocupar
+   caja, asi que la barra no se mueve por muy grande que sea.
+   alpha() es de GTK, no de CSS web: mezcla contra el fondo, asi que la rampa se
+   ve igual con cualquier wallpaper. */
+#custom-spotify.play { color: @text; }
+#custom-spotify.l0 { color: alpha(#ffffff, 0.20); }
+#custom-spotify.l1 {
+    color: alpha(#ffffff, 0.45);
+    text-shadow: 0 0 4px alpha(@accent, 0.25);
+}
+#custom-spotify.l2 {
+    color: alpha(#ffffff, 0.70);
+    text-shadow: 0 0 9px alpha(@accent, 0.55);
+}
+#custom-spotify.l3 {
+    color: alpha(#ffffff, 0.92);
+    text-shadow: 0 0 15px alpha(@accent, 0.85);
+}
+#custom-spotify.l4 {
+    color: #ffffff;
+    text-shadow: 0 0 22px @accent;
+}
+
+#custom-spotify.paused {
     color: @text-mute;
 }
 
@@ -308,6 +355,7 @@
 #custom-hwtoggle:hover,
 #custom-launcher:hover,
 #custom-spotify:hover,
+#mpris:hover,
 #privacy-item:hover,
 #tray > .passive:hover,
 #tray > .active:hover,

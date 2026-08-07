@@ -179,11 +179,13 @@
 (defpoll timerinfo :interval "1s" :initial "{\"text\":\"\",\"plain\":\"\",\"class\":\"idle\"}" "/home/wdona/.config/waybar/scripts/timer.sh status")
 (defpoll power_profile :interval "3s" :initial "balanced" "~/.config/eww/scripts/get_profile.sh")
 (defpoll brightness_pct :interval "2s" :initial 50 "~/.config/eww/scripts/get_brightness.sh")
-;; set_brightness.sh necesita brightnessctl: sin el, el slider no haria nada,
-;; asi que se oculta la fila entera. Intervalo largo = se resuelve al arrancar
-;; el daemon y tras instalarlo se corrige solo sin tener que recargar.
-(defpoll has_brightnessctl :interval "1h" :initial "false"
-         "command -v brightnessctl >/dev/null 2>&1 && echo true || echo false")
+;; El slider de brillo solo sirve si hay LAS DOS cosas: brightnessctl (escribe
+;; en sysfs via udev) y una pantalla con backlight en /sys/class/backlight. En
+;; sobremesa brightnessctl suele estar instalado igualmente y no hay backlight:
+;; el slider salia y no hacia nada. Falta cualquiera de las dos -> fila oculta.
+;; Intervalo largo = se corrige solo al instalar/conectar, sin recargar eww.
+(defpoll has_brightness :interval "1h" :initial "false"
+         "command -v brightnessctl >/dev/null 2>&1 && [ -n \"$(ls -A /sys/class/backlight 2>/dev/null)\" ] && echo true || echo false")
 
 ;; Fila: icono + nombre a la izq, valor a la der, barra de uso debajo (opcional)
 (defwidget statrow [icon name val color ?pct ?show]
@@ -257,7 +259,7 @@
           (label :class "sm-ico" :text "󰚩")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Claude Code")))
       (box :class "sm-item" :orientation "v" :space-evenly false :spacing 6
-           :visible {has_brightnessctl == "true"}
+           :visible {has_brightness == "true"}
         (box :space-evenly false :spacing 10
           (label :class "sm-ico" :text "󰃟")
           (label :class "sm-lbl" :hexpand true :halign "start" :text "Brillo")
@@ -592,6 +594,12 @@
     (box :visible {view == "conf"}      (aj-detail))))
 
 ;; ─── Ventanas ─────────────────────────────────────────────
+;; TODAS estas ventanas entran y salen de arriba a abajo, y eso NO se hace
+;; aqui: lo hace Hyprland con
+;;     layerrule = animation slide top, match:namespace gtk-layer-shell
+;; (hypr/conf.d/styles.conf). Un revealer dentro del yuck solo anima la
+;; APERTURA: al cerrar, `eww close` destruye la ventana en el mismo frame y el
+;; panel desaparece de golpe. La regla de Hyprland cubre las dos direcciones.
 (defwindow dashboard
   :monitor 0
   :stacking "overlay"
@@ -726,12 +734,13 @@
 (defwindow clima
   :monitor 0
   :stacking "overlay"
-  ;; 183 - 165 = 18. El centro del modulo de clima se movio de 3062 a 3097 al
-  ;; colapsar el temporizador en reposo (clima esta a su izquierda, asi que se
-  ;; corre a la derecha). Ojo: con un temporizador corriendo el modulo vuelve a
-  ;; aparecer y esto se va ~35px; se calibra para el estado normal, que es sin
-  ;; nada puesto. Los de la derecha del temporizador (volumen, sysmenu) no se
-  ;; enteran.
+  ;; Esta geometria es solo el respaldo: toggle_weather.sh abre la ventana con
+  ;; --anchor "top left" --pos calculado, centrandola bajo el raton (o sea bajo
+  ;; el modulo, que es donde se acaba de hacer click) y recortada a los bordes
+  ;; del monitor con foco. Asi vale para cualquier resolucion y deja de depender
+  ;; de un x medido a mano, que se descalibraba con el ancho del titulo de
+  ;; Spotify o con el temporizador al colapsarse.
+  ;; ANCHO: si cambia el :width, cambiarlo tambien en toggle_weather.sh (W).
   :geometry (geometry :x "18px" :y "5px" :width "330px" :anchor "top right")
   (weather))
 
@@ -774,3 +783,82 @@
   ;; a la izquierda del icono)
   :geometry (geometry :x "5px" :y "5px" :width "240px" :anchor "top right")
   (volmenu))
+
+;; ══════════════════════════════════════════════════════════
+;; ─── SPOTIFY ──────────────────────────────────────────────
+;; ══════════════════════════════════════════════════════════
+
+;; Sin defpoll ni deflisten a proposito: lo rellena toggle_spotify.sh antes de
+;; abrir, y spotify.sh lo reescribe despues de cada boton. Un panel que se mira
+;; tres segundos no justifica un proceso vivo (ni un fork por intervalo) el
+;; resto del dia. Ver la cabecera de scripts/spotify.sh.
+(defvar spotify_json "{\"open\":false,\"playing\":false,\"title\":\"\",\"artist\":\"\",\"shuffle\":false,\"loop\":\"None\",\"vol\":0}")
+
+(defwidget sp-btn [icon onclick ?active ?big ?tip]
+  (button :class "sp-btn ${(active ?: false) ? "on" : ""} ${(big ?: false) ? "big" : ""}"
+          :tooltip {tip ?: ""}
+          :onclick onclick
+    icon))
+
+(defwidget spotifymenu []
+  (box :class "spmenu" :orientation "v" :space-evenly false :spacing 12
+
+    (box :orientation "v" :space-evenly false :spacing 1
+      (label :class "sp-title"  :halign "start" :limit-width 26 :text {spotify_json.title})
+      (label :class "sp-artist" :halign "start" :limit-width 30 :text {spotify_json.artist}))
+
+    ;; Anterior/siguiente estan aqui ADEMAS de en los clicks de waybar, por si
+    ;; algun click de la barra deja de responder.
+    ;; setsid -f en TODOS, y no es adorno: eww se lleva por delante al hijo del
+    ;; onclick en cuanto vuelve del click, asi que playerctl (inmediato) si
+    ;; corria pero el refresco que spotify.sh hace 0.3s despues moria con el.
+    ;; De ahi el sintoma: la cancion cambiaba de modo pero el boton se quedaba
+    ;; con el estado viejo hasta cerrar y reabrir el popup. Con setsid el script
+    ;; sale del arbol de eww y termina su trabajo. Mismo truco que ya usaban
+    ;; note_edit.sh y today.sh en el calendario.
+    (box :class "sp-controls" :space-evenly false :spacing 4 :halign "center"
+      (sp-btn :icon "󰒝"
+              :active {spotify_json.shuffle}
+              :tip {spotify_json.shuffle ? "Aleatorio: activado" : "Aleatorio: desactivado"}
+              :onclick "setsid -f ~/.config/eww/scripts/spotify.sh action shuffle")
+      (sp-btn :icon "󰒮" :tip "Anterior"
+              :onclick "setsid -f ~/.config/eww/scripts/spotify.sh action previous")
+      (sp-btn :icon {spotify_json.playing ? "󰏤" : "󰐊"} :big true
+              :tip {spotify_json.playing ? "Pausar" : "Reproducir"}
+              :onclick "setsid -f ~/.config/eww/scripts/spotify.sh action play-pause")
+      (sp-btn :icon "󰒭" :tip "Siguiente"
+              :onclick "setsid -f ~/.config/eww/scripts/spotify.sh action next")
+      ;; Un solo boton para los tres estados de repeticion: el glifo cambia a
+      ;; "repetir una" cuando el modo es Track.
+      (sp-btn :icon {spotify_json.loop == "Track" ? "󰑘" : "󰑖"}
+              :active {spotify_json.loop != "None"}
+              :tip {spotify_json.loop == "Track"    ? "Repetir: esta cancion" :
+                    spotify_json.loop == "Playlist" ? "Repetir: la lista" :
+                                                      "Repetir: desactivado"}
+              :onclick "setsid -f ~/.config/eww/scripts/spotify.sh action loop"))
+
+    ;; Volumen del stream de Spotify, no del sink por defecto: mover esto no
+    ;; toca el volumen del resto del sistema.
+    (box :class "sp-vol" :space-evenly false :spacing 8
+      (label :class "sp-vol-ico" :text "󰝚")
+      (scale :class "vol-scale" :hexpand true :min 0 :max 100
+             :value {spotify_json.vol}
+             :onchange "~/.config/eww/scripts/spotify.sh vol {}"))))
+
+(defwindow spotify
+  :monitor 0
+  :stacking "overlay"
+  ;; Medido pintando #mpris de verde y buscando las columnas en una captura de
+  ;; grim sobre DP-1 (1920 de ancho): el modulo ocupa 1629..1716, o sea su borde
+  ;; DERECHO cae a 204px del filo del monitor.
+  ;;
+  ;; Se ancla a ese borde derecho y no al centro a proposito: `modules-right`
+  ;; empaqueta desde la derecha, asi que al alargarse el titulo el modulo crece
+  ;; hacia la IZQUIERDA y su borde derecho no se mueve. Centrarlo obligaria a
+  ;; recalibrar con cada cancion.
+  ;;
+  ;; x=170 deja el filo derecho del popup 34px por fuera del modulo, que con
+  ;; :width 300 lo mantiene dentro del panel hasta titulos de ~300px.
+  :geometry (geometry :x "170px" :y "5px" :width "300px" :anchor "top right")
+
+  (spotifymenu))
