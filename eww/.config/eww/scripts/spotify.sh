@@ -6,7 +6,7 @@
 #   spotify.sh refresh          -> empuja ese JSON a eww (spotify_json)
 #   spotify.sh action <accion>  -> play-pause | next | previous | shuffle | loop
 #   spotify.sh vol <0-100>      -> volumen SOLO de Spotify
-#   spotify.sh vol-sync         -> devuelve el volumen al stream nuevo
+#   spotify.sh vol-guard        -> bucle: repone el volumen si algo lo sube al tope
 #
 # NO hay ningun proceso de fondo, a proposito. El estado se refresca al abrir el
 # popup y despues de cada accion, igual que hace el widget de clima. Un
@@ -57,38 +57,50 @@ vol_set() {
 }
 
 # --- volumen entre canciones -------------------------------------------------
-# Spotify DESTRUYE y recrea su sink-input al cambiar de cancion, y el nuevo nace
-# al 100%: el volumen que hubieras puesto se pierde en cada tema. El restore de
-# wireplumber no cubre esto (guarda por application.name, pero el stream nuevo
-# llega con su propio volumen y se lo pisa), asi que lo recordamos aqui.
+# Al cambiar de cancion algo escribe 99% o 100% en el sink-input de Spotify y se
+# lleva por delante el volumen que hubieras puesto. MEDIDO: el indice del
+# sink-input NO cambia (283 durante toda una sesion), o sea que el stream es el
+# mismo y no hay nada que "restaurar al recrearse"; hay un escritor externo
+# pisando el valor. Por eso esto NO se cuelga del cambio de cancion, sino de los
+# eventos de volumen: da igual quien escriba y cuando.
 #
-# Se guarda INDICE + volumen, no solo el volumen: es lo que distingue "mismo
-# stream, el usuario ha movido el volumen por ahi" (pavucontrol, teclas) de
-# "stream nuevo, hay que devolverle el suyo". Sin el indice esto pisaria
-# cualquier cambio hecho fuera del popup.
+# El valor recordado se guarda como INDICE + volumen (el indice solo sirve para
+# saber de que stream hablamos si Spotify se reabre).
 VOL_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/spotify-vol"
+
+# Umbrales del guardia. El reset observado cae siempre en 99-100; por debajo de
+# TOPE se asume que el cambio es tuyo y se memoriza.
+# ponytail: heuristica por valor, no por autor — pactl no dice quien escribe.
+# Consecuencia: subir a >=98 desde pavucontrol se revierte. Para dejarlo al tope
+# usa el popup, que memoriza el valor nuevo y desactiva el guardia solo.
+VOL_TOPE=98
+VOL_MARGEN=95
 
 vol_remember() {
     mkdir -p "${VOL_STATE%/*}"
     printf '%s %s\n' "$1" "$2" > "$VOL_STATE"
 }
 
-# Lo llama spotify_bar.sh en cada cambio de cancion (un fork por tema).
-vol_sync() {
-    local id prev_id prev_vol
-    id=$(sink_input)
-    [ -n "$id" ] || return 0
-    prev_id=""; prev_vol=""
-    [ -r "$VOL_STATE" ] && read -r prev_id prev_vol < "$VOL_STATE"
+# Bucle largo: lo arranca spotify_bar.sh. Un evento por cambio de volumen, sin
+# polling. Mientras nadie toque el volumen no consume nada.
+vol_guard() {
+    local kind num id vol prev
+    pactl subscribe 2>/dev/null | while read -r _ _ _ kind num; do
+        [ "$kind" = "sink-input" ] || continue
+        id=$(sink_input)
+        [ -n "$id" ] || continue
+        vol=$(vol_get)
+        [[ $vol =~ ^[0-9]+$ ]] || continue
 
-    if [ "$id" = "$prev_id" ]; then
-        vol_remember "$id" "$(vol_get)"
-    elif [ -n "$prev_vol" ]; then
-        pactl set-sink-input-volume "$id" "${prev_vol}%"
-        vol_remember "$id" "$prev_vol"
-    else
-        vol_remember "$id" "$(vol_get)"
-    fi
+        prev=""
+        [ -r "$VOL_STATE" ] && read -r _ prev < "$VOL_STATE"
+
+        if [ -n "$prev" ] && [ "$vol" -ge "$VOL_TOPE" ] && [ "$prev" -le "$VOL_MARGEN" ]; then
+            pactl set-sink-input-volume "$id" "${prev}%"
+        else
+            vol_remember "$id" "$vol"
+        fi
+    done
 }
 
 # --- estado ------------------------------------------------------------------
@@ -161,6 +173,6 @@ case "${1:-state}" in
     refresh) refresh ;;
     action)  do_action "${2:?falta la accion}" ;;
     vol)     vol_set "${2:?falta el porcentaje}" ;;
-    vol-sync) vol_sync ;;
-    *)       echo "uso: spotify.sh {state|refresh|action <a>|vol <0-100>|vol-sync}" >&2; exit 1 ;;
+    vol-guard) vol_guard ;;
+    *)       echo "uso: spotify.sh {state|refresh|action <a>|vol <0-100>|vol-guard}" >&2; exit 1 ;;
 esac

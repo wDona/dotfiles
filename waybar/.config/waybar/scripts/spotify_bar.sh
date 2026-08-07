@@ -36,6 +36,20 @@ printf 'CLOSED||\n' > "$STATE"
     done
 } &
 
+# ── Guardia del volumen, en segundo plano ────────────────────────────────
+# Al cambiar de cancion algo sube el sink-input de Spotify a 99-100% y se lleva
+# por delante el volumen que hubieras puesto. El guardia escucha eventos de
+# pactl y lo repone (ver spotify.sh). Vive aqui porque este script ya es el
+# proceso permanente de Spotify; montarlo como servicio aparte seria un unit
+# mas para un bucle que duerme el 99.9% del tiempo.
+# El reintento es por si pipewire se reinicia y se lleva el subscribe.
+{
+    while :; do
+        "$HOME/.config/eww/scripts/spotify.sh" vol-guard
+        sleep 2
+    done
+} &
+
 # ── cava ─────────────────────────────────────────────────────────────────
 # 6 bandas: se promedian para sacar el nivel. Pocas a proposito, hay que
 # parsearlas 25 veces por segundo y aqui no se pinta ninguna.
@@ -70,11 +84,8 @@ cava -p "$CONF" | while IFS=';' read -r -a v; do
     if [ "$title" != "$last_title" ]; then
         last_title="$title"
         esc=${title//\\/\\\\}; esc=${esc//\"/\\\"}
-        # Spotify recrea su sink-input al cambiar de cancion y el nuevo nace al
-        # 100%: vol-sync le devuelve el volumen que tenia. Va aqui porque este
-        # es el unico proceso que ya esta vivo y sabe cuando cambia el tema; en
-        # segundo plano para no frenar el bucle de cava (25 vueltas/s).
-        [ -n "$title" ] && "$HOME/.config/eww/scripts/spotify.sh" vol-sync &
+        # (El volumen NO se toca aqui: el reset no va sincronizado con el
+        # cambio de titulo, lo lleva el guardia de arriba.)
     fi
 
     tot=0; n=0
