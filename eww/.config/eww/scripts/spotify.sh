@@ -6,6 +6,7 @@
 #   spotify.sh refresh          -> empuja ese JSON a eww (spotify_json)
 #   spotify.sh action <accion>  -> play-pause | next | previous | shuffle | loop
 #   spotify.sh vol <0-100>      -> volumen SOLO de Spotify
+#   spotify.sh vol-sync         -> devuelve el volumen al stream nuevo
 #
 # NO hay ningun proceso de fondo, a proposito. El estado se refresca al abrir el
 # popup y despues de cada accion, igual que hace el widget de clima. Un
@@ -52,6 +53,42 @@ vol_set() {
     id=$(sink_input)
     [ -n "$id" ] || return 0
     pactl set-sink-input-volume "$id" "${1:-0}%"
+    vol_remember "$id" "${1:-0}"
+}
+
+# --- volumen entre canciones -------------------------------------------------
+# Spotify DESTRUYE y recrea su sink-input al cambiar de cancion, y el nuevo nace
+# al 100%: el volumen que hubieras puesto se pierde en cada tema. El restore de
+# wireplumber no cubre esto (guarda por application.name, pero el stream nuevo
+# llega con su propio volumen y se lo pisa), asi que lo recordamos aqui.
+#
+# Se guarda INDICE + volumen, no solo el volumen: es lo que distingue "mismo
+# stream, el usuario ha movido el volumen por ahi" (pavucontrol, teclas) de
+# "stream nuevo, hay que devolverle el suyo". Sin el indice esto pisaria
+# cualquier cambio hecho fuera del popup.
+VOL_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/spotify-vol"
+
+vol_remember() {
+    mkdir -p "${VOL_STATE%/*}"
+    printf '%s %s\n' "$1" "$2" > "$VOL_STATE"
+}
+
+# Lo llama spotify_bar.sh en cada cambio de cancion (un fork por tema).
+vol_sync() {
+    local id prev_id prev_vol
+    id=$(sink_input)
+    [ -n "$id" ] || return 0
+    prev_id=""; prev_vol=""
+    [ -r "$VOL_STATE" ] && read -r prev_id prev_vol < "$VOL_STATE"
+
+    if [ "$id" = "$prev_id" ]; then
+        vol_remember "$id" "$(vol_get)"
+    elif [ -n "$prev_vol" ]; then
+        pactl set-sink-input-volume "$id" "${prev_vol}%"
+        vol_remember "$id" "$prev_vol"
+    else
+        vol_remember "$id" "$(vol_get)"
+    fi
 }
 
 # --- estado ------------------------------------------------------------------
@@ -124,5 +161,6 @@ case "${1:-state}" in
     refresh) refresh ;;
     action)  do_action "${2:?falta la accion}" ;;
     vol)     vol_set "${2:?falta el porcentaje}" ;;
-    *)       echo "uso: spotify.sh {state|refresh|action <a>|vol <0-100>}" >&2; exit 1 ;;
+    vol-sync) vol_sync ;;
+    *)       echo "uso: spotify.sh {state|refresh|action <a>|vol <0-100>|vol-sync}" >&2; exit 1 ;;
 esac

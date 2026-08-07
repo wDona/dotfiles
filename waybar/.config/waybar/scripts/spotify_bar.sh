@@ -70,6 +70,11 @@ cava -p "$CONF" | while IFS=';' read -r -a v; do
     if [ "$title" != "$last_title" ]; then
         last_title="$title"
         esc=${title//\\/\\\\}; esc=${esc//\"/\\\"}
+        # Spotify recrea su sink-input al cambiar de cancion y el nuevo nace al
+        # 100%: vol-sync le devuelve el volumen que tenia. Va aqui porque este
+        # es el unico proceso que ya esta vivo y sabe cuando cambia el tema; en
+        # segundo plano para no frenar el bucle de cava (25 vueltas/s).
+        [ -n "$title" ] && "$HOME/.config/eww/scripts/spotify.sh" vol-sync &
     fi
 
     tot=0; n=0
